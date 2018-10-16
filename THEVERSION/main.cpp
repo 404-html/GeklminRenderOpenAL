@@ -29,8 +29,8 @@ GkScene Demo Program 1 main.cpp
 #include "Global_Variables.h" //theScene and FileResourceManager
 
 //OpenAL
-// #include <al.h>
-// #include <alc.h>
+#include <AL/al.h>
+#include <AL/alc.h>
 //#define GLFW_DLL // Do we need this? //No.
 //(C) DMHSW 2018 All Rights Reserved
 
@@ -67,6 +67,13 @@ GeklminRender::CubeMap* SkyboxTex = nullptr; //Skybox texture
 GeklminRender::CubeMap* SkyboxTwo = nullptr; //Second skybox texture, for testing per-mesh cubemaps
 
 GeklminRender::Font* myFont = nullptr; //my super special font!
+
+//OpenAL Variables
+ALCdevice *OpenALDevice = 0;
+ALCcontext *OpenALContext = 0;
+//For the actual audio we're going to play
+ALuint audiosource1 = 0;
+ALuint audiobuffer1 = 0;
 
 /*
 User Input Variables and Functions
@@ -464,6 +471,14 @@ void init()
 	for (int i = 0; i<2; i++)
 		currentmousexy[i] = 0;
 	theScene = new GkScene(WIDTH, HEIGHT, 1);
+	
+	//OpenAL Stuff
+	OpenALDevice = alcOpenDevice(NULL);
+	if (OpenALDevice)
+	{
+		std::cout << "\nUsing Device: " << alcGetString(OpenALDevice, ALC_DEVICE_SPECIFIER) << "\n";
+		OpenALContext = alcCreateContext(OpenALDevice, 0);
+	}
 }
 
 //Load the resources from file for the demo.
