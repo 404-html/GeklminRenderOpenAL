@@ -1,0 +1,19 @@
+To build the library, I run these two commands (Make sure to delete main.o after the first one):
+
+g++ -O3 -ffast-math -msse4 -c *.c *.cpp  -lopengl32 -lglfw3dll -lglfw3 -IC:\mingw-w64\x86_64-7.1.0-posix-seh-rt_v5-rev1\mingw64\include -m64 -Wno-undef
+
+and then...
+
+g++ -O3 -ffast-math -msse4 -shared -o GeklminRender.dll *.o -lopengl32 -lglfw3dll -lglfw3 -IC:\mingw-w64\x86_64-7.1.0-posix-seh-rt_v5-rev1\mingw64\include -m64 -Wno-undef
+
+
+
+
+
+
+~~~~~~~~~~~~~~~~~~~~
+To build the demo, I ran into problems just doing -O, let alone -O3 (Relating to glfwSetInputMode), so I just started including all the args from a website I found on the GCC.
+
+All of them work... even though they shouldnt.
+
+See Compiler_Call.bat if you want to look at the... mess...
