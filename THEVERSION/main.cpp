@@ -291,8 +291,8 @@ void checkKeys(){
 				));
 				//Randomly decide whether or not to use Cubemap Reflections
 				ProgramMeshInstances[ProgramMeshInstances.size()-1]->EnableCubemapDiffusion = 0;
-				ProgramMeshInstances[ProgramMeshInstances.size()-1]->EnableCubemapReflections = (rand()%100 > 25) ? 1 : 0;
-				// ProgramMeshInstances[ProgramMeshInstances.size()-1]->EnableCubemapReflections = 1;
+				//~ ProgramMeshInstances[ProgramMeshInstances.size()-1]->EnableCubemapReflections = (rand()%100 > 25) ? 1 : 0;
+				ProgramMeshInstances[ProgramMeshInstances.size()-1]->EnableCubemapReflections = 0;
 				
 				
 				//Randomly decide which cubemap to use.
@@ -308,8 +308,8 @@ void checkKeys(){
 				ProgramMeshInstances[ProgramMeshInstances.size()-1]->myPhong.specreflectivity = rand()%100/100.0;
 				
 				//Random diffusivity
-				ProgramMeshInstances[ProgramMeshInstances.size()-1]->myPhong.diffusivity = 1-ProgramMeshInstances[ProgramMeshInstances.size()-1]->myPhong.specreflectivity;
-				
+				//~ ProgramMeshInstances[ProgramMeshInstances.size()-1]->myPhong.diffusivity = 1-ProgramMeshInstances[ProgramMeshInstances.size()-1]->myPhong.specreflectivity;
+				ProgramMeshInstances[ProgramMeshInstances.size()-1]->myPhong.diffusivity = rand()%100/100.0;
 				
 				
 				FileResourceManager->loadMesh("sphere_test.obj",false,true)->RegisterInstance(
@@ -391,7 +391,7 @@ void checkKeys(){
 				// std::cout <<"\n\n This demo is licensed to you under the MiT License (https://mit-license.org/). Have fun.";
 				// std::cout <<"\n\n if you find any bugs in the software (E.g. crashing) report them to gordonfreeman424@gmail.com";
 				IndexedModel Boxy = createBox(1.0f,4.0f,3.0f);
-				std::string OBJExportedBoxy = Boxy.exportToString(false);
+				std::string OBJExportedBoxy = Boxy.exportToString(true);
 				std::cout << "\n BEGIN PRINTOUT:\n";
 				std::cout << OBJExportedBoxy;
 			}
@@ -516,10 +516,10 @@ void LoadResources()
 	
 	
 	
-	Phong_Material Material_for_letters = Phong_Material();
-	Material_for_letters.diffusivity = 0.5;
-	Material_for_letters.specreflectivity = 0.5;
-	Material_for_letters.specdamp = 70; //Fairly shiny looking
+	//Phong_Material Material_for_letters = Phong_Material();
+	//Material_for_letters.diffusivity = 0.5;
+	//Material_for_letters.specreflectivity = 0.5;
+	//Material_for_letters.specdamp = 70; //Fairly shiny looking
 	//myFont->pushMaterialPropertiesToAllLetters(Material_for_letters, true, false);
 	
 	
