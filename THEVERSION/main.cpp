@@ -24,6 +24,7 @@ GkScene Demo Program 1 main.cpp
 
 
 #include "geklminrender.h"
+#include <fstream>
 #include "font.h"
 #include "resource_manager.h"
 #include "Global_Variables.h" //theScene and FileResourceManager
@@ -71,9 +72,61 @@ GeklminRender::Font* myFont = nullptr; //my super special font!
 //OpenAL Variables
 ALCdevice *OpenALDevice = 0;
 ALCcontext *OpenALContext = 0;
+ALfloat listenerOri[] = { 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f };
 //For the actual audio we're going to play
 ALuint audiosource1 = 0;
 ALuint audiobuffer1 = 0;
+
+bool isBigEndian()
+{
+	int a=1;
+	return !((char*)&a)[0];
+}
+
+int convertToInt(char* buffer,int len)
+{
+	int a=0;
+	if(!isBigEndian())
+		for(int i=0;i<len;i++)
+			((char*)&a)[i]=buffer[i];
+	else
+		for(int i=0;i<len;i++)
+			((char*)&a)[3-i]=buffer[i];	
+	return a;
+}
+
+//WAV File Loader
+char* loadWAV(const char* fn,int& chan,int& samplerate,int& bps,int& size)
+{
+	char buffer[4];
+	std::ifstream in(fn,std::ios::binary);
+	in.read(buffer,4);
+	if(strncmp(buffer,"RIFF",4)!=0)
+	{
+		std::cout << "this is not a valid WAVE file"  << std::endl;
+		return NULL;
+	}
+	in.read(buffer,4);
+	in.read(buffer,4);	//WAVE
+	in.read(buffer,4);	//fmt 
+	in.read(buffer,4);	//16
+	in.read(buffer,2);	//1
+	in.read(buffer,2);
+	chan=convertToInt(buffer,2);
+	in.read(buffer,4);
+	samplerate=convertToInt(buffer,4);
+	in.read(buffer,4);
+	in.read(buffer,2);
+	in.read(buffer,2);
+	bps=convertToInt(buffer,2);
+	in.read(buffer,4);	//data
+	in.read(buffer,4);
+	size=convertToInt(buffer,4);
+	char* data=new char[size];
+	in.read(data,size);
+	return data;	
+}
+
 
 /*
 User Input Variables and Functions
@@ -355,7 +408,12 @@ void checkKeys(){
 				deRegisterOnButtonPress = !deRegisterOnButtonPress;
 			}
 		oldkeystates[16] = state;
-
+		state = myDevice->getKey(0, GLFW_KEY_SPACE);
+			if (state == GLFW_PRESS && oldkeystates[17] != GLFW_PRESS)
+			{
+				alSourcePlay(audiosource1);
+			}
+		oldkeystates[17] = state;
 			
 			
 			
@@ -478,7 +536,12 @@ void init()
 	{
 		std::cout << "\nUsing Device: " << alcGetString(OpenALDevice, ALC_DEVICE_SPECIFIER) << "\n";
 		OpenALContext = alcCreateContext(OpenALDevice, 0);
+		if(alcMakeContextCurrent(OpenALContext))
+		{
+			std::cout<<"\nSuccessfully Made Context!!!";
+		}
 	}
+	alGetError();
 }
 
 //Load the resources from file for the demo.
@@ -588,6 +651,38 @@ void LoadResources()
 	//Testing...
 	theScene->customMainShaderBinds = &MainshaderUniformFunctionDemo;
 	theScene->customRenderingAfterSkyboxBeforeMainShader = &CustomRenderingFunction; //Draw to your heart's content!
+	
+	//OpenAL Loading
+	int channel,sampleRate,bps,size;
+	ALuint format = 0;
+	alGenBuffers(1, &audiobuffer1);
+	//Loading TONE.WAV
+	char* TONE_WAV_DATA = nullptr; 
+	TONE_WAV_DATA = loadWAV("SOUNDS/TONE.WAV",channel ,sampleRate, bps, size);
+	if(channel==1)
+	{
+		if(bps==8)
+		{
+			format=AL_FORMAT_MONO8;
+			std::cout << "\nMONO8 FORMAT";
+		}else{
+			format=AL_FORMAT_MONO16;
+			std::cout << "\nMONO16 FORMAT";
+		}
+	}else{
+		if(bps==8)
+		{
+			format=AL_FORMAT_STEREO8;
+			std::cout << "\nSTEREO8 FORMAT";
+		}else{
+			format=AL_FORMAT_STEREO16;
+			std::cout << "\nSTEREO16 FORMAT";
+		}	
+	}
+	alBufferData(audiobuffer1, format, TONE_WAV_DATA, size, sampleRate);
+	
+	if (TONE_WAV_DATA) //Gotta free what we malloc
+		free(TONE_WAV_DATA);
 }
 
 
@@ -699,6 +794,17 @@ void initObjects()
 		LetterTester.myTransform.SetPos(glm::vec3(0,100,0));
 		LetterTester.myTransform.SetScale(glm::vec3(10,10,10));
 		//myFont->Characters['B']->RegisterInstance(&LetterTester);
+		
+		//OpenAL Source Generation
+		alGenSources(1,&audiosource1);
+		alSourcef(audiosource1, AL_GAIN, 1);
+		alSourcef(audiosource1, AL_PITCH, 1);
+		//Params
+		alSource3f(audiosource1, AL_POSITION, 0, 0, 0);
+		alSource3f(audiosource1, AL_VELOCITY, 0, 0, 0);
+		alSourcei(audiosource1, AL_LOOPING, AL_FALSE);
+		//What sound?
+		alSourcei(audiosource1, AL_BUFFER, audiobuffer1);
 }
 
 int main()
@@ -795,7 +901,17 @@ int main()
 				myDevice->getCursorPosition(0, &oldmousexy[0], &oldmousexy[1]);
 		}
 		//Eof Game Code
-
+		alListener3f(AL_POSITION, SceneRenderCamera->pos.x, SceneRenderCamera->pos.y, SceneRenderCamera->pos.z);
+		alListener3f(AL_VELOCITY, 0, 0, 0); //Later we will use the derivative
+		
+		listenerOri[0] = SceneRenderCamera->forward.x;
+		listenerOri[1] = SceneRenderCamera->forward.y;
+		listenerOri[2] = SceneRenderCamera->forward.z;
+		
+		listenerOri[3] = SceneRenderCamera->up.x;
+		listenerOri[4] = SceneRenderCamera->up.y;
+		listenerOri[5] = SceneRenderCamera->up.z;
+		alListenerfv(AL_ORIENTATION, listenerOri);
 		//THE MAGICAL DRAW CALL! Calls the pipeline upon the objects you have in the scene.
 		theScene->drawPipeline(1, FBOArray[0], FBOArray[1], &RenderTargetCamera, false, glm::vec4(1.0,0,0,1.0), glm::vec2(300,500)); //Don't draw the ground
 		theScene->drawPipeline(1, nullptr, nullptr, nullptr, false, glm::vec4(0,0,0,0), glm::vec2(800,1000));
@@ -883,6 +999,8 @@ int main()
 				delete FBOArray[i];
 		}
 	}
+	if(OpenALDevice)
+		alcCloseDevice(OpenALDevice);
 	std::cout<<"\n\n DELETED THE FBOS";
 	myDevice->removeWindow(0);
 	std::cout << "\n DELETED THE WINDOW";
