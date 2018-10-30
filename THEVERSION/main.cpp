@@ -344,8 +344,8 @@ void checkKeys(){
 				));
 				//Randomly decide whether or not to use Cubemap Reflections
 				ProgramMeshInstances[ProgramMeshInstances.size()-1]->EnableCubemapDiffusion = 0;
-				//~ ProgramMeshInstances[ProgramMeshInstances.size()-1]->EnableCubemapReflections = (rand()%100 > 25) ? 1 : 0;
-				ProgramMeshInstances[ProgramMeshInstances.size()-1]->EnableCubemapReflections = 0;
+				ProgramMeshInstances[ProgramMeshInstances.size()-1]->EnableCubemapReflections = (rand()%100 > 25) ? 1 : 0;
+				//~ ProgramMeshInstances[ProgramMeshInstances.size()-1]->EnableCubemapReflections = 0;
 				
 				
 				//Randomly decide which cubemap to use.

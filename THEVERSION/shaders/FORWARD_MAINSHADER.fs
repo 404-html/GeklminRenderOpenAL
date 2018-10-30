@@ -331,6 +331,11 @@ void main()
 		float inrange = float(length2vec3(fragtolight) < amb_lightArray[i].range * amb_lightArray[i].range);
 		diffuseffect += renderthislight * amb_lightArray[i].color * inrange;
 	}
+	
+	
+	//TO DISABLE CAMERALIGHTS (FOR PERFORMANCE) START COMMENTING HERE
+	//ON GEANY SELECT IT ALL AND HIT CTRL+E
+	
 	//Grab camera light samples
 	//CameraTex1
 	vec4 samplecoord1 = (camera_lightArray[0].viewproj * vec4(worldout,1.0));
@@ -420,6 +425,11 @@ void main()
 		speceffect += shouldRenderAtAll * shouldRenderSpecEffect * specDampFactor * specreflectivity * lightcolor * rangevar;
 		
 	}
+	
+	
+	//STOP COMMENTING HERE
+	
+	
 	// float UnitNormalBad = float(UnitNormal == vec3(0));
 	// UnitNormal = UnitNormalBad * vec3(0,0,1) + (1-UnitNormalBad) * UnitNormal;
 	vec4 cubemapData = texture(worldaroundme,reflect(-unit_frag_to_camera, UnitNormal));
