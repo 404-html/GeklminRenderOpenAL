@@ -24,14 +24,11 @@ GkScene Demo Program 1 main.cpp
 
 
 #include "geklminrender.h"
-#include <fstream>
 #include "font.h"
 #include "resource_manager.h"
 #include "Global_Variables.h" //theScene and FileResourceManager
-
-//OpenAL
-#include <AL/al.h>
-#include <AL/alc.h>
+//My AL Utils
+#include "GekAL.h"
 //#define GLFW_DLL // Do we need this? //No.
 //(C) DMHSW 2018 All Rights Reserved
 
@@ -68,64 +65,17 @@ GeklminRender::CubeMap* SkyboxTex = nullptr; //Skybox texture
 GeklminRender::CubeMap* SkyboxTwo = nullptr; //Second skybox texture, for testing per-mesh cubemaps
 
 GeklminRender::Font* myFont = nullptr; //my super special font!
+GeklminRender::Mesh* DeleteMeshTest = nullptr;
+
 
 //OpenAL Variables
 ALCdevice *OpenALDevice = 0;
 ALCcontext *OpenALContext = 0;
-ALfloat listenerOri[] = { 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f };
+//~ ALfloat listenerOri[] = { 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f };
 //For the actual audio we're going to play
 ALuint audiosource1 = 0;
 ALuint audiobuffer1 = 0;
 
-bool isBigEndian()
-{
-	int a=1;
-	return !((char*)&a)[0];
-}
-
-int convertToInt(char* buffer,int len)
-{
-	int a=0;
-	if(!isBigEndian())
-		for(int i=0;i<len;i++)
-			((char*)&a)[i]=buffer[i];
-	else
-		for(int i=0;i<len;i++)
-			((char*)&a)[3-i]=buffer[i];	
-	return a;
-}
-
-//WAV File Loader
-char* loadWAV(const char* fn,int& chan,int& samplerate,int& bps,int& size)
-{
-	char buffer[4];
-	std::ifstream in(fn,std::ios::binary);
-	in.read(buffer,4);
-	if(strncmp(buffer,"RIFF",4)!=0)
-	{
-		std::cout << "this is not a valid WAVE file"  << std::endl;
-		return NULL;
-	}
-	in.read(buffer,4);
-	in.read(buffer,4);	//WAVE
-	in.read(buffer,4);	//fmt 
-	in.read(buffer,4);	//16
-	in.read(buffer,2);	//1
-	in.read(buffer,2);
-	chan=convertToInt(buffer,2);
-	in.read(buffer,4);
-	samplerate=convertToInt(buffer,4);
-	in.read(buffer,4);
-	in.read(buffer,2);
-	in.read(buffer,2);
-	bps=convertToInt(buffer,2);
-	in.read(buffer,4);	//data
-	in.read(buffer,4);
-	size=convertToInt(buffer,4);
-	char* data=new char[size];
-	in.read(data,size);
-	return data;	
-}
 
 
 /*
@@ -434,6 +384,20 @@ void checkKeys(){
 				//"\nX: " << myFont->CharacterAABBDimensions['I'].x <<
 				//"\nY: " << myFont->CharacterAABBDimensions['I'].y <<
 				//"\nZ: " << myFont->CharacterAABBDimensions['I'].z;
+				if(DeleteMeshTest)
+				{
+					theScene->deregisterMesh(DeleteMeshTest);
+					delete DeleteMeshTest;
+					DeleteMeshTest = nullptr;
+				}
+				else
+				{
+					std::cout << "\nMaking Mesh";
+					DeleteMeshTest = new GeklminRender::Mesh("SPHERE_TEST.OBJ", false, true, true);
+					theScene->registerMesh(DeleteMeshTest);
+					DeleteMeshTest->RegisterInstance(&LetterTester);
+					DeleteMeshTest->pushTexture(FileResourceManager->loadTexture("AMIGA.PNG",true));
+				}
 			}
 		oldkeystates[49] = state;
 		state = myDevice->getMouseButton(0, GLFW_MOUSE_BUTTON_RIGHT);
@@ -652,37 +616,39 @@ void LoadResources()
 	theScene->customMainShaderBinds = &MainshaderUniformFunctionDemo;
 	theScene->customRenderingAfterSkyboxBeforeMainShader = &CustomRenderingFunction; //Draw to your heart's content!
 	
-	//OpenAL Loading
-	int channel,sampleRate,bps,size;
-	ALuint format = 0;
-	alGenBuffers(1, &audiobuffer1);
-	//Loading TONE.WAV
-	char* TONE_WAV_DATA = nullptr; 
-	TONE_WAV_DATA = loadWAV("SOUNDS/TONE.WAV",channel ,sampleRate, bps, size);
-	if(channel==1)
-	{
-		if(bps==8)
-		{
-			format=AL_FORMAT_MONO8;
-			std::cout << "\nMONO8 FORMAT";
-		}else{
-			format=AL_FORMAT_MONO16;
-			std::cout << "\nMONO16 FORMAT";
-		}
-	}else{
-		if(bps==8)
-		{
-			format=AL_FORMAT_STEREO8;
-			std::cout << "\nSTEREO8 FORMAT";
-		}else{
-			format=AL_FORMAT_STEREO16;
-			std::cout << "\nSTEREO16 FORMAT";
-		}	
-	}
-	alBufferData(audiobuffer1, format, TONE_WAV_DATA, size, sampleRate);
+	audiobuffer1 = loadWAVintoALBuffer("SOUNDS/TONE.WAV");
 	
-	if (TONE_WAV_DATA) //Gotta free what we malloc
-		free(TONE_WAV_DATA);
+	//~ //OpenAL Loading
+	//~ int channel,sampleRate,bps,size;
+	//~ ALuint format = 0;
+	//~ alGenBuffers(1, &audiobuffer1);
+	//~ //Loading TONE.WAV
+	//~ char* TONE_WAV_DATA = nullptr; 
+	//~ TONE_WAV_DATA = loadWAV("SOUNDS/TONE.WAV",channel ,sampleRate, bps, size);
+	//~ if(channel==1)
+	//~ {
+		//~ if(bps==8)
+		//~ {
+			//~ format=AL_FORMAT_MONO8;
+			//~ std::cout << "\nMONO8 FORMAT";
+		//~ }else{
+			//~ format=AL_FORMAT_MONO16;
+			//~ std::cout << "\nMONO16 FORMAT";
+		//~ }
+	//~ }else{
+		//~ if(bps==8)
+		//~ {
+			//~ format=AL_FORMAT_STEREO8;
+			//~ std::cout << "\nSTEREO8 FORMAT";
+		//~ }else{
+			//~ format=AL_FORMAT_STEREO16;
+			//~ std::cout << "\nSTEREO16 FORMAT";
+		//~ }	
+	//~ }
+	//~ alBufferData(audiobuffer1, format, TONE_WAV_DATA, size, sampleRate);
+	
+	//~ if (TONE_WAV_DATA) //Gotta free what we malloc
+		//~ free(TONE_WAV_DATA);
 }
 
 
@@ -880,13 +846,6 @@ int main()
 				//Camera Positioning
 				if (cameralock)
 				{
-					/*
-						glfwGetCursorPos(window, &currentmousexy[0], &currentmousexy[1]);
-						SceneRenderCamera->Pitch((float)(currentmousexy[1] - oldmousexy[1]) * 0.001f);
-						SceneRenderCamera->RotateY((float)(currentmousexy[0] - oldmousexy[0]) * -0.001f);
-						glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-						glfwGetCursorPos(window, &oldmousexy[0], &oldmousexy[1]);
-					*/
 					myDevice->getCursorPosition(0, &currentmousexy[0], &currentmousexy[1]);
 					SceneRenderCamera->Pitch((float)(currentmousexy[1] - oldmousexy[1]) * 0.001f);
 					SceneRenderCamera->RotateY((float)(currentmousexy[0] - oldmousexy[0]) * -0.001f);
@@ -901,40 +860,14 @@ int main()
 				myDevice->getCursorPosition(0, &oldmousexy[0], &oldmousexy[1]);
 		}
 		//Eof Game Code
-		alListener3f(AL_POSITION, SceneRenderCamera->pos.x, SceneRenderCamera->pos.y, SceneRenderCamera->pos.z);
-		alListener3f(AL_VELOCITY, 0, 0, 0); //Later we will use the derivative
+		syncCameraStateToALListener(SceneRenderCamera);
 		
-		listenerOri[0] = SceneRenderCamera->forward.x;
-		listenerOri[1] = SceneRenderCamera->forward.y;
-		listenerOri[2] = SceneRenderCamera->forward.z;
-		
-		listenerOri[3] = SceneRenderCamera->up.x;
-		listenerOri[4] = SceneRenderCamera->up.y;
-		listenerOri[5] = SceneRenderCamera->up.z;
-		alListenerfv(AL_ORIENTATION, listenerOri);
-		//THE MAGICAL DRAW CALL! Calls the pipeline upon the objects you have in the scene.
 		theScene->drawPipeline(1, FBOArray[0], FBOArray[1], &RenderTargetCamera, false, glm::vec4(1.0,0,0,1.0), glm::vec2(300,500)); //Don't draw the ground
 		theScene->drawPipeline(1, nullptr, nullptr, nullptr, false, glm::vec4(0,0,0,0), glm::vec2(800,1000));
 		myDevice->pollevents();
 		myDevice->swapBuffers(0);
 	} //EOF game loop
 
-	/*
-	
-	GeklminRender::Shader* MainShad = nullptr; //Final Pass Shader
-	GeklminRender::Shader* SkyboxShad = nullptr; //Skybox shader
-	GeklminRender::Shader* DisplayTexture = nullptr; //Displays a texture to the screen
-	GeklminRender::Shader* WBOITCompShader = nullptr; //Composites the WBOIT initial pass onto the opaque framebuffer
-
-
-	GeklminRender::Camera* SceneRenderCamera = nullptr; //SceneRender camera
-	GeklminRender::Camera RenderTargetCamera; //The render target camera
-	GeklminRender::CubeMap* SkyboxTex = nullptr; //Skybox texture
-	GeklminRender::CubeMap* SkyboxTwo = nullptr; //Second skybox texture, for testing per-mesh cubemaps
-
-	GeklminRender::Font* myFont = nullptr; //my super special font!
-	
-	*/
 
 								
 	//We should delete stuff... if we want to be good programmers :<

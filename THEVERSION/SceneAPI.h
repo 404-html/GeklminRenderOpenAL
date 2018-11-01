@@ -132,24 +132,6 @@ class GkScene //Gk for Geklmin
 				}
 			}
 			bool deregisterMesh(Mesh* sadboy){
-				// if (sadboy)
-					// if (Meshes.size() > 0)
-						// for (size_t i = 0; i < Meshes.size(); i++) //I don't know how iterators work.
-						// {
-							// if (sadboy == Meshes[i])
-							// {
-								// Meshes.erase(Meshes.begin() + i);
-								// return;
-							// }
-						// }
-				//Time to learn how iterators work
-				// if (sadboy != nullptr && Meshes.size() > 0)
-					// for (auto iter = (Meshes.end()--); iter >= Meshes.begin(); --iter)
-					// {
-						// if (iter < Meshes.end())
-							// if (*iter == sadboy)
-								// Meshes.erase(iter);
-					// }
 				auto iter = std::find(Meshes.begin(), Meshes.end(), sadboy);
 				if (iter != Meshes.end())
 				{

@@ -169,7 +169,7 @@ class Mesh
 			if (!is_instanced){
 				glUniform1f(EnableInstancing, 0);
 				//GENERATE THE BATCHES
-				std::unordered_map<unsigned int, std::unordered_map<unsigned int, std::vector<MeshInstance*>>> Batches_cubemap_texture;
+				std::map<unsigned int, std::map<unsigned int, std::vector<MeshInstance*>>> Batches_cubemap_texture;
 				
 				
 				for (size_t i = 0; i < Instances.size(); i++) //for each thing

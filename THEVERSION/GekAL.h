@@ -1,0 +1,115 @@
+#ifndef GEKAL_H
+#define GEKAL_H
+#include "geklminrender.h"
+#include <fstream>
+#include <AL/al.h>
+#include <AL/alc.h>
+
+
+//START GekAL.h
+bool isBigEndian()
+{
+	int a=1;
+	return !((char*)&a)[0];
+}
+
+int convertToInt(char* buffer,int len)
+{
+	int a=0;
+	if(!isBigEndian())
+		for(int i=0;i<len;i++)
+			((char*)&a)[i]=buffer[i];
+	else
+		for(int i=0;i<len;i++)
+			((char*)&a)[3-i]=buffer[i];	
+	return a;
+}
+
+//WAV File Loader
+char* loadWAV(const char* fn,int& chan,int& samplerate,int& bps,int& size)
+{
+	char buffer[4];
+	std::ifstream in(fn,std::ios::binary);
+	in.read(buffer,4);
+	if(strncmp(buffer,"RIFF",4)!=0)
+	{
+		std::cout << "this is not a valid WAVE file"  << std::endl;
+		return NULL;
+	}
+	in.read(buffer,4);
+	in.read(buffer,4);	//WAVE
+	in.read(buffer,4);	//fmt 
+	in.read(buffer,4);	//16
+	in.read(buffer,2);	//1
+	in.read(buffer,2);
+	chan=convertToInt(buffer,2);
+	in.read(buffer,4);
+	samplerate=convertToInt(buffer,4);
+	in.read(buffer,4);
+	in.read(buffer,2);
+	in.read(buffer,2);
+	bps=convertToInt(buffer,2);
+	in.read(buffer,4);	//data
+	in.read(buffer,4);
+	size=convertToInt(buffer,4);
+	char* data=new char[size];
+	in.read(data,size);
+	return data;	
+}
+
+ALuint loadWAVintoALBuffer(const char* fn)
+{
+	ALuint return_val = 0;
+	
+	//OpenAL Loading
+	int channel,sampleRate,bps,size;
+	ALuint format = 0;
+	alGenBuffers(1, &return_val);
+	//Loading TONE.WAV
+	char* TONE_WAV_DATA = nullptr; 
+	TONE_WAV_DATA = loadWAV(fn,channel ,sampleRate, bps, size);
+	if(channel==1)
+	{
+		if(bps==8)
+		{
+			format=AL_FORMAT_MONO8;
+			//std::cout << "\nMONO8 FORMAT";
+		}else{
+			format=AL_FORMAT_MONO16;
+			//std::cout << "\nMONO16 FORMAT";
+		}
+	}else{
+		if(bps==8)
+		{
+			format=AL_FORMAT_STEREO8;
+			//std::cout << "\nSTEREO8 FORMAT";
+		}else{
+			format=AL_FORMAT_STEREO16;
+			//std::cout << "\nSTEREO16 FORMAT";
+		}	
+	}
+	alBufferData(return_val, format, TONE_WAV_DATA, size, sampleRate);
+	
+	if (TONE_WAV_DATA) //Gotta free what we malloc
+		free(TONE_WAV_DATA);
+	
+	return return_val;
+}
+
+void syncCameraStateToALListener(GeklminRender::Camera* mycam){
+	ALfloat listenerOri[] = { 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f };
+	alListener3f(AL_POSITION, mycam->pos.x, mycam->pos.y, mycam->pos.z);
+		alListener3f(AL_VELOCITY, 0, 0, 0); //Later we will use the derivative
+		
+		listenerOri[0] = mycam->forward.x;
+		listenerOri[1] = mycam->forward.y;
+		listenerOri[2] = mycam->forward.z;
+		
+		listenerOri[3] = mycam->up.x;
+		listenerOri[4] = mycam->up.y;
+		listenerOri[5] = mycam->up.z;
+		alListenerfv(AL_ORIENTATION, listenerOri);
+}
+//End GekAL.h
+
+#endif
