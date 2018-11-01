@@ -77,7 +77,7 @@ class Texture
 		}
 		void Bind(unsigned int unit);
 		void BindGeneric();
-		void reInitFromDataPointer(bool respecify_wrap_and_filt){
+		void reInitFromDataPointer(bool respecify_wrap_and_filt, bool isSameSize = false){
 			if(!isnull)
 			{
 				//glActiveTexture(GL_TEXTURE0);
@@ -93,7 +93,10 @@ class Texture
 					glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, minfilt);
 					glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, maxfilt);
 				}
-				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, myWidth, myHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, Permanent_Data_Pointer);
+				if(isSameSize && !respecify_wrap_and_filt)
+					glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, myWidth, myHeight, GL_RGBA, GL_UNSIGNED_BYTE, Permanent_Data_Pointer);
+				else
+					glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, myWidth, myHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, Permanent_Data_Pointer);
 				if (respecify_wrap_and_filt)
 				{
 					if (

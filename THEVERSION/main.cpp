@@ -526,10 +526,6 @@ void LoadResources()
 	FBOArray.push_back(new FBO(640,480, 1, GL_RGBA32F)); //2, the FBO for rendering Shadowmaps
 	theScene->registerCustomFBO(FBOArray[0]); //I was planning to use this to do reflections in the future, so I added a custom FBO registration feature.
 	
-	//myFont = new Font("GeklminRender_Font3/");
-	//myFont->registerFontToScene(theScene);
-	//myFont->pushTextureToAllMeshes(FileResourceManager->loadTexture("clouds.jpg",false));
-	
 	
 	std::string cubemapfilenames[6] = {
 			"Cubemap/Skybox_Water10_128_right.jpg", //right
@@ -540,14 +536,6 @@ void LoadResources()
 			"Cubemap/Skybox_Water10_128_front.jpg" //front
 	};
 	SkyboxTex = new CubeMap(cubemapfilenames[0],cubemapfilenames[1],cubemapfilenames[2],cubemapfilenames[3],cubemapfilenames[4],cubemapfilenames[5]);
-	
-	
-	
-	//Phong_Material Material_for_letters = Phong_Material();
-	//Material_for_letters.diffusivity = 0.5;
-	//Material_for_letters.specreflectivity = 0.5;
-	//Material_for_letters.specdamp = 70; //Fairly shiny looking
-	//myFont->pushMaterialPropertiesToAllLetters(Material_for_letters, true, false);
 	
 	
 	
@@ -616,39 +604,8 @@ void LoadResources()
 	theScene->customMainShaderBinds = &MainshaderUniformFunctionDemo;
 	theScene->customRenderingAfterSkyboxBeforeMainShader = &CustomRenderingFunction; //Draw to your heart's content!
 	
+	//See GekAL.h for how this is done
 	audiobuffer1 = loadWAVintoALBuffer("SOUNDS/TONE.WAV");
-	
-	//~ //OpenAL Loading
-	//~ int channel,sampleRate,bps,size;
-	//~ ALuint format = 0;
-	//~ alGenBuffers(1, &audiobuffer1);
-	//~ //Loading TONE.WAV
-	//~ char* TONE_WAV_DATA = nullptr; 
-	//~ TONE_WAV_DATA = loadWAV("SOUNDS/TONE.WAV",channel ,sampleRate, bps, size);
-	//~ if(channel==1)
-	//~ {
-		//~ if(bps==8)
-		//~ {
-			//~ format=AL_FORMAT_MONO8;
-			//~ std::cout << "\nMONO8 FORMAT";
-		//~ }else{
-			//~ format=AL_FORMAT_MONO16;
-			//~ std::cout << "\nMONO16 FORMAT";
-		//~ }
-	//~ }else{
-		//~ if(bps==8)
-		//~ {
-			//~ format=AL_FORMAT_STEREO8;
-			//~ std::cout << "\nSTEREO8 FORMAT";
-		//~ }else{
-			//~ format=AL_FORMAT_STEREO16;
-			//~ std::cout << "\nSTEREO16 FORMAT";
-		//~ }	
-	//~ }
-	//~ alBufferData(audiobuffer1, format, TONE_WAV_DATA, size, sampleRate);
-	
-	//~ if (TONE_WAV_DATA) //Gotta free what we malloc
-		//~ free(TONE_WAV_DATA);
 }
 
 
