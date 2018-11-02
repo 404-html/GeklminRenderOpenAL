@@ -1,10 +1,10 @@
-THIS IS A CLONE OF THE GEKLMINRENDER REPO FOR TESTING OPENAL
+Welcome to the GeklminRender OpenAL Repo! This will (probably) be where all continued development will occur.
 
+This is licensed under the MiT license.
 
+You have everything you need to make games and demos.
 
-THIS REPO REQUIRES OPENAL AND THE -DEV VARIANT BE INSTALLED
-
-LINUX IS THE PRIMARY DEVELOPMENT ENVIRONMENT AND AS SUCH WINDOWS BINARIES WILL BE SLOW TO COME OUT
+Changes to GeklminRender will now go here.
 
 # GeklminRender Original Readme
 # GeklminRender and GkScene
