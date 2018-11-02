@@ -69,8 +69,8 @@ GeklminRender::Mesh* DeleteMeshTest = nullptr;
 
 
 //OpenAL Variables
-ALCdevice *OpenALDevice = 0;
-ALCcontext *OpenALContext = 0;
+//~ ALCdevice *OpenALDevice = 0;
+//~ ALCcontext *OpenALContext = 0;
 //~ ALfloat listenerOri[] = { 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f };
 //For the actual audio we're going to play
 ALuint audiosource1 = 0;
@@ -495,17 +495,18 @@ void init()
 	theScene = new GkScene(WIDTH, HEIGHT, 1);
 	
 	//OpenAL Stuff
-	OpenALDevice = alcOpenDevice(NULL);
-	if (OpenALDevice)
-	{
-		std::cout << "\nUsing Device: " << alcGetString(OpenALDevice, ALC_DEVICE_SPECIFIER) << "\n";
-		OpenALContext = alcCreateContext(OpenALDevice, 0);
-		if(alcMakeContextCurrent(OpenALContext))
-		{
-			std::cout<<"\nSuccessfully Made Context!!!";
-		}
-	}
-	alGetError();
+	//~ OpenALDevice = alcOpenDevice(NULL);
+	//~ if (OpenALDevice)
+	//~ {
+		//~ std::cout << "\nUsing Device: " << alcGetString(OpenALDevice, ALC_DEVICE_SPECIFIER) << "\n";
+		//~ OpenALContext = alcCreateContext(OpenALDevice, 0);
+		//~ if(alcMakeContextCurrent(OpenALContext))
+		//~ {
+			//~ std::cout<<"\nSuccessfully Made Context!!!";
+		//~ }
+	//~ }
+	//~ alGetError();
+	myDevice->fastInitOpenAL();
 }
 
 //Load the resources from file for the demo.
@@ -605,7 +606,8 @@ void LoadResources()
 	theScene->customRenderingAfterSkyboxBeforeMainShader = &CustomRenderingFunction; //Draw to your heart's content!
 	
 	//See GekAL.h for how this is done
-	audiobuffer1 = loadWAVintoALBuffer("SOUNDS/TONE.WAV");
+	//~ audiobuffer1 = loadWAVintoALBuffer("SOUNDS/TONE.WAV");
+	audiobuffer1 = FileResourceManager->loadSound("SOUNDS/TONE.WAV");
 }
 
 
@@ -889,8 +891,8 @@ int main()
 				delete FBOArray[i];
 		}
 	}
-	if(OpenALDevice)
-		alcCloseDevice(OpenALDevice);
+	//~ if(OpenALDevice)
+		//~ alcCloseDevice(OpenALDevice);
 	std::cout<<"\n\n DELETED THE FBOS";
 	myDevice->removeWindow(0);
 	std::cout << "\n DELETED THE WINDOW";

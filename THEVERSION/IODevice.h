@@ -5,6 +5,8 @@
 #include <GL3/gl3.h>
 #include <GL3/gl3w.h>
 #include <GLFW/glfw3.h>
+#include <AL/al.h>
+#include <AL/alc.h>
 #include <string>
 namespace GeklminRender {
 class IODevice //This class exists so that my engine will support fancy window shit, like drawing all the different stages of rendering to different windows. Will help a lot with shader development.
@@ -15,7 +17,9 @@ class IODevice //This class exists so that my engine will support fancy window s
 		};
 		~IODevice()
 		{
-		   for (int i = 0; i<ourWindows.size(); i++)
+			if(OpenALDevice)
+				alcCloseDevice(OpenALDevice);
+			for (int i = 0; i<ourWindows.size(); i++)
 		   {
 			   removeWindow(i);
 		   }
@@ -204,6 +208,23 @@ class IODevice //This class exists so that my engine will support fancy window s
 			if (ourWindows.size() > window)
 				glfwSetWindowIcon(ourWindows[window], count, images);
 			//glfwSetWindowTitle(ourWindows[window], title);
+		}
+		ALCdevice *OpenALDevice = 0;
+		ALCcontext *OpenALContext = 0;
+		void fastInitOpenAL(){
+			if (OpenALDevice)
+				{alcCloseDevice(OpenALDevice);OpenALDevice = 0;}
+			OpenALDevice = alcOpenDevice(NULL);
+			if (OpenALDevice)
+			{
+				std::cout << "\nUsing Device: " << alcGetString(OpenALDevice, ALC_DEVICE_SPECIFIER) << "\n";
+				OpenALContext = alcCreateContext(OpenALDevice, 0);
+				if(alcMakeContextCurrent(OpenALContext))
+				{
+					std::cout<<"\nSuccessfully Made Context!!!";
+				}
+			}
+			alGetError();
 		}
     protected:
 

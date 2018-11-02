@@ -4,10 +4,14 @@
 #include "texture.h"
 #include "SafeTexture.h"
 #include "obj_loader.h"
+//~ #include "GekAL.h"
+#include <AL/al.h>
+#include <AL/alc.h>
 #include <iostream>
 #include <cstdlib>
 #include <algorithm>
 #include <string>
+#include <map>
 
 //THIS FILE ONLY INCLUDED FOR THIS DEMO, YOU CAN REMOVE IT IN YOUR OWN PROGRAMS AND IN FACT THIS METHOD OF LOADING FILES IS ONLY PARTIALLY DEVELOPED SO IT IS RECOMMENDED YOU MANAGE RESOURCES ON YOUR OWN.
 
@@ -87,11 +91,14 @@ class Resource_Manager
 			SafeTexture temp = SafeTexture(loadedTextures[loadedTextures.size()-1]); //No longer a memory leak thanks to doctor memory!
 			return temp;
 		}
+		
+		ALuint loadSound(const std::string& fileName);
 
     protected:
 	
     private:
 	std::vector<Mesh*> loadedMeshes; //SUSPECT FOR MEMORY LEAK!
+	std::map<std::string,ALuint> loadedSoundBuffers;
 	std::vector<IndexedModel> Models_from_file; //SUSPECT FOR MEMORY LEAK!
 	std::vector<Texture*> loadedTextures; //SUSPECT FOR MEMORY LEAK!
 };
