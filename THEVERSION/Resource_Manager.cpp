@@ -9,6 +9,7 @@ ALuint Resource_Manager::loadSound(const std::string& fileName){
 			}
 			else 
 			{
+				std::cout << "\nHAD TO LOAD " << fileName;
 				loadedSoundBuffers[fileName] = loadWAVintoALBuffer(fileName.c_str());
 				return loadedSoundBuffers[fileName];
 			}

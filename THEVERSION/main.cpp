@@ -607,6 +607,8 @@ void LoadResources()
 	
 	//See GekAL.h for how this is done
 	//~ audiobuffer1 = loadWAVintoALBuffer("SOUNDS/TONE.WAV");
+	//Can we cache a sound?
+	FileResourceManager->loadSound("SOUNDS/TONE.WAV");
 	audiobuffer1 = FileResourceManager->loadSound("SOUNDS/TONE.WAV");
 }
 

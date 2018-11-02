@@ -217,11 +217,12 @@ class IODevice //This class exists so that my engine will support fancy window s
 			OpenALDevice = alcOpenDevice(NULL);
 			if (OpenALDevice)
 			{
-				std::cout << "\nUsing Device: " << alcGetString(OpenALDevice, ALC_DEVICE_SPECIFIER) << "\n";
+				//Enable these printouts for debugging
+				//std::cout << "\nUsing Device: " << alcGetString(OpenALDevice, ALC_DEVICE_SPECIFIER) << "\n";
 				OpenALContext = alcCreateContext(OpenALDevice, 0);
 				if(alcMakeContextCurrent(OpenALContext))
 				{
-					std::cout<<"\nSuccessfully Made Context!!!";
+					//std::cout<<"\nSuccessfully Made Context!!!";
 				}
 			}
 			alGetError();

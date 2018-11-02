@@ -114,4 +114,7 @@ void syncCameraStateToALListener(GeklminRender::Camera* mycam){
 }
 //End GekAL.h
 
+//OpenAL reference link
+//https://www.openal.org/documentation/openal-1.1-specification.pdf
+
 #endif
