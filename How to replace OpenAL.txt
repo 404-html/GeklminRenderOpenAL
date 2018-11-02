@@ -1,0 +1,13 @@
+You need to replace the OpenAL SO file with your own version. 
+I believe it's called libal.so
+
+It needs a complete function name table and identical functionality
+to OpenAL
+
+you can use SO inspector program to look at the function headers in the
+.SO file and figure out what functions you therefore need to replicate.
+
+Documentation of OpenAL's functionality (so you can reproduce it with
+your own code) is available on their website:
+
+https://www.openal.org/documentation/
