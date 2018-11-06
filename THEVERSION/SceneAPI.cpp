@@ -10,7 +10,10 @@ void GkScene::drawPipeline(int meshmask, FBO* CurrentRenderTarget, FBO* RenderTa
 	GLenum communism;
 	//Dont render to target unless we have both FBOs
 	if ((CurrentRenderTarget != nullptr && RenderTarget_Transparent == nullptr) || (CurrentRenderTarget == nullptr && RenderTarget_Transparent != nullptr))
-		return;
+		{
+			std::cout<<"\nYou got kicked out boi 1";
+			return;
+		}
 	if (nextRenderPipelineCallWillBeAfterVsync) //Reset everything if this render call was immediately after the vsync
 	{
 		// for (int iter = 0; iter < RendertargetCameras.size(); iter++)
@@ -44,6 +47,7 @@ void GkScene::drawPipeline(int meshmask, FBO* CurrentRenderTarget, FBO* RenderTa
 	
 	
 	if (!SceneCamera || !MainShader || !MainShaderUniforms || !ShowTextureShader /*|| !CompositionShader*/){ //if one is not present
+		std::cout<<"\nYou got kicked out boi 3";
 		return; //gtfo
 	}
 	
@@ -87,8 +91,8 @@ void GkScene::drawPipeline(int meshmask, FBO* CurrentRenderTarget, FBO* RenderTa
 		//CurrentRenderTarget->BindRenderTarget();
 	}
 	MainFBO->BindRenderTarget();
-	FBO::clearTexture(0.0,0.0,0.0,0.0);
-	
+	FBO::clearTexture(backgroundColor.x,backgroundColor.y,backgroundColor.z,backgroundColor.w);
+	//std::cout<<"\nShould be clearing the screen";
 	/*
 	
 	Skybox Render

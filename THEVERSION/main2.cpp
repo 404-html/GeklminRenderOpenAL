@@ -68,6 +68,7 @@ void window_size_callback(GLFWwindow* window, int width, int height)
 	HEIGHT = height;
 	if (SceneRenderCamera != nullptr)
 		SceneRenderCamera->buildPerspective(70, ((float)WIDTH)/((float)HEIGHT), 1, 1000);
+	std::cout<<"\nNEW SIZE: "<< WIDTH <<" x "<<HEIGHT;
 }
 
 
@@ -77,7 +78,7 @@ void init()
 	using namespace GeklminRender;
 	//Creates the GLFW context. This pretty much has to be the first code we run
 	myDevice->initGLFW();
-	myDevice->pushWindowCreationHint(GLFW_RESIZABLE, GLFW_FALSE);
+	myDevice->pushWindowCreationHint(GLFW_RESIZABLE, GLFW_TRUE);
 	//Set Version to OpenGL 3.3
 	myDevice->pushWindowCreationHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	myDevice->pushWindowCreationHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -92,6 +93,7 @@ void init()
 
 	glEnable(GL_CULL_FACE); //Enable culling faces
 	glEnable(GL_DEPTH_TEST); //test fragment depth when rendering
+	glDepthMask(GL_TRUE);
 	glCullFace(GL_BACK); //cull faces with clockwise winding
 		
 		//Standard error check code
@@ -162,6 +164,7 @@ void initGame(){
 								1000.0f,                     //Zfar
 								glm::vec3(0.0f, 0.0f, 1.0f), //forward
 								glm::vec3(0.0f, 1.0f, 0.0f));//Up
+	theScene->setSceneCamera(SceneRenderCamera);
 	//Load lights and register them
 	theScene->registerPointLight(&thePoint);
 	theScene->RegisterDirLight(&theSun);
@@ -176,7 +179,7 @@ void everyFrame(){
 }
 
 void Draw(){
-	theScene->drawPipeline(1, nullptr, nullptr, nullptr, false, glm::vec4(0,0,0,0), glm::vec2(800,1000));
+	theScene->drawPipeline(1, nullptr, nullptr, nullptr, false, glm::vec4(0,0,0.1,0), glm::vec2(800,1000));
 	myDevice->pollevents();
 	myDevice->swapBuffers(0);
 }
@@ -221,6 +224,7 @@ int main(){
 		everyFrame();
 		Draw();
 	}
+	
 	cleanUp();
 	return 0;
 }
