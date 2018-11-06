@@ -608,8 +608,8 @@ void LoadResources()
 	//See GekAL.h for how this is done
 	//~ audiobuffer1 = loadWAVintoALBuffer("SOUNDS/TONE.WAV");
 	//Can we cache a sound?
-	FileResourceManager->loadSound("SOUNDS/TONE.WAV");
-	audiobuffer1 = FileResourceManager->loadSound("SOUNDS/TONE.WAV");
+	//FileResourceManager->loadSound("SOUNDS/SURFING.WAV");
+	audiobuffer1 = FileResourceManager->loadSound("SOUNDS/SURFING.WAV");
 }
 
 
@@ -724,7 +724,7 @@ void initObjects()
 		
 		//OpenAL Source Generation
 		alGenSources(1,&audiosource1);
-		alSourcef(audiosource1, AL_GAIN, 1);
+		alSourcef(audiosource1, AL_GAIN, 10);
 		alSourcef(audiosource1, AL_PITCH, 1);
 		//Params
 		alSource3f(audiosource1, AL_POSITION, 0, 0, 0);

@@ -7,6 +7,34 @@
 #include <AL/al.h>
 #include <AL/alc.h>
 
+std::string ErrorCheck(ALenum error)
+{
+    if(error == AL_INVALID_NAME)
+    {
+        return "\nInvalid name";
+    }
+    else if(error == AL_INVALID_ENUM)
+    {
+        return "\nInvalid enum ";
+    }
+    else if(error == AL_INVALID_VALUE)
+    {
+        return "\nInvalid value ";
+    }
+    else if(error == AL_INVALID_OPERATION)
+    {
+        return "\nInvalid operation ";
+    }
+    else if(error == AL_OUT_OF_MEMORY)
+    {
+        return "\nOut of memory like! ";
+    }
+
+    return "\nDon't know ";
+
+
+}
+
 
 //START GekAL.h
 bool isBigEndian()
@@ -31,6 +59,7 @@ int convertToInt(char* buffer,int len)
 char* loadWAV(const char* fn,int& chan,int& samplerate,int& bps,int& size)
 {
 	char buffer[4];
+	int incrementer = 0; //for the crawler
 	std::ifstream in(fn,std::ios::binary);
 	in.read(buffer,4);
 	if(strncmp(buffer,"RIFF",4)!=0)
@@ -52,11 +81,78 @@ char* loadWAV(const char* fn,int& chan,int& samplerate,int& bps,int& size)
 	in.read(buffer,2);
 	bps=convertToInt(buffer,2);
 	in.read(buffer,4);	//data
-	in.read(buffer,4);
-	size=convertToInt(buffer,4);
-	char* data=new char[size];
-	in.read(data,size);
-	return data;	
+	if(strncmp(buffer, "data", 4)==0)
+	{
+		in.read(buffer,4);
+		size=convertToInt(buffer,4);
+		char* data=new char[size];
+		in.read(data,size);
+		std::cout << "\n USING DEFAULT LOADING METHOD";
+		return data;	
+	} else {
+		char crawler = 'F';
+		bool foundD = false;
+		bool foundDA = false;
+		bool foundDAT = false;
+		bool foundDATA = false;
+		//crawl to the data
+		while(!foundDATA && incrementer < 300){
+			in.read(&crawler,1);
+			if(foundDAT && crawler == 'a')
+			{
+				foundDATA=true;
+				foundDAT = false;
+				foundDA = false;
+				foundD = false;
+			} else if (foundDAT) {
+				foundDATA = false;
+				foundDAT = false;
+				foundDA = false;
+				foundD = false;
+			}
+			
+			if(foundDA && crawler == 't')
+			{
+				foundDAT = true;
+				foundDA = false;
+				foundD = false;
+			} else if (foundDA) {
+				foundDATA = false;
+				foundDAT = false;
+				foundDA = false;
+				foundD = false;
+			}
+			
+			if(foundD && crawler == 'a')
+			{
+				foundDA = true;
+				foundD = false;
+			} else if (foundD) {
+				foundDATA = false;
+				foundDAT = false;
+				foundDA = false;
+				foundD = false;
+			}
+			if(crawler == 'd')
+			{
+				foundD = true;
+			}
+			incrementer++;
+		}
+		if(foundDATA)
+		{
+			std::cout << "\nFOUND DATA!!!";
+			in.read(buffer,4);
+			size=convertToInt(buffer,4);
+			std::cout << "\nSize is " << size;
+			char* data = new char[size];
+			in.read(data,size);
+			return data;
+		} else {
+			std::cout << "\nUH OH!";
+			return nullptr;
+		}
+	}
 }
 
 ALuint loadWAVintoALBuffer(const char* fn)
@@ -70,6 +166,7 @@ ALuint loadWAVintoALBuffer(const char* fn)
 	//Loading TONE.WAV
 	char* TONE_WAV_DATA = nullptr; 
 	TONE_WAV_DATA = loadWAV(fn,channel ,sampleRate, bps, size);
+	//std::cout << "\nSAMPLE RATE: " << sampleRate;
 	if(channel==1)
 	{
 		if(bps==8)
@@ -94,7 +191,7 @@ ALuint loadWAVintoALBuffer(const char* fn)
 	
 	if (TONE_WAV_DATA) //Gotta free what we malloc
 		free(TONE_WAV_DATA);
-	
+	//std::cout << ErrorCheck(alGetError());
 	return return_val;
 }
 
