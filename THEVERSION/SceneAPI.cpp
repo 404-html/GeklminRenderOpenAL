@@ -43,7 +43,7 @@ void GkScene::drawPipeline(int meshmask, FBO* CurrentRenderTarget, FBO* RenderTa
 	
 	
 	
-	if (!SceneCamera || !MainShader || !MainShaderUniforms || !ShowTextureShader || !CompositionShader){ //if one is not good
+	if (!SceneCamera || !MainShader || !MainShaderUniforms || !ShowTextureShader /*|| !CompositionShader*/){ //if one is not present
 		return; //gtfo
 	}
 	
@@ -592,108 +592,112 @@ void GkScene::drawPipeline(int meshmask, FBO* CurrentRenderTarget, FBO* RenderTa
 				}
 	//Prep for rendering Transparent Objects
 		
-		glDepthMask(GL_FALSE); // Transparent objects aren't depth tested against each other but are against opaque objects in the scene.
-		glDisable(GL_CULL_FACE); 
-		// glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-		//Swap these two lines along with vec3(0) and vec3(1) in FORWARD_MAINSHADER.FS to achieve either multiplicative or additive transparency. Both are wrong, but you might prefer one over another.
-		if(TransparencyFBO != nullptr) // JUST TO MAKE SURE...
-			TransparencyFBO->BindRenderTarget();
-			//CLEAR IT BEFORE WE SET THE BLEND FUNCTIONS
-			/*
-				DrawBuffers[i] = GL_COLOR_ATTACHMENT0 + i;
-			}
-			glDrawBuffers(numcolorattachments, DrawBuffers);
-			*/
-			static GLenum DrawBuffers0[1] = {GL_COLOR_ATTACHMENT0};
-			static GLenum DrawBuffers1[1] = {GL_COLOR_ATTACHMENT1};
-			//GLenum DrawBuffers2[2] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
-			glDrawBuffers(1, DrawBuffers0);
-			FBO::clearTexture(0, 0, 0, 0);
-			glDrawBuffers(1, DrawBuffers1);
-			FBO::clearTexture(1, 1, 1, 1);
-			TransparencyFBO->BindDrawBuffers(); //Do the right thing!
-		// communism = glGetError(); //Ensure there are no errors listed before we start.
-		
-		glEnable(GL_BLEND);
-		glBlendFunci(0, GL_ONE, GL_ONE); //Additive blending
-		glBlendFunci(1, GL_ZERO, GL_ONE_MINUS_SRC_ALPHA); //Uh... I don't know
-		
-		// communism = glGetError(); //Ensure there are no errors listed before we start.
-		// if (communism != GL_NO_ERROR) //if communism has made an error (which is pretty typical)
-		// {
-			// std::cout<<"\n OpenGL reports an ERROR!";
-			// if (communism == GL_INVALID_ENUM)
-				// std::cout<<"\n Invalid enum.";
-			// if (communism == GL_INVALID_OPERATION)
-				// std::cout<<"\n Invalid operation.";
-			// if (communism == GL_INVALID_FRAMEBUFFER_OPERATION)
-				// std::cout <<"\n Invalid Framebuffer Operation.";
-			// if (communism == GL_OUT_OF_MEMORY)
-			// {
-				// std::cout <<"\n Out of memory. You've really done it now. I'm so angry, i'm going to close the program. ARE YOU HAPPY NOW, DAVE?!?!";
-				// std::abort();
-			// }
-		// }
-		// glBlendFunc(GL_ZERO, GL_SRC_COLOR); //Multiplicative Blending
-	//Render Transparent Objects
-		if (Meshes.size() > 0) //if there are any
-			for (size_t i = 0; i < Meshes.size(); i++) //for all of them
-				if (Meshes[i]) //don't call methods on nullptrs
-				{
-					unsigned int flagerinos = Meshes[i]->getFlags(); //Set flags
-					glUniform1ui(MainShaderUniforms[MAINSHADER_RENDERFLAGS], flagerinos); //Set flags on GPU
-					Meshes[i]->DrawInstancesPhong(
-						MainShaderUniforms[MAINSHADER_MODEL2WORLD], 		//Model->World transformation matrix
-						MainShaderUniforms[MAINSHADER_RENDERFLAGS],
-						MainShaderUniforms[MAINSHADER_SPECREFLECTIVITY], 	//Specular reflective material component
-						MainShaderUniforms[MAINSHADER_SPECDAMP], 		//Specular dampening material component
-						MainShaderUniforms[MAINSHADER_DIFFUSIVITY],   //Diffusivity. Reaction to diffuse light.
-						MainShaderUniforms[MAINSHADER_EMISSIVITY],
-						MainShaderUniforms[MAINSHADER_ENABLE_CUBEMAP_REFLECTIONS],
-						MainShaderUniforms[MAINSHADER_ENABLE_CUBEMAP_DIFFUSION],
-						MainShaderUniforms[MAINSHADER_ENABLE_TRANSPARENCY],
-						MainShaderUniforms[MAINSHADER_IS_INSTANCED],
-						true,		//Transparent.
-						(CurrentRenderTarget != nullptr)?true:false,		//is it to render target?
-						meshmask
-					);
-				}
-	glDisableVertexAttribArray(0); //Position. NOTE: don't disable if we want to do screenquads later.
-	glDisableVertexAttribArray(1); //Texture
-	glDisableVertexAttribArray(2); //Normal
-	glDisableVertexAttribArray(3); //Color
-	// This is the part where we composite to the screen with the compositionshader
-	//INTEL GPU FIX
-	if(doFrameBufferChecks)
-		while(true)
-		{
-			if (glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE)
-				break;
-		}
-	CompositionShader->Bind();
-	if (HasntRunYet_CompositionShader)
+	//IF TEST FOR IF WE HAVE THE COMPOSITION SHADER (DON'T ATTEMPT TO DO TRANSPARENCY UNLESS WE HAVE IT)
+	if (CompositionShader)
 	{
-		/*
-		enum{
-				OIT_COMP_1,
-				OIT_COMP_2,
-				OIT_NUM_OIT_COMP_UNIFORMS
-			};
-			GLuint CompositionShaderUniforms[OIT_NUM_OIT_COMP_UNIFORMS];
-		*/
-		CompositionShaderUniforms[OIT_COMP_1] = CompositionShader->GetUniformLocation("diffuse");
-		CompositionShaderUniforms[OIT_COMP_2] = CompositionShader->GetUniformLocation("diffuse2");
-		HasntRunYet_CompositionShader = false;
+		
+			glDepthMask(GL_FALSE); // Transparent objects aren't depth tested against each other but are against opaque objects in the scene.
+			glDisable(GL_CULL_FACE); 
+			// glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+			//Swap these two lines along with vec3(0) and vec3(1) in FORWARD_MAINSHADER.FS to achieve either multiplicative or additive transparency. Both are wrong, but you might prefer one over another.
+			if(TransparencyFBO != nullptr) // JUST TO MAKE SURE...
+				TransparencyFBO->BindRenderTarget();
+				//CLEAR IT BEFORE WE SET THE BLEND FUNCTIONS
+				/*
+					DrawBuffers[i] = GL_COLOR_ATTACHMENT0 + i;
+				}
+				glDrawBuffers(numcolorattachments, DrawBuffers);
+				*/
+				static GLenum DrawBuffers0[1] = {GL_COLOR_ATTACHMENT0};
+				static GLenum DrawBuffers1[1] = {GL_COLOR_ATTACHMENT1};
+				//GLenum DrawBuffers2[2] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
+				glDrawBuffers(1, DrawBuffers0);
+				FBO::clearTexture(0, 0, 0, 0);
+				glDrawBuffers(1, DrawBuffers1);
+				FBO::clearTexture(1, 1, 1, 1);
+				TransparencyFBO->BindDrawBuffers(); //Do the right thing!
+			// communism = glGetError(); //Ensure there are no errors listed before we start.
+			
+			glEnable(GL_BLEND);
+			glBlendFunci(0, GL_ONE, GL_ONE); //Additive blending
+			glBlendFunci(1, GL_ZERO, GL_ONE_MINUS_SRC_ALPHA); //Uh... I don't know
+			
+			// communism = glGetError(); //Ensure there are no errors listed before we start.
+			// if (communism != GL_NO_ERROR) //if communism has made an error (which is pretty typical)
+			// {
+				// std::cout<<"\n OpenGL reports an ERROR!";
+				// if (communism == GL_INVALID_ENUM)
+					// std::cout<<"\n Invalid enum.";
+				// if (communism == GL_INVALID_OPERATION)
+					// std::cout<<"\n Invalid operation.";
+				// if (communism == GL_INVALID_FRAMEBUFFER_OPERATION)
+					// std::cout <<"\n Invalid Framebuffer Operation.";
+				// if (communism == GL_OUT_OF_MEMORY)
+				// {
+					// std::cout <<"\n Out of memory. You've really done it now. I'm so angry, i'm going to close the program. ARE YOU HAPPY NOW, DAVE?!?!";
+					// std::abort();
+				// }
+			// }
+			// glBlendFunc(GL_ZERO, GL_SRC_COLOR); //Multiplicative Blending
+		//Render Transparent Objects
+			if (Meshes.size() > 0) //if there are any
+				for (size_t i = 0; i < Meshes.size(); i++) //for all of them
+					if (Meshes[i]) //don't call methods on nullptrs
+					{
+						unsigned int flagerinos = Meshes[i]->getFlags(); //Set flags
+						glUniform1ui(MainShaderUniforms[MAINSHADER_RENDERFLAGS], flagerinos); //Set flags on GPU
+						Meshes[i]->DrawInstancesPhong(
+							MainShaderUniforms[MAINSHADER_MODEL2WORLD], 		//Model->World transformation matrix
+							MainShaderUniforms[MAINSHADER_RENDERFLAGS],
+							MainShaderUniforms[MAINSHADER_SPECREFLECTIVITY], 	//Specular reflective material component
+							MainShaderUniforms[MAINSHADER_SPECDAMP], 		//Specular dampening material component
+							MainShaderUniforms[MAINSHADER_DIFFUSIVITY],   //Diffusivity. Reaction to diffuse light.
+							MainShaderUniforms[MAINSHADER_EMISSIVITY],
+							MainShaderUniforms[MAINSHADER_ENABLE_CUBEMAP_REFLECTIONS],
+							MainShaderUniforms[MAINSHADER_ENABLE_CUBEMAP_DIFFUSION],
+							MainShaderUniforms[MAINSHADER_ENABLE_TRANSPARENCY],
+							MainShaderUniforms[MAINSHADER_IS_INSTANCED],
+							true,		//Transparent.
+							(CurrentRenderTarget != nullptr)?true:false,		//is it to render target?
+							meshmask
+						);
+					}
+		glDisableVertexAttribArray(0); //Position. NOTE: don't disable if we want to do screenquads later.
+		glDisableVertexAttribArray(1); //Texture
+		glDisableVertexAttribArray(2); //Normal
+		glDisableVertexAttribArray(3); //Color
+		// This is the part where we composite to the screen with the compositionshader
+		//INTEL GPU FIX
+		if(doFrameBufferChecks)
+			while(true)
+			{
+				if (glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE)
+					break;
+			}
+		CompositionShader->Bind();
+		if (HasntRunYet_CompositionShader)
+		{
+			/*
+			enum{
+					OIT_COMP_1,
+					OIT_COMP_2,
+					OIT_NUM_OIT_COMP_UNIFORMS
+				};
+				GLuint CompositionShaderUniforms[OIT_NUM_OIT_COMP_UNIFORMS];
+			*/
+			CompositionShaderUniforms[OIT_COMP_1] = CompositionShader->GetUniformLocation("diffuse");
+			CompositionShaderUniforms[OIT_COMP_2] = CompositionShader->GetUniformLocation("diffuse2");
+			HasntRunYet_CompositionShader = false;
+		}
+		glUniform1i(CompositionShaderUniforms[OIT_COMP_1], 0);
+		glUniform1i(CompositionShaderUniforms[OIT_COMP_2], 1);
+		MainFBO->BindRenderTarget();
+		TransparencyFBO->BindasTexture(0,0);
+		TransparencyFBO->BindasTexture(1,1);
+		glBlendFunc(GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA);
+		ScreenquadtoFBO(CompositionShader);
+	
 	}
-	glUniform1i(CompositionShaderUniforms[OIT_COMP_1], 0);
-	glUniform1i(CompositionShaderUniforms[OIT_COMP_2], 1);
-	MainFBO->BindRenderTarget();
-	TransparencyFBO->BindasTexture(0,0);
-	TransparencyFBO->BindasTexture(1,1);
-	glBlendFunc(GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA);
-	ScreenquadtoFBO(CompositionShader);
-	
-	
 	if (CurrentRenderTarget == nullptr) //This part is just for displaying the FBO to the screen... Not used for the FBO stuff.
 	{
 		glDisable(GL_BLEND);
