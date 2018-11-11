@@ -82,7 +82,7 @@ Linux 64 bit:
 * GLM (Header-only library, grab from glm website, or from dependencies folder in repo)
 * OpenAL
 3) Copy the GL3 folder from Dependencies into your include directory
-4) Run Compiler_Call.sh
+4) Run Compiler_Call.sh as root (inside the directory you cloned the repo into... it has to be root to copy a .so file to /usr/lib
 5) Run the demo
 6) Get programming!!!
 
@@ -90,12 +90,12 @@ Linux 64 bit:
 ## Can this be compiled on linux?
 
 YES!
-It has been tested working on linux (100%) on the date of the last commit and appears to be run at approximately the same speed as on windows.
+It has been tested working on linux (100%) on 10/12/2018 and appears to be run at approximately the same speed as on windows.
 
 This repo is now being developed mostly on linux, so if it doesn't work on your distro, call me
 
 ## Why is this so shoddily shoved together? 
-It's improving every period of time
+It's improving every <period of time>
 
 Ask and you shall... probably... recieve
 
@@ -114,7 +114,7 @@ See Licensing.txt
 
 ## What are the features?
 * some of the fastest OpenGL rendering this side of Scandinavia
-* Optimized GLSL shaders for GKScene (But you can easily write your own) (NOTE: THE CAMERALIGHTS REALLY SLOW IT DOWN SO IF PERF IS IMPORTANT YOU CAN TRIPLE PERFORMANCE BY DISABLING THEM, CHECK FORWARD_MAINSHADER.FS AND COMMENT OUT THE LINES MARKED (if you're code saavy you can reduce the number of them as well to solve the problem You don't need to edit the C++ code))
+* Optimized GLSL shaders for GKScene (But you can easily write your own)
 * Few shader program binds per frame (Skybox (optional), Mainshader, WBOITCompositionShader, Showtex (literally just screenquads a texture))
 * Per-vertex color
 * OBJ Support
@@ -158,7 +158,7 @@ Other quirks not related to Vsync and data upload and CPU-GPU Sync Points:
 ## Why use this instead of a different renderer?
 This renderer is very fast and has a unique combination of features and performance.
 
-You cannot get the instancing performance of my engine from any of those big-name game engines. (NOTE: YOU CAN IMPROVE PERF EVEN MORE BY DISABLING CAMERA LIGHTS)
+You cannot get the instancing performance of my engine from any of those big-name game engines.
 
 Pros and Cons compared to those big-name engines' renderers:
 Pros:
