@@ -28,11 +28,8 @@ long_line_behaviour=1
 long_line_column=72
 
 [files]
-current_page=3
-FILE_NAME_0=2;C++;0;EUTF-8;1;1;0;%2Fhome%2Fgek%2FProgramming%2FGeklminRenderOpenAL%2FTHEVERSION%2Fmain.cpp;0;4
-FILE_NAME_1=117;C++;0;EUTF-8;1;1;0;%2Fhome%2Fgek%2FProgramming%2FGeklminRenderOpenAL%2FTHEVERSION%2Fmain2.cpp;0;4
-FILE_NAME_2=624;Sh;0;EUTF-8;1;1;0;%2Fhome%2Fgek%2FProgramming%2FGeklminRenderOpenAL%2FTHEVERSION%2FCompiler_Call.sh;0;4
-FILE_NAME_3=0;Sh;0;EUTF-8;1;1;0;%2Fhome%2Fgek%2FProgramming%2FGeklminRenderOpenAL%2FTHEVERSION%2FRun_Prog.sh;0;4
+current_page=0
+FILE_NAME_0=0;C++;0;EUTF-8;1;1;0;%2Fhome%2Fgek%2FProgramming%2FGeklminRenderOpenAL%2FTHEVERSION%2Fmain.cpp;0;4
 
 [VTE]
 last_dir=/home/gek
@@ -42,10 +39,10 @@ EX_00_LB=_Execute
 EX_00_CM="./%f"
 EX_00_WD=
 C++FT_00_LB=_Compile
-C++FT_00_CM=./Compiler_Call.sh
+C++FT_00_CM=uxterm ./Compiler_Call.sh
 C++FT_00_WD=
 C++FT_01_LB=_Build
-C++FT_01_CM=./Compiler_Call.sh
+C++FT_01_CM=uxterm ./Compiler_Call.sh
 C++FT_01_WD=
 filetypes=C++;
 
