@@ -6,7 +6,6 @@ You have everything you need to make games and demos.
 
 Changes to GeklminRender will now go here.
 
-# GeklminRender Original Readme
 # GeklminRender and GkScene
 
 This is the Official Repository for GeklminRender and the GkScene API.
@@ -37,21 +36,20 @@ GeklminRender is probably all you'll ever need for 99% of your 3d Rendering need
 
 For instance, GeklminRender's Shader class (Credit where credit is due- Thanks BennyBox) does not support Geometry Shaders, for instance, and adding that functionality is definitely possible, but the Mesh class having its draw function called while a geometry shader was active would have unknown effects. The library is written in such a way, however, that it would be trivial to add your own OpenGL code to operate alongside GeklminRender and GkScene, as long as you know the quirks of GeklminRender and GkScene or sufficiently avoid mucking with things that might cause, for instance, a CPU-GPU Sync point.
 
-There is a raytracing demo in the additional OpenGL demos... if you're interested. Check it out. it is the only secondary demo that comes with a compiled binary example
+There is a raytracing demo in the additional OpenGL demos... if you're interested. Check it out. it is the only "lesser" demo that comes with a compiled binary example
 
 ## How do I build it? There isn't a Makefile!
-See the "Compiler_Call.bat" file. If you run that in the context of that folder (on windows) then it will compile, but you have to change the -I bits, or remove them. It just points to your include folder, don't worry about it
+See "Compiler_Call.sh" and "Compiler_Call.bat" for linux and windows respectively.
 
-First you compile the O files, 
-Second,you delete Main.O, 
-Third, you link the DLL file, and 
-Fourth, you compile the EXE with main.cpp and the DLL as a dependency.
+You no longer have to run the SH script as root on linux to copy the SO file to /usr/lib/ since I figured out how to have it refer to a local SO file.
 
-That's how I compile and test the API
-
-For the demos, I just drag and drop the DLLs + h files into the demo's folder (same dir as main.cpp) and run an equivalent of the Step 4 which doesn't use appinfo.res
-On linux, I don't use appinfo at all, read Compiler_Call.sh (It doesn't actually execute for some reason, but you can copy-paste the commands into the terminal)
-
+IF YOU JUST DOWNLOADED THE REPO AND YOU DON'T KNOW WHAT TO DO:
+* You need to extract glm from the dependencies and copy it to /usr/include (so it looks like this: /usr/include/glm/mat4x4.hpp)
+* You need to hop into your package manager and install GLFW and the -dev variant (the headers will be in /usr/include/GLFW)
+* You need OpenGL if your distro didn't come with it for some reason. OpenGL 3.1 is required (We use VBOs it is the 21st century) (Instancing too)
+* You need to run Compiler_Call.sh in the THEVERSION folder to compile the project and the 2 main demos
+* You need to run Run_Prog.sh to run the main demo and Run_Prog2.sh to run the second main demo
+* You need to inspect the demos to learn how to use my library
 
 ## Why is everything in one folder?
 
@@ -82,6 +80,7 @@ Linux 64 bit:
 * GLFW
 * OpenGL
 * GLM (Header-only library, grab from glm website, or from dependencies folder in repo)
+* OpenAL
 3) Copy the GL3 folder from Dependencies into your include directory
 4) Run Compiler_Call.sh as root (inside the directory you cloned the repo into... it has to be root to copy a .so file to /usr/lib
 5) Run the demo
@@ -92,6 +91,8 @@ Linux 64 bit:
 
 YES!
 It has been tested working on linux (100%) on 10/12/2018 and appears to be run at approximately the same speed as on windows.
+
+This repo is now being developed mostly on linux, so if it doesn't work on your distro, call me
 
 ## Why is this so shoddily shoved together? 
 It's improving every <period of time>
