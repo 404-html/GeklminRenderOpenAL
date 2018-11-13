@@ -29,7 +29,7 @@ long_line_column=72
 
 [files]
 current_page=0
-FILE_NAME_0=0;C++;0;EUTF-8;1;1;0;%2Fhome%2Fgek%2FProgramming%2FGeklminRenderOpenAL%2FTHEVERSION%2Fmain.cpp;0;4
+FILE_NAME_0=4544;C++;0;EUTF-8;1;1;0;%2Fhome%2Fgek%2FProgramming%2FGeklminRenderOpenAL%2FTHEVERSION%2Fmain.cpp;0;4
 
 [VTE]
 last_dir=/home/gek
@@ -52,4 +52,4 @@ header_patterns=*.h;*.H;*.hpp;*.hxx;*.h++;*.hh;
 ignored_dirs_patterns=
 ignored_file_patterns=*.o;*.obj;*.a;*.lib;*.so;*.dll;*.lo;*.la;*.class;*.jar;*.pyc;*.mo;*.gmo;
 generate_tag_prefs=1
-external_dirs=/usr/include;
+external_dirs=
