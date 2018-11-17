@@ -609,7 +609,7 @@ void LoadResources()
 	//~ audiobuffer1 = loadWAVintoALBuffer("SOUNDS/TONE.WAV");
 	//Can we cache a sound?
 	//FileResourceManager->loadSound("SOUNDS/SURFING.WAV");
-	audiobuffer1 = FileResourceManager->loadSound("SOUNDS/SURFING.WAV");
+	audiobuffer1 = FileResourceManager->loadSound("SOUNDS/CAVES_OF_STEEL1.WAV");
 }
 
 
