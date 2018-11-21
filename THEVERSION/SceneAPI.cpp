@@ -291,7 +291,7 @@ void GkScene::drawPipeline(int meshmask, FBO* CurrentRenderTarget, FBO* RenderTa
 	}
 	//Custom Bindings
 	if (customMainShaderBinds != nullptr)
-		customMainShaderBinds(meshmask, CurrentRenderTarget, RenderTarget_Transparent, CurrentRenderCamera, doFrameBufferChecks, backgroundColor, fogRangeDescriptor);
+		customMainShaderBinds(meshmask, CurrentRenderTarget, RenderTarget_Transparent, CurrentRenderCamera, doFrameBufferChecks, backgroundColor, fogRangeDescriptor); //TODO: Why aren't we passing the shader?
 	
 	if (CurrentRenderCamera == nullptr)
 		glUniform3f(MainShaderUniforms[MAINSHADER_CAMERAPOS], SceneCamera->pos.x, SceneCamera->pos.y, SceneCamera->pos.z);
@@ -327,7 +327,7 @@ void GkScene::drawPipeline(int meshmask, FBO* CurrentRenderTarget, FBO* RenderTa
 	//Do this regardless of the presence of Skyboxcubemap
 	glUniform1i(MainShaderUniforms[MAINSHADER_WORLDAROUNDME], 1);//Cubemap unit 1 is reserved for the cubemap representing the world around the object, for reflections.
 	
-	
+	//TODO: Change camera reference for sorting lights to the current render target camera (if applicable)
 
 	if (CurrentRenderCamera == nullptr)
 		{glUniformMatrix4fv(MainShaderUniforms[MAINSHADER_WORLD2CAMERA], 1, GL_FALSE, &SceneRenderCameraMatrix[0][0]);}
@@ -670,7 +670,10 @@ void GkScene::drawPipeline(int meshmask, FBO* CurrentRenderTarget, FBO* RenderTa
 		glDisableVertexAttribArray(1); //Texture
 		glDisableVertexAttribArray(2); //Normal
 		glDisableVertexAttribArray(3); //Color
+		
 		// This is the part where we composite to the screen with the compositionshader
+		if (customRenderingAfterTransparentObjectRendering)
+			customRenderingAfterTransparentObjectRendering(meshmask, CurrentRenderTarget, RenderTarget_Transparent, CurrentRenderCamera, doFrameBufferChecks, backgroundColor, fogRangeDescriptor);
 		//INTEL GPU FIX
 		if(doFrameBufferChecks)
 			while(true)
