@@ -261,7 +261,7 @@ void GkScene::drawPipeline(int meshmask, FBO* CurrentRenderTarget, FBO* RenderTa
 			m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("amb_lightArray[" + std::to_string(i) + "].iswhitelist"));
 		}
 		
-		for (int i = 0; i < 10; i++) //Cameralights
+		for (int i = 0; i < 5; i++) //Cameralights
 		{
 			//access by taking i, multiplying by 3, adding 4 * maxpointlights + 2 * maxdirlights + 3 * maxambientlights, and adding an offset (0 for viewproj, 1 for color...)
 			m_LightUniformHandles.push_back(MainShader->GetUniformLocation("camera_lightArray[" + std::to_string(i) + "].viewproj"));//0
@@ -539,7 +539,7 @@ void GkScene::drawPipeline(int meshmask, FBO* CurrentRenderTarget, FBO* RenderTa
 		int camLightsRegistered = 0;
 		size_t currindex = 0;
 		//Replace with a system that sorts by distance later
-		while (currindex < CameraLights.size() && camLightsRegistered < 10)
+		while (currindex < CameraLights.size() && camLightsRegistered < 5)
 		{
 			if (CameraLights[currindex] && CameraLights[currindex]->shouldRender)
 			{

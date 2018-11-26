@@ -2,7 +2,7 @@
 #define MAX_POINT_LIGHTS 32
 #define MAX_DIR_LIGHTS 2
 #define MAX_AMB_LIGHTS 3
-#define MAX_CAM_LIGHTS 10
+#define MAX_CAM_LIGHTS 5
 #extension GL_ARB_conservative_depth : enable
 // out vec4 fColor[2];
 // FORWARD_MAINSHADER.FS
@@ -362,31 +362,6 @@ void main()
 	samplecoord1 = samplecoord1/samplecoord1.w; //NDC
 	samplecoord1.xy = (samplecoord1.xy/2.0) + 0.5;
 	CameraTexSamples[4] = texture2D(CameraTex5, vec2(samplecoord1.x, -samplecoord1.y));
-	//CameraTex6
-	samplecoord1 = (camera_lightArray[5].viewproj * vec4(worldout,1.0));
-	samplecoord1 = samplecoord1/samplecoord1.w; //NDC
-	samplecoord1.xy = (samplecoord1.xy/2.0) + 0.5;
-	CameraTexSamples[5] = texture2D(CameraTex6, vec2(samplecoord1.x, -samplecoord1.y));
-	//CameraTex7
-	samplecoord1 = (camera_lightArray[6].viewproj * vec4(worldout,1.0));
-	samplecoord1 = samplecoord1/samplecoord1.w; //NDC
-	samplecoord1.xy = (samplecoord1.xy/2.0) + 0.5;
-	CameraTexSamples[6] = texture2D(CameraTex7, vec2(samplecoord1.x, -samplecoord1.y));
-	//CameraTex8
-	samplecoord1 = (camera_lightArray[7].viewproj * vec4(worldout,1.0));
-	samplecoord1 = samplecoord1/samplecoord1.w; //NDC
-	samplecoord1.xy = (samplecoord1.xy/2.0) + 0.5;
-	CameraTexSamples[7] = texture2D(CameraTex8, vec2(samplecoord1.x, -samplecoord1.y));
-	//CameraTex9
-	samplecoord1 = (camera_lightArray[8].viewproj * vec4(worldout,1.0));
-	samplecoord1 = samplecoord1/samplecoord1.w; //NDC
-	samplecoord1.xy = (samplecoord1.xy/2.0) + 0.5;
-	CameraTexSamples[8] = texture2D(CameraTex9, vec2(samplecoord1.x, -samplecoord1.y));
-	//CameraTex10
-	samplecoord1 = (camera_lightArray[9].viewproj * vec4(worldout,1.0));
-	samplecoord1 = samplecoord1/samplecoord1.w; //NDC
-	samplecoord1.xy = (samplecoord1.xy/2.0) + 0.5;
-	CameraTexSamples[9] = texture2D(CameraTex10, vec2(samplecoord1.x, -samplecoord1.y));
 	//Camera Lights
 	for (int i = 0; i < MAX_CAM_LIGHTS; i++)
 	{
@@ -405,6 +380,9 @@ void main()
 		frag_to_light = frag_to_light * float(camera_lightArray[i].range >= 0) + float(camera_lightArray[i].range < 0) * -lightpos; //If range < 0 then we use position AS the direction. This allows for the correct caustics effect
 		vec3 unit_frag_to_light = normalize(frag_to_light);
 		vec3 lightDir = -unit_frag_to_light;
+		
+		//handling shadows
+		float shouldRenderCaseShadow = float((camera_lightArray[i].shadows == 0) || (camera_lightArray[i].shadows == 1) && (CameraTexSamples[i].x < dot(frag_to_light, unit_frag_to_light) + 0.005)); //Avoid shadow banding 
 		//float lightdist = length2vec3(frag_to_light); //Can never be negative
 		float nDotl = dot(UnitNormal, unit_frag_to_light);
 		float rangevar = 1.0 - clamp(dot(unit_frag_to_light,frag_to_light)/camera_lightArray[i].range, 0.0 , 1);
