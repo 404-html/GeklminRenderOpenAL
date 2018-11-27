@@ -262,6 +262,7 @@ void checkKeys(){
 				//Test FBO Information
 				//FBOArray[0]->printcolorattachments();
 				creepilyfacetowardthecamera = !creepilyfacetowardthecamera;
+				Cam_Lights[0]->myCamera = *SceneRenderCamera;
 			}
 			oldkeystates[10] = state;
 		state = myDevice->getKey(0, GLFW_KEY_N);
