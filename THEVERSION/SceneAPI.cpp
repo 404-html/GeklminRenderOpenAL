@@ -591,7 +591,10 @@ void GkScene::drawPipeline(int meshmask, FBO* CurrentRenderTarget, FBO* RenderTa
 						MainShaderUniforms[MAINSHADER_IS_INSTANCED],
 						false,		//NOT transparent
 						(CurrentRenderTarget != nullptr)?true:false,		//is it to render target?
-						meshmask
+						meshmask,
+						true, //Phong?
+						true, //Do not use maps
+						false //Force non-instanced
 					);
 				}
 	//Prep for rendering Transparent Objects
@@ -663,7 +666,10 @@ void GkScene::drawPipeline(int meshmask, FBO* CurrentRenderTarget, FBO* RenderTa
 							MainShaderUniforms[MAINSHADER_IS_INSTANCED],
 							true,		//Transparent.
 							(CurrentRenderTarget != nullptr)?true:false,		//is it to render target?
-							meshmask
+							meshmask,
+							true,
+							true,
+							false
 						);
 					}
 		glDisableVertexAttribArray(0); //Position. NOTE: don't disable if we want to do screenquads later.

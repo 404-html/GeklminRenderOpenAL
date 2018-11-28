@@ -159,14 +159,14 @@ class Mesh
 		}
 
 		//RenderableMesh is now nothing more than a bad dream.
-		void DrawInstancesPhong(GLuint Model, GLuint rflags, GLuint specr, GLuint specd, GLuint diff, GLuint emiss, GLuint enableCubemaps, GLuint enableCubemaps_diffuse, GLuint EnableTransparency, GLuint EnableInstancing, bool Transparency, bool toRenderTarget, int meshmask){
+		void DrawInstancesPhong(GLuint Model, GLuint rflags, GLuint specr, GLuint specd, GLuint diff, GLuint emiss, GLuint enableCubemaps, GLuint enableCubemaps_diffuse, GLuint EnableTransparency, GLuint EnableInstancing, bool Transparency, bool toRenderTarget, int meshmask, bool usePhong = true, bool donotusemaps = false, bool force_non_instanced = false){
 			if (Instances.size() <= 0 || mesh_meshmask == 0 || (meshmask != 0 && mesh_meshmask%meshmask != 0) )
 				return;
 			
 			
 			
 			//std::map<unsigned int, std::vector<MeshInstance*>> Batches_texture;
-			if (!is_instanced){
+			if ((!is_instanced || force_non_instanced) && !donotusemaps){
 				glUniform1f(EnableInstancing, 0);
 				//GENERATE THE BATCHES
 				std::map<unsigned int, std::map<unsigned int, std::vector<MeshInstance*>>> Batches_cubemap_texture;
@@ -224,35 +224,22 @@ class Mesh
 								MyTextures[i].Bind(0);
 							for (unsigned int k = 0; k < Batches_cubemap_texture[j][i].size(); k++)
 							{
-								/*
-									std::vector<glm::mat4*> MatrixDataCache; //When we used this for instancing, it was GLfloat.
-									std::vector<GLfloat*> MatrixDataCacheMalloced;
-									
-									bool shouldremakeinstancedmodelvector = true;
-								*/
-								//Old code that had a quirk which I dont want 
-									//Batches_cubemap_texture[j][i][k]->Transitional = Batches_cubemap_texture[j][i][k]->myTransform.GetModel();
-									//glUniformMatrix4fv(Model, 1, GL_FALSE, &Batches_cubemap_texture[j][i][k]->Transitional[0][0]);//Should do the right thing
-								//MatrixDataCache.push_back(new glm::mat4(Batches_cubemap_texture[j][i][k]->myTransform.GetModel()));
-								/*
-								glUniformMatrix4fv(Model, 1, GL_FALSE, 
-									&(
-										(*MatrixDataCache[MatrixDataCache.size()-1])
-									[0][0])
-								);//Should do the right thing
-								*/
+								
 								//memcpy(&MatrixDataCacheMalloced[howmanyhavewedone * 16], &(Batches_cubemap_texture[j][i][k]->myTransform.GetModel()[0][0]), sizeof(GLfloat) * 16);
 								//glUniformMatrix4fv(Model, 1, GL_FALSE, &MatrixDataCacheMalloced[howmanyhavewedone * 16]);
 								glUniformMatrix4fv(Model, 1, GL_FALSE, &(Batches_cubemap_texture[j][i][k]->myTransform.GetModel()[0][0]));
 								//howmanyhavewedone++;
 								//Phong Properties
 								//Of note: this barely affects performance, maybe restricting the number of low poly meshes by a thousand or so
-								glUniform1f(specr, Batches_cubemap_texture[j][i][k]->myPhong.specreflectivity); //Specr
-								glUniform1f(specd, Batches_cubemap_texture[j][i][k]->myPhong.specdamp); //specular dampening
-								glUniform1f(diff, Batches_cubemap_texture[j][i][k]->myPhong.diffusivity);//Diffusivity of the material
-								glUniform1f(emiss, Batches_cubemap_texture[j][i][k]->myPhong.emissivity);//Emissivity of the material
-								glUniform1f(enableCubemaps, Batches_cubemap_texture[j][i][k]->EnableCubemapReflections);//show cubemap in reflections?
-								glUniform1f(enableCubemaps_diffuse, Batches_cubemap_texture[j][i][k]->EnableCubemapDiffusion);
+								if (usePhong)
+								{
+									glUniform1f(specr, Batches_cubemap_texture[j][i][k]->myPhong.specreflectivity); //Specr
+									glUniform1f(specd, Batches_cubemap_texture[j][i][k]->myPhong.specdamp); //specular dampening
+									glUniform1f(diff, Batches_cubemap_texture[j][i][k]->myPhong.diffusivity);//Diffusivity of the material
+									glUniform1f(emiss, Batches_cubemap_texture[j][i][k]->myPhong.emissivity);//Emissivity of the material
+									glUniform1f(enableCubemaps, Batches_cubemap_texture[j][i][k]->EnableCubemapReflections);//show cubemap in reflections?
+									glUniform1f(enableCubemaps_diffuse, Batches_cubemap_texture[j][i][k]->EnableCubemapDiffusion);
+								}
 								//glUniform1f(m_instanced_float_loc, 0); //We are NOT instanced, use the modelmatrix VBO.
 								if (Transparency)
 									glUniform1f(EnableTransparency, 1.0f);
@@ -265,9 +252,74 @@ class Mesh
 						}
 					}
 				glBindVertexArray(0);
-	//INSTANCING ELSE
-			} else { //Is instanced
+			//NOT INSTANCED, NO MAPS
+			} else if ((!is_instanced || force_non_instanced) && donotusemaps){
+				glUniform1f(EnableInstancing, 0);
+				//GENERATE THE BATCHES
 				
+				glBindVertexArray(m_vertexArrayObject);
+				glUniform1ui(rflags, renderflags);
+				for (size_t i = 0; i < Instances.size(); i++) //for each thing
+				{
+					if (!Instances[i] || (Instances[i] && !Instances[i]->shouldRender) || (meshmask != 0 && Instances[i]->mymeshmask%meshmask != 0))
+						continue;
+					if (Instances[i]->cubeMap < myCubeMaps.size() && Instances[i]->cubeMap >= 0 && myCubeMaps[Instances[i]->cubeMap])
+						myCubeMaps[Instances[i]->cubeMap]->Bind(1);
+					
+					if (Instances[i] && MyTextures.size() > Instances[i]->tex && MyTextures[Instances[i]->tex].amITransparent() != Transparency)
+						continue;
+					else if (Instances[i] && MyTextures.size() > Instances[i]->tex && MyTextures[Instances[i]->tex].amITransparent() == Transparency)
+						MyTextures[Instances[i]->tex].Bind(0);
+						
+					
+					glUniformMatrix4fv(Model, 1, GL_FALSE, &(Instances[i]->myTransform.GetModel()[0][0]));
+					//howmanyhavewedone++;
+					//Phong Properties
+					//Of note: this barely affects performance, maybe restricting the number of low poly meshes by a thousand or so
+					if (usePhong)
+					{
+						glUniform1f(specr, Instances[i]->myPhong.specreflectivity); //Specr
+						glUniform1f(specd, Instances[i]->myPhong.specdamp); //specular dampening
+						glUniform1f(diff, Instances[i]->myPhong.diffusivity);//Diffusivity of the material
+						glUniform1f(emiss, Instances[i]->myPhong.emissivity);//Emissivity of the material
+						glUniform1f(enableCubemaps, Instances[i]->EnableCubemapReflections);//show cubemap in reflections?
+						glUniform1f(enableCubemaps_diffuse, Instances[i]->EnableCubemapDiffusion);
+					}
+					//glUniform1f(m_instanced_float_loc, 0); //We are NOT instanced, use the modelmatrix VBO.
+					if (Transparency)
+						glUniform1f(EnableTransparency, 1.0f);
+					else
+						glUniform1f(EnableTransparency, 0.0f);
+					
+					//Drawing
+					glDrawElements(GL_TRIANGLES, m_drawCount, GL_UNSIGNED_INT, 0);
+					//~ if (Instances[i] && MyTextures.size() > Instances[i]->tex && MyTextures[Instances[i]->tex].amITransparent() == Transparency)
+					//~ {
+						//~ if (Instances[i]->cubeMap < myCubeMaps.size())
+							//~ Batches_cubemap_texture[Instances[i]->cubeMap][Instances[i]->tex].push_back(Instances[i]);
+						//~ else
+							//~ Batches_cubemap_texture[0][Instances[i]->tex].push_back(Instances[i]);
+					//~ } else if (Instances[i] && MyTextures.size() > Instances[i]->tex && MyTextures[Instances[i]->tex].amITransparent() != Transparency) {
+						//~ continue;
+					//~ } else if (Instances[i] && MyTextures.size() > 0 && MyTextures[0].amITransparent() == Transparency){
+						//~ if (Instances[i]->cubeMap < myCubeMaps.size())
+							//~ Batches_cubemap_texture[Instances[i]->cubeMap][0].push_back(Instances[i]);
+						//~ else
+							//~ Batches_cubemap_texture[0][0].push_back(Instances[i]);
+					//~ } else if (Instances[i] && MyTextures.size() > 0 && MyTextures[0].amITransparent() != Transparency) {
+						//~ continue;
+					//~ } else if (Instances[i] && MyTextures.size() == 0){
+						//~ if (Instances[i]->cubeMap < myCubeMaps.size())
+							//~ Batches_cubemap_texture[Instances[i]->cubeMap][0].push_back(Instances[i]);
+						//~ else
+							//~ Batches_cubemap_texture[0][0].push_back(Instances[i]);
+					//~ }
+				}
+				
+				glUniform1ui(rflags, renderflags);
+				glBindVertexArray(0);
+	//INSTANCING ELSE
+			}else { //Is instanced	
 				//Perform testing to ensure that there is a texture to render with, and that its transparency flag matches the transparency state.
 				if ((MyTextures.size() > 0 && MyTextures[0].amITransparent() == Transparency) || (MyTextures.size() == 0))
 				{
@@ -358,12 +410,15 @@ class Mesh
 					//}//Eof shouldremakeinstancedmodelvector in the case where we limit the user to changing the positions of instances only before rendering anything
 						
 						//Third, Set uniform variables for per-instance stuff (E.g. material)
-						glUniform1f(specr, InstancedMaterial.specreflectivity); //Specr
-						glUniform1f(specd, InstancedMaterial.specdamp); //specular dampening
-						glUniform1f(diff, InstancedMaterial.diffusivity);//Diffusivity of the material
-						glUniform1f(emiss, InstancedMaterial.emissivity);//Emissivity of the material
-						glUniform1f(enableCubemaps, instanced_enable_cubemap_reflections ? 1.0f : 0.0f);//show cubemap in reflections?
-						glUniform1f(enableCubemaps_diffuse, instanced_enable_cubemap_diffusion ? 1.0f : 0.0f);
+						if (usePhong)
+						{
+							glUniform1f(specr, InstancedMaterial.specreflectivity); //Specr
+							glUniform1f(specd, InstancedMaterial.specdamp); //specular dampening
+							glUniform1f(diff, InstancedMaterial.diffusivity);//Diffusivity of the material
+							glUniform1f(emiss, InstancedMaterial.emissivity);//Emissivity of the material
+							glUniform1f(enableCubemaps, instanced_enable_cubemap_reflections ? 1.0f : 0.0f);//show cubemap in reflections?
+							glUniform1f(enableCubemaps_diffuse, instanced_enable_cubemap_diffusion ? 1.0f : 0.0f);
+						}
 						//glUniform1f(m_instanced_float_loc, 0); //We are NOT instanced, use the modelmatrix VBO.
 						if (Transparency)
 							glUniform1f(EnableTransparency, 1.0f);
