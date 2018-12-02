@@ -388,7 +388,7 @@ void main()
 		float rangevar = 1.0 - clamp(dot(unit_frag_to_light,frag_to_light)/camera_lightArray[i].range, 0.0 , 1);
 		rangevar = rangevar * float(camera_lightArray[i].range >= 0) + 1.0 * float(camera_lightArray[i].range < 0);
 		nDotl = max(nDotl,0.0);
-		diffuseffect += shouldRenderAtAll * shouldRenderCaseShadow * nDotl * lightcolor * diffusivity * rangevar;
+		diffuseffect += shouldRenderAtAll * nDotl * lightcolor * diffusivity * rangevar;
 		//diffuseffect += vec3(1);
 		//diffuseffect += vec3(1);
 		//specular
@@ -400,7 +400,7 @@ void main()
 		);
 		float specDampFactor = pow(specFactor,specdamp);
 		
-		speceffect += shouldRenderAtAll * shouldRenderCaseShadow * shouldRenderSpecEffect * specDampFactor * specreflectivity * lightcolor * rangevar;
+		speceffect += shouldRenderAtAll * shouldRenderSpecEffect * specDampFactor * specreflectivity * lightcolor * rangevar;
 		
 	}
 	

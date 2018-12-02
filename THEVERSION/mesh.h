@@ -580,7 +580,7 @@ class Mesh
 		//Used for sending in per-instance info. Note that we will only expand this when we need to, no clear calls should be necessary. Send in as columns!
 		//This one is used for Non-Instanced mode to store the Mat4s
 		//std::vector<glm::mat4*> MatrixDataCache; //When we used this for instancing, it was GLfloat.
-		std::vector<GLfloat> MatrixDataCacheMalloced; //Std vector will manage resizing for us...
+		std::vector<GLfloat> MatrixDataCacheMalloced; //Std vector will manage resizing for us... NO LONGER MALLOCED SO IT SHOULDNT BE CALLED THAT!!!
 		
 		bool shouldremakeinstancedmodelvector = true;
 		bool canbereshaped = true;

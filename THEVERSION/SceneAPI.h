@@ -270,7 +270,8 @@ class GkScene //Gk for Geklmin
 
 		//Public Variables
 		// IODevice* globalDevicePointer = nullptr; //This shouldn't be necessary, but hey it's here if I need it.
-		Shader* ShowTextureShader = nullptr; //This is for debugging and should not be used in the final build.
+		Shader* ShowTextureShader = nullptr; //TODO: Make getters and setters for this
+		Shader* ShadowOpaqueMainShader = nullptr; //TODO: Make getters and setters for this too
 
 	bool ImDeletingThisShaderOKThanks(Shader* currentShader){//If you delete a shader and then make another, and both were used in screenquadtoFBO, there is a chance that it will be allocated in the exact same memory location... A really good chance. So make sure that we delete any info we have on the shader in the std::maps before proceeding.
 		bool did_deregister = false;

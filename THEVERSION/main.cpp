@@ -56,7 +56,7 @@ GeklminRender::Shader* MainShad = nullptr; //Final Pass Shader
 GeklminRender::Shader* SkyboxShad = nullptr; //Skybox shader
 GeklminRender::Shader* DisplayTexture = nullptr; //Displays a texture to the screen
 GeklminRender::Shader* WBOITCompShader = nullptr; //Composites the WBOIT initial pass onto the opaque framebuffer
-
+GeklminRender::Shader* MainshaderShadows = nullptr;
 
 GeklminRender::Camera* SceneRenderCamera = nullptr; //SceneRender camera
 GeklminRender::Camera RenderTargetCamera; //The render target camera
@@ -516,11 +516,13 @@ void LoadResources()
 	using namespace GeklminRender;
 	//it puts .vs and .fs after the string. The EXE Is the starting folder, but I could probably change that if I tried.
 	MainShad = new Shader("shaders/FORWARD_MAINSHADER");
+	MainshaderShadows = new Shader("shaders/FORWARD_MAINSHADER_SHADOWS");
 	DisplayTexture = new Shader("shaders/SHOWTEX");
 	SkyboxShad = new Shader("shaders/Skybox");
 	WBOITCompShader = new Shader("shaders/WBOIT_COMPOSITION_SHADER");
 	theScene->setSkyboxShader(SkyboxShad);
 	theScene->setMainShader(MainShad);
+	theScene->ShadowOpaqueMainShader = MainshaderShadows;
 	theScene->ShowTextureShader = DisplayTexture; //Add a setter later
 	theScene->setWBOITCompositionShader(WBOITCompShader); //Has a setter, and it's been a long time, I should write a setter for the ShowTextureShader
 	FBOArray.push_back(new FBO(640,480, 1, GL_RGBA8)); //0, the test FBO render target
@@ -834,10 +836,12 @@ int main()
 								
 	//We should delete stuff... if we want to be good programmers :<
 	std::cout << "\n BEGINNING DELETION...";
-	delete InstancedMesh; //TODO: Push this to 147
+	delete InstancedMesh; //TODO: Push this to 147 //Later: what the fuck???
 	delete FileResourceManager;
 	if (MainShad)
-		delete MainShad; //Initial Opaque shader, passed to the Scene class.
+		delete MainShad; 
+	if (MainshaderShadows)
+		delete MainshaderShadows; //Shadowmap renderer
 	if (SkyboxShad)
 		delete SkyboxShad; //Skybox shader, passed to the scene class.
 	if (DisplayTexture)
