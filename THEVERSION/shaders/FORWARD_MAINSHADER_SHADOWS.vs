@@ -1,7 +1,7 @@
 #version 330
 
 //FORWARD_MAINSHADER.VS
-//(C) David MHS Webster 2018
+//(C) DMHSW 2018
 
 //List of flags. Some of these are no longer implemented, they DID NOT caus too much of a performance problem. I do not recommend you enable them. (Remember: Mat4 changing lag?)
 const uint GK_RENDER = uint(1); // Do we render it? This is perhaps the most important flag.

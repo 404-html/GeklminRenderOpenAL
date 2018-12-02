@@ -1,6 +1,6 @@
 /*
-(C) David MHS Webster 2018
-GkScene Demo Program 1 main.cpp
+(C) DMHSW 2018
+GkScene Demo Program 2 main2.cpp
 */
 
 

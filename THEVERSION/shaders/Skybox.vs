@@ -1,7 +1,7 @@
 #version 330
 
 //SKYBOX.VS
-//(C) David MHS Webster 2018
+//(C) DMHSW 2018
 
 
 

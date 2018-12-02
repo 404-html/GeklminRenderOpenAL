@@ -1,7 +1,7 @@
 #version 330
 
 //INITIAL_OPAQUE.VS
-//(C) David MHS Webster 2018
+//(C) DMHSW 2018
 
 //List of flags. Some of these are no longer implemented, they caused too much of a performance problem. I do not recommend you enable them.
 const uint GK_RENDER = uint(1); // Do we render it? This is perhaps the most important flag.

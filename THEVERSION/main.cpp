@@ -1,5 +1,5 @@
 /*
-(C) David MHS Webster 2018
+(C) DMHSW 2018
 GkScene Demo Program 1 main.cpp
 */
 

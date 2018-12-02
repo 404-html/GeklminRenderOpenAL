@@ -2,7 +2,7 @@
 // #extension GL_ARB_conservative_depth : enable
 // out vec4 fColor[2];
 // SKYBOX.FS
-// (C) David MHS Webster 2018
+// (C) DMHSW 2018
 // layout (depth_greater) out float gl_FragDepth;
 // ^ should probably re-enable that later
 
