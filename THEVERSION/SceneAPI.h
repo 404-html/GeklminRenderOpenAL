@@ -52,6 +52,7 @@ class GkScene //Gk for Geklmin
 
 		//Draw Functions (NEEDS CULLING)
 			void drawPipeline(int meshmask = -1, FBO* CurrentRenderTarget = nullptr, FBO* RenderTarget_Transparent = nullptr, Camera* CurrentRenderCamera = nullptr, bool doFrameBufferChecks = false, glm::vec4 backgroundColor = glm::vec4(0,0,0,0), glm::vec2 fogRangeDescriptor = glm::vec2(10000,15000));
+			void drawShadowPipeline(int meshmask = -1, FBO* CurrentRenderTarget = nullptr, FBO* RenderTarget_Transparent = nullptr, Camera* CurrentRenderCamera = nullptr, bool doFrameBufferChecks = false, glm::vec4 backgroundColor = glm::vec4(0,0,0,0), glm::vec2 fogRangeDescriptor = glm::vec2(10000,15000));
 			void (*customRenderingAfterTransparentObjectRendering)(int meshmask, FBO* CurrentRenderTarget, FBO* RenderTarget_Transparent, Camera* CurrentRenderCamera, bool doFrameBufferChecks, glm::vec4 backgroundColor, glm::vec2 fogRangeDescriptor) =  nullptr;
 			void (*customMainShaderBinds)(int meshmask, FBO* CurrentRenderTarget, FBO* RenderTarget_Transparent, Camera* CurrentRenderCamera, bool doFrameBufferChecks, glm::vec4 backgroundColor, glm::vec2 fogRangeDescriptor) = nullptr; //For doing custom main shader binds
 			void (*customRenderingAfterSkyboxBeforeMainShader)(int meshmask, FBO* CurrentRenderTarget, FBO* RenderTarget_Transparent, Camera* CurrentRenderCamera, bool doFrameBufferChecks, glm::vec4 backgroundColor, glm::vec2 fogRangeDescriptor) =  nullptr;
@@ -555,6 +556,13 @@ class GkScene //Gk for Geklmin
 		MAINSHADER_NUM_SceneRender_SHADER_UNIFORMS //Self explanatory
 	};
 	enum{
+		MAINSHADER_SHADOWS_IS_INSTANCED,
+		MAINSHADER_SHADOWS_WORLD2CAMERA,
+		MAINSHADER_SHADOWS_MODEL2WORLD,
+		MAINSHADER_SHADOWS_DUMMY, //If we are worried that the mesh class will accidentally do something stupid, we send it this dummy!
+		MAINSHADER_SHADOWS_NUM_MAINSHADER_SHADOWS_UNIFORMS
+	};
+	enum{
 		//Matrices
 		SKYBOX_WORLD2CAMERA,  //4x4 convert from world space to NDC
 		SKYBOX_MODEL2WORLD,   //4x4 convert from model to world
@@ -568,6 +576,7 @@ class GkScene //Gk for Geklmin
 		SKYBOX_NUM_SKYBOX_SHADER_UNIFORMS //Self explanatory
 	};
 	GLuint MainShaderUniforms[MAINSHADER_NUM_SceneRender_SHADER_UNIFORMS]; //Why the fuck did we ever malloc this
+	GLuint MainShaderShadowUniforms[MAINSHADER_SHADOWS_NUM_MAINSHADER_SHADOWS_UNIFORMS]; //Shadow uniforms
 	std::vector<GLuint> m_LightUniformHandles;//See SceneAPI.cpp for format
 	//std::vector<GLuint> m_CameraLightUniformHandles; //See SceneAPI.cpp for details and format
 	std::vector<GLuint> m_LightClippingVolumeUniformHandles;//See SceneAPI.cpp for format or look below

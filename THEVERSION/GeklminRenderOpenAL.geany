@@ -28,16 +28,10 @@ long_line_behaviour=1
 long_line_column=72
 
 [files]
-current_page=8
-FILE_NAME_0=35720;C++;0;EUTF-8;1;1;0;%2Fhome%2Fgek%2FProgramming%2FGeklminRenderOpenAL%2FTHEVERSION%2Fmain.cpp;0;4
-FILE_NAME_1=36320;C++;0;EUTF-8;1;1;0;%2Fhome%2Fgek%2FProgramming%2FGeklminRenderOpenAL%2FTHEVERSION%2FSceneAPI.cpp;0;4
-FILE_NAME_2=10691;C++;0;EUTF-8;1;1;0;%2Fhome%2Fgek%2FProgramming%2FGeklminRenderOpenAL%2FTHEVERSION%2FSceneAPI.h;0;4
-FILE_NAME_3=0;C++;0;EUTF-8;1;1;0;%2Fhome%2Fgek%2FProgramming%2FGeklminRenderOpenAL%2FTHEVERSION%2Fmain2.cpp;0;4
-FILE_NAME_4=0;C++;0;EUTF-8;1;1;0;%2Fhome%2Fgek%2FProgramming%2FGeklminRenderOpenAL%2FTHEVERSION%2FpointLight.h;0;4
-FILE_NAME_5=16609;C++;0;EUTF-8;1;1;0;%2Fhome%2Fgek%2FProgramming%2FGeklminRenderOpenAL%2FTHEVERSION%2Fshaders%2FFORWARD_MAINSHADER.fs;0;4
-FILE_NAME_6=23981;C++;0;EUTF-8;1;1;0;%2Fhome%2Fgek%2FProgramming%2FGeklminRenderOpenAL%2FTHEVERSION%2Fmesh.h;0;4
-FILE_NAME_7=19430;C++;0;EUTF-8;1;1;0;%2Fhome%2Fgek%2FProgramming%2FGeklminRenderOpenAL%2FTHEVERSION%2FMesh.cpp;0;4
-FILE_NAME_8=0;Sh;0;EUTF-8;1;1;0;%2Fhome%2Fgek%2FProgramming%2FGeklminRenderOpenAL%2FTHEVERSION%2FCompiler_Call.sh;0;4
+current_page=2
+FILE_NAME_0=2515;C++;0;EUTF-8;1;1;0;%2Fhome%2Fgek%2FProgramming%2FGeklminRenderOpenAL%2FTHEVERSION%2Fmain.cpp;0;4
+FILE_NAME_1=23691;C++;0;EUTF-8;1;1;0;%2Fhome%2Fgek%2FProgramming%2FGeklminRenderOpenAL%2FTHEVERSION%2FSceneAPI.h;0;4
+FILE_NAME_2=171;C++;0;EUTF-8;1;1;0;%2Fhome%2Fgek%2FProgramming%2FGeklminRenderOpenAL%2FTHEVERSION%2FSceneAPI.cpp;0;4
 
 [VTE]
 last_dir=/home/gek

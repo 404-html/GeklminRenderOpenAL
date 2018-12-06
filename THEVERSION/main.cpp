@@ -826,7 +826,7 @@ int main()
 		//Eof Game Code
 		syncCameraStateToALListener(SceneRenderCamera);
 		
-		theScene->drawPipeline(1, FBOArray[0], FBOArray[1], &RenderTargetCamera, false, glm::vec4(1.0,0,0,1.0), glm::vec2(300,500)); //Don't draw the ground
+		theScene->drawShadowPipeline(1, FBOArray[0], nullptr, &RenderTargetCamera, false, glm::vec4(1.0,0,0,1.0), glm::vec2(300,500)); //Don't draw the ground
 		theScene->drawPipeline(1, nullptr, nullptr, nullptr, false, glm::vec4(0,0,0,0), glm::vec2(800,1000));
 		myDevice->pollevents();
 		myDevice->swapBuffers(0);
