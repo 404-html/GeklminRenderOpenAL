@@ -257,12 +257,24 @@ void checkKeys(){
 				" Sphere Model Instances: " << FileResourceManager->loadMesh("sphere_test.obj",false,true)->NumInstances();
 				
 				std::cout << "\n WIDTH: " << WIDTH << "\n HEIGHT: " << HEIGHT;
-				RenderTargetCamera = *SceneRenderCamera;
+				
+				
+				
+				
+				RenderTargetCameraShadowMapping = RenderTargetCameraShadowMapping = Camera(SceneRenderCamera->pos + glm::vec3(0,20,0),            //World Pos
+																							70.0f,                       //FOV
+																							1.0f,		 //Aspect
+																							1.0f,                       //Znear
+																							1000.0f,                     //Zfar
+																							glm::vec3(0.0f, -1.0f, 0.0f), //forward
+																							glm::vec3(0.0f, 0.0f, 1.0f));//Up;
+				//~ RenderTargetCameraShadowMapping = *SceneRenderCamera;
 				std::cout << "\n The Rendertarget Camera has been moved to the Camera's location";
 				//Test FBO Information
 				//FBOArray[0]->printcolorattachments();
-				creepilyfacetowardthecamera = !creepilyfacetowardthecamera;
-				Cam_Lights[0]->myCamera = *SceneRenderCamera;
+				//~ creepilyfacetowardthecamera = !creepilyfacetowardthecamera;
+				if (Cam_Lights.size() > 0)
+					Cam_Lights[0]->myCamera = RenderTargetCameraShadowMapping;
 			}
 			oldkeystates[10] = state;
 		state = myDevice->getKey(0, GLFW_KEY_N);
@@ -312,7 +324,7 @@ void checkKeys(){
 				ProgramMeshInstances[ProgramMeshInstances.size()-1]->myPhong.specreflectivity = rand()%100/100.0;
 				
 				//Random diffusivity
-				//~ ProgramMeshInstances[ProgramMeshInstances.size()-1]->myPhong.diffusivity = 1-ProgramMeshInstances[ProgramMeshInstances.size()-1]->myPhong.specreflectivity;
+				//~ ProgramMeshInstances[ProgramMeshInstances.size()-1]->myPhong.diffusivity = 1-ProgramMeshInstances[ProgramMeshInstances.size()-1]->myPhong.specreflectivity; //looks better
 				ProgramMeshInstances[ProgramMeshInstances.size()-1]->myPhong.diffusivity = rand()%100/100.0;
 				
 				
@@ -377,14 +389,9 @@ void checkKeys(){
 				myDevice->getCursorPosition(0, &mousepos[0], &mousepos[1]);
 				std::cout << "\n X: " << (mousepos[0]/WIDTH);
 				std::cout << "\n Y: " << (mousepos[1]/HEIGHT);
-				std::cout << "\nsizeof int pointer:" << sizeof(int*);
+				std::cout << "\nsizeof int pointer (proves this is 64 bit):" << sizeof(int*);
 				InstancedMesh->optimizeCacheMemoryUsage();
 				FileResourceManager->loadMesh("sphere_test.obj",false,true)->optimizeCacheMemoryUsage();
-				//std::cout << "\nALL ASCII CHARACTERS:\n" <<"!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~" << "\n";
-				//std::cout << "\nCAPITAL I AABB DIMENSIONS:"<<
-				//"\nX: " << myFont->CharacterAABBDimensions['I'].x <<
-				//"\nY: " << myFont->CharacterAABBDimensions['I'].y <<
-				//"\nZ: " << myFont->CharacterAABBDimensions['I'].z;
 				if(DeleteMeshTest)
 				{
 					theScene->deregisterMesh(DeleteMeshTest);
@@ -395,6 +402,7 @@ void checkKeys(){
 				{
 					std::cout << "\nMaking Mesh";
 					DeleteMeshTest = new GeklminRender::Mesh("SPHERE_TEST.OBJ", false, true, true);
+					std::cout << "\n" << DeleteMeshTest->getVAOHandle();
 					theScene->registerMesh(DeleteMeshTest);
 					DeleteMeshTest->RegisterInstance(&LetterTester);
 					DeleteMeshTest->pushTexture(FileResourceManager->loadTexture("AMIGA.PNG",true));
@@ -404,15 +412,7 @@ void checkKeys(){
 		state = myDevice->getMouseButton(0, GLFW_MOUSE_BUTTON_RIGHT);
 			if (state == GLFW_PRESS && oldkeystates[50] != GLFW_PRESS)
 			{
-				// std::cout <<"\nProgrammed in C++ and OpenGL to test the functionality of GkScene rendering API middleware.\nSpecial Thanks:";
-				// std::cout <<"\n DMHSW- Programming and Design";
-				// std::cout <<"\n BennyBox- Teaching me OpenGL";
-				// std::cout <<"\n GLM- Mathematics Libraries";
-				// std::cout <<"\n GLFW- Window creation, OpenGL Context creation, and Device interface";
-				// std::cout <<"\n OpenGL- API for graphics";
-				// std::cout <<"\n (Your OpenGL Vendor)- Stunning hardware-accelerated 3D graphics.";
-				// std::cout <<"\n\n This demo is licensed to you under the MiT License (https://mit-license.org/). Have fun.";
-				// std::cout <<"\n\n if you find any bugs in the software (E.g. crashing) report them to gordonfreeman424@gmail.com";
+				//DEMO: Exporting models
 				IndexedModel Boxy = createBox(1.0f,4.0f,3.0f);
 				std::string OBJExportedBoxy = Boxy.exportToString(true);
 				std::cout << "\n BEGIN PRINTOUT:\n";
@@ -427,6 +427,7 @@ void checkKeys(){
 
 void window_size_callback(GLFWwindow* window, int width, int height)
 {
+	std::cout << "\n\nWindow resized!!!"<<std::endl;
 	using namespace GeklminRender;
 	if (height == 0 || width == 0)
 		return;
@@ -439,7 +440,7 @@ void window_size_callback(GLFWwindow* window, int width, int height)
 }
 
 
-// init function. Should initialize all globals
+//Sets up the window, opengl context, openal context, and generally everything you need for games
 void init()
 {
 	//Why didn't I just put this at the top of the file???
@@ -494,19 +495,6 @@ void init()
 	for (int i = 0; i<2; i++)
 		currentmousexy[i] = 0;
 	theScene = new GkScene(WIDTH, HEIGHT, 1);
-	
-	//OpenAL Stuff
-	//~ OpenALDevice = alcOpenDevice(NULL);
-	//~ if (OpenALDevice)
-	//~ {
-		//~ std::cout << "\nUsing Device: " << alcGetString(OpenALDevice, ALC_DEVICE_SPECIFIER) << "\n";
-		//~ OpenALContext = alcCreateContext(OpenALDevice, 0);
-		//~ if(alcMakeContextCurrent(OpenALContext))
-		//~ {
-			//~ std::cout<<"\nSuccessfully Made Context!!!";
-		//~ }
-	//~ }
-	//~ alGetError();
 	myDevice->fastInitOpenAL();
 }
 
@@ -524,10 +512,10 @@ void LoadResources()
 	theScene->setMainShader(MainShad);
 	theScene->ShadowOpaqueMainShader = MainshaderShadows;
 	theScene->ShowTextureShader = DisplayTexture; //Add a setter later
-	theScene->setWBOITCompositionShader(WBOITCompShader); //Has a setter, and it's been a long time, I should write a setter for the ShowTextureShader
+	//~ theScene->setWBOITCompositionShader(WBOITCompShader); //Has a setter, and it's been a long time, I should write a setter for the ShowTextureShader
 	FBOArray.push_back(new FBO(640,480, 1, GL_RGBA32F)); //0, the test FBO render target
 	FBOArray.push_back(new FBO(640,480, 2, GL_RGBA16F, FBOArray[0]->getDepthBufferHandle())); //1, the FBO necessary for Weighted Blended OIT
-	FBOArray.push_back(new FBO(640,480, 1, GL_RGBA32F)); //2, the FBO for rendering Shadowmaps
+	FBOArray.push_back(new FBO(640,480, 1, GL_RGBA32F)); //2, the FBO for rendering Shadowmaps //TODO: Actually use this one for the shadowmap instead of FBOArray[0]
 	theScene->registerCustomFBO(FBOArray[0]); //I was planning to use this to do reflections in the future, so I added a custom FBO registration feature.
 	
 	
@@ -568,12 +556,12 @@ void LoadResources()
 	//FileResourceManager->loadMesh("Cube_Test_Low_Poly.obj",false,true);
 	FileResourceManager->loadMesh("sphere_test.obj",false,true);
 	FileResourceManager->loadMesh("First_Terrain_With_Caves.obj",false,true);
-	InstancedMesh = new Mesh("Cube_Test_Low_Poly.obj",true,false,true); //Instanced, Static, Asset
+	InstancedMesh = new Mesh("Cube_Test_Low_Poly.obj",false,false,true); //Instanced, Static, Asset
 	
 	FileResourceManager->loadTexture("Amiga.png",true);
 	FileResourceManager->loadTexture("Art.jpg",false);
 	
-	//MESH REGISTRATION
+	//MESH REGISTRATION. This is how you tell the scene what meshes to draw every frame
 	theScene->registerMesh(FileResourceManager->loadMesh("sphere_test.obj",false,true));
 	//theScene->registerMesh(FileResourceManager->loadMesh("Cube_Test_Low_Poly.obj",false,true));
 	theScene->registerMesh(FileResourceManager->loadMesh("First_Terrain_With_Caves.obj",false,true));
@@ -588,12 +576,7 @@ void LoadResources()
 	FileResourceManager->loadMesh("sphere_test.obj",false,true)->pushTexture(FileResourceManager->loadTexture("clouds.jpg",false)); //1
 	
 	
-	//Non-instanced Mesh Available Textures.
-	//FileResourceManager->loadMesh("Cube_Test_Low_Poly.obj",false,true)->pushTexture(FileResourceManager->loadTexture("Amiga.png",true)); //0
-	//FileResourceManager->loadMesh("Cube_Test_Low_Poly.obj",false,true)->pushTexture(FileResourceManager->loadTexture("Art.jpg",false)); //1
-	//NotPointedTextureTest = Texture()
-	//Instanced Mesh texture and cubemap
-	//InstancedMesh->pushTexture(FileResourceManager->loadTexture("clouds.jpg",false));
+	//Render the shadowmap as a texture on the instanced cube
 	InstancedMesh->pushTexture(FBOArray[0]->getTex(0));
 	InstancedMesh->pushCubeMap(SkyboxTex);
 	
@@ -604,32 +587,31 @@ void LoadResources()
 	//More Cubemaps
 	//FileResourceManager->loadMesh("Cube_Test_Low_Poly.obj",false,true)->pushCubeMap(SkyboxTwo);//0
 	//FileResourceManager->loadMesh("Cube_Test_Low_Poly.obj",false,true)->pushCubeMap(SkyboxTex);//1
-	//Testing...
+	
+	//Custom rendering pipeline callbacks for your rendering needs
 	theScene->customMainShaderBinds = &MainshaderUniformFunctionDemo;
 	theScene->customRenderingAfterSkyboxBeforeMainShader = &CustomRenderingFunction; //Draw to your heart's content!
 	
 	//See GekAL.h for how this is done
-	//~ audiobuffer1 = loadWAVintoALBuffer("SOUNDS/TONE.WAV");
-	//Can we cache a sound?
-	//FileResourceManager->loadSound("SOUNDS/SURFING.WAV");
 	audiobuffer1 = FileResourceManager->loadSound("SOUNDS/CAVES_OF_STEEL1.WAV");
 }
 
 
 void initObjects()
 { //Default existing objects
-	//Instance Instantiation
-		using namespace GeklminRender;
+		using namespace GeklminRender;// sue me
 
 		
 		FileResourceManager->loadMesh("First_Terrain_With_Caves.obj",false,true)->RegisterInstance(&TerrainInstance);
 		FileResourceManager->loadMesh("First_Terrain_With_Caves.obj",false,true)->pushTexture(FileResourceManager->loadTexture("CLOUDS.JPG",false)); //Note: we are Loading a texture here... should probably move to LoadResources
 		
-		
+		//                                      position          Euler Rotation       Scale
 		TerrainInstance.myTransform = Transform(glm::vec3(0,0,0), glm::vec3(0 , 0, 0), glm::vec3(20,20,20));
-		TerrainInstance.myPhong.specreflectivity = 0;
-		TerrainInstance.myPhong.diffusivity = 1;
-		TerrainInstance.mymeshmask = 4; //It wont render on a 3 renderpipeline call
+		TerrainInstance.myPhong.specreflectivity = 0; //Not shiny at all. Chalk.
+		TerrainInstance.myPhong.diffusivity = 1; //If you want a more physical material, you should make sure diffusivity = 1 - specular reflectivity
+		TerrainInstance.mymeshmask = 4; //DIVISIBLE BY: 4, 2, 1 so if you call the rendering function with any other number it will not render this mesh (Negative numbers not withstanding)
+		
+		
 		//~~~~~~~~~~~~~~~~~~~~~~~~~
 		//Lights...
 		PointLightsWithoutShadows.push_back(
@@ -707,27 +689,36 @@ void initObjects()
 			theScene->RegisterAmbLight(Amb_Lights[4]);
 		}
 		// the SceneRender camera
-		SceneRenderCamera = new Camera(glm::vec3(0,1,-10),            //World Pos
+		SceneRenderCamera = new Camera(glm::vec3(0,50,-10),            //World Pos
 								70.0f,                       //FOV
-								(float)WIDTH/HEIGHT,		 //Aspect
-								0.01f,                       //Znear
+								((float)WIDTH/(float)HEIGHT),		 //Aspect
+								1.0f,                       //Znear
 								1000.0f,                     //Zfar
 								glm::vec3(0.0f, 0.0f, 1.0f), //forward
 								glm::vec3(0.0f, 1.0f, 0.0f));//Up
-		RenderTargetCamera = *SceneRenderCamera;
+								
+		RenderTargetCameraShadowMapping = Camera(glm::vec3(0,50,-10),            //World Pos
+											70.0f,                       //FOV
+											1.0f,		 //Aspect
+											1.0f,                       //Znear
+											1000.0f,                     //Zfar
+											glm::vec3(0.0f, -1.0f, 0.0f), //forward
+											glm::vec3(0.0f, 0.0f, 1.0f));//Up
+		RenderTargetCameraShadowMapping = *SceneRenderCamera;
+		//Set the main render camera for the scene. You MUST set the main camera otherwise the main rendering function will NOT run.
 		theScene->setSceneCamera(SceneRenderCamera);
 		Cam_Lights.push_back(new CameraLight());
 		//~ Cam_Lights[0]->Tex2Project = FileResourceManager->loadTexture("Art.jpg",false);
 		Cam_Lights[0]->Tex2Project = FBOArray[0]->getTex(0);
 		Cam_Lights[0]->isShadowed = true;
+		Cam_Lights[0]->myCamera = RenderTargetCameraShadowMapping;
 		Cam_Lights[0]->solidColor = 1.0;
 		Cam_Lights[0]->myColor = glm::vec3(1,0,0);
-		Cam_Lights[0]->myCamera = *SceneRenderCamera;
 		Cam_Lights[0]->range = 300;
 		theScene->RegisterCamLight(Cam_Lights[0]);
+		Cam_Lights[0]->myCamera = RenderTargetCameraShadowMapping;
 		LetterTester.myTransform.SetPos(glm::vec3(0,100,0));
 		LetterTester.myTransform.SetScale(glm::vec3(10,10,10));
-		//myFont->Characters['B']->RegisterInstance(&LetterTester);
 		
 		//OpenAL Source Generation
 		alGenSources(1,&audiosource1);
@@ -743,10 +734,14 @@ void initObjects()
 
 int main()
 {
-	using namespace GeklminRender; //I didn't know that you could do "using namespace X" at the beginning of a file, I swear!
+	using namespace GeklminRender; //bad practice but I don't care
 	init(); //Sets up all the OpenGL setup and stuff
 	LoadResources(); //Load models and shaders and stuff
 	initObjects(); //Create the initial objects we place into the scene
+	
+	
+	//STACK-ALLOCATED OBJECTS
+	//Most things in GeklminRender have to be Malloced, but some classes can be made on the stack. For the most protection against error, I recommend using malloced versions, but stack-allocated versons may be better for beginners
 	Mesh BadDeer = Mesh("Bad Deer.obj", false, true, true);
 	Texture NotPointedTextureTest = Texture("AMIGA.PNG", true);
 	BadDeer.pushTexture(SafeTexture(&NotPointedTextureTest));//0
@@ -759,15 +754,10 @@ int main()
 	MyVeryBadDeer.myPhong.specreflectivity = 0.4;
 	MyVeryBadDeer.myTransform.SetScale(glm::vec3(10,10,10));
 	BadDeer.RegisterInstance(&MyVeryBadDeer);
-	//PRE-MAIN FIDDLINGS
-		// glClearColor(0,0,0.3,0); //What color shall the backdrop be?
-		float ordinarycounter = 0.0f; // Used to achieve the trigonometry wave effects
-		//progtime = IODevice::getTime();
-
+	float ordinarycounter = 0.0f; // Used to achieve the trigonometry wave effects
+	
 	while (!myDevice->shouldClose(0) && !shouldQuit) //Main game loop.
     {
-
-
 		//COLLECT INFORMATION ABOUT THE SYSTEM
 		progtime = IODevice::getTime();
 		ordinarycounter += 0.1f;
@@ -781,17 +771,16 @@ int main()
 		checkKeys();
 
 
-		//GAME CODE | Demonstrates using transforms to set the rotation and position of an object in the scene. Quaternions can be used instead of euler angles to avoid gimbal lock.
-		//It also demonstrates a first-person camera, which was figured out by BennyBox. Thanks for that.
+		//GAME CODE | Demonstrates using transforms to set the rotation and position of an object in the scene, as well as properties and changing shape.
 		{
 				//Changing shape demo
 				// /*
-					//IndexedModel tempshape = createBox(1, 1, 1);
-					// for (size_t i = 0; i < tempshape.colors.size(); i++){
-						// tempshape.colors[i] = glm::vec3((rand()%100)/100.0, (rand()%100)/100.0, (rand()%100)/100.0);
-					// }
-					//InstancedMesh->reShapeMesh(createBox(3, 3, 7));
-					//NotPointedTextureTest.reInitFromDataPointer(true);
+					IndexedModel tempshape = createBox(1, 1, 1);
+					for (size_t i = 0; i < tempshape.colors.size(); i++){
+						tempshape.colors[i] = glm::vec3((rand()%100)/100.0, (rand()%100)/100.0, (rand()%100)/100.0);
+					}
+					InstancedMesh->reShapeMesh(createBox(3, 3, 7));
+					NotPointedTextureTest.reInitFromDataPointer(true);
 				// */
 					// LetterTester.myTransform.SetRot(glm::vec3(sinf(ordinarycounter/10.0) * 5,sinf(ordinarycounter/10.0)*3,sinf(ordinarycounter/11.2)*2));
 				for (size_t communists_killed = 0; communists_killed < ProgramMeshInstances.size() && communists_killed < 100; communists_killed++)
@@ -821,17 +810,15 @@ int main()
 					myDevice->getCursorPosition(0, &oldmousexy[0], &oldmousexy[1]);
 
 				} else {
-					//glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 					myDevice->setInputMode(0, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 				}
-				//glfwGetCursorPos(window, &oldmousexy[0], &oldmousexy[1]);
 				myDevice->getCursorPosition(0, &oldmousexy[0], &oldmousexy[1]);
 		}
 		//Eof Game Code
 		syncCameraStateToALListener(SceneRenderCamera);
 		
-		theScene->drawShadowPipeline(1, FBOArray[0], &RenderTargetCamera, false);
-		theScene->drawPipeline(1, nullptr, nullptr, nullptr, false, glm::vec4(0,0,0,0), glm::vec2(800,1000));
+		theScene->drawShadowPipeline(1, FBOArray[0], &Cam_Lights[0]->myCamera, false);
+		theScene->drawPipeline(1, nullptr, nullptr,  nullptr, false, glm::vec4(0,0,0,0), glm::vec2(800,1000));
 		myDevice->pollevents();
 		myDevice->swapBuffers(0);
 	} //EOF game loop

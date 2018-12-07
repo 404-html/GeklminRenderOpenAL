@@ -375,14 +375,15 @@ void main()
 		
 		//handling shadows
 		float shouldRenderCaseShadow = float((camera_lightArray[i].shadows == 0) || (camera_lightArray[i].shadows == 1) && (CameraTexSamples[i].x + 0.001 > screenspace_light.z)); //Avoid shadow banding 
-		
+		float radial_distance = length(vec2(0.5,0.5) - screenspace_light.xy);
+		float shouldRenderCaseRadii = float(camera_lightArray[i].radii.y > radial_distance);
 		//~ float shouldRenderCaseShadow = float(CameraTexSamples[i].x > screenspace_light.z); //Avoid shadow banding 
 		//float lightdist = length2vec3(frag_to_light); //Can never be negative
 		float nDotl = dot(UnitNormal, unit_frag_to_light);
 		float rangevar = 1.0 - clamp(dot(unit_frag_to_light,frag_to_light)/camera_lightArray[i].range, 0.0 , 1);
 		rangevar = rangevar * float(camera_lightArray[i].range >= 0) + 1.0 * float(camera_lightArray[i].range < 0);
 		nDotl = max(nDotl,0.0);
-		diffuseffect += shouldRenderAtAll * shouldRenderCaseShadow * nDotl * lightcolor * diffusivity * rangevar;
+		diffuseffect += shouldRenderAtAll * shouldRenderCaseShadow * shouldRenderCaseRadii * nDotl * lightcolor * diffusivity * rangevar;
 		//diffuseffect += vec3(1);
 		//diffuseffect += vec3(1);
 		//specular
@@ -394,7 +395,7 @@ void main()
 		);
 		float specDampFactor = pow(specFactor,specdamp);
 		
-		speceffect += shouldRenderAtAll * shouldRenderCaseShadow * shouldRenderSpecEffect * specDampFactor * specreflectivity * lightcolor * rangevar;
+		speceffect += shouldRenderAtAll * shouldRenderCaseShadow * shouldRenderCaseRadii * shouldRenderSpecEffect * specDampFactor * specreflectivity * lightcolor * rangevar;
 		
 	}
 	

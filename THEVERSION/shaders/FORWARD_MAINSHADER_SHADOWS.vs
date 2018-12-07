@@ -58,20 +58,7 @@ main()
 	mat4 worldtrans = float(is_instanced > 0) * instanced_model_matrix + (1 - float(is_instanced > 0)) * Model2World;
 	//The position of this vertex in the world coordinate system.
 	worldpos = (worldtrans * vec4(vPosition,1.0)).xyz;
-	texcoord = intexcoord; //this is faster
 	gl_Position = World2Camera * worldtrans * vec4(vPosition,1.0);
-	
-	normout = (worldtrans * vec4(Normal, 0.0)).xyz;
-	Smooth_Vert_Color = VertexColor;
-	Flat_Vert_Color = VertexColor;
-	
-	
-	//whichNormal = float((renderflags & GK_FLAT_NORMAL) > uint(0));
-	whichVertColor = float((renderflags & GK_FLAT_COLOR) > uint(0));
-	alphareplace = float((renderflags & GK_TEXTURE_ALPHA_REPLACE_PRIMARY_COLOR) > uint(0));
-	colorbase = float((renderflags & GK_COLOR_IS_BASE) > uint(0));
-	alphareplace = float((renderflags & GK_TEXTURE_ALPHA_REPLACE_PRIMARY_COLOR) > uint(0));
-	isColored = float((renderflags & GK_COLORED) > uint(0));
 	
 	// vert_to_camera = CameraPos  - worldpos;
 	worldout = worldpos;

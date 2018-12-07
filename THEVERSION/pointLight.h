@@ -114,7 +114,7 @@ struct CameraLight {
 		);
 		Tex2Project = SafeTexture();
 	}
-	CameraLight(glm::vec3 pos, float fov, float aspect, float zNear, float zFar, glm::vec3 forward, glm::vec3 up, glm::vec3 _color, SafeTexture _tex){
+	CameraLight(glm::vec3 pos, float fov, float aspect, float zNear, float zFar, glm::vec3 forward, glm::vec3 up, glm::vec3 _color, bool _Shadowtoggle, SafeTexture _tex){
 		myCamera = Camera(pos,fov,aspect,zNear,zFar,forward,up);
 		myColor = _color;
 		Tex2Project = _tex;
