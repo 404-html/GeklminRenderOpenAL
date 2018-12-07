@@ -119,7 +119,7 @@ struct CameraLight {
 		myColor = _color;
 		Tex2Project = _tex;
 	}
-	void BindtoUniformCameraLight(GLuint m_matrix, GLuint m_camerapos, GLuint m_color, GLuint m_SolidColorToggle, GLuint m_range, GLuint m_shadows, unsigned int textureunit) {
+	void BindtoUniformCameraLight(GLuint m_matrix, GLuint m_camerapos, GLuint m_color, GLuint m_SolidColorToggle, GLuint m_range, GLuint m_shadows, GLuint m_radii, unsigned int textureunit) {
 		MatrixCache = myCamera.GetViewProjection();
 		glUniformMatrix4fv(m_matrix, 1, GL_FALSE, &MatrixCache[0][0]);
 		//Setup the far and near plane variables
@@ -130,6 +130,7 @@ struct CameraLight {
 		else
 		{glUniform3f(m_camerapos, myCamera.forward.x, myCamera.forward.y, myCamera.forward.z);}
 		glUniform3f(m_color, myColor.x, myColor.y, myColor.z);
+		glUniform2f(m_radii, radii.x, radii.y);
 		glUniform1f(m_SolidColorToggle, solidColor);
 		glUniform1f(m_range, range);
 		glUniform1f(m_shadows, isShadowed?1.0f:0.0f);
@@ -139,6 +140,7 @@ struct CameraLight {
 	}
 	float solidColor = 0.0f; //By default, use a solid color
 	glm::vec3 myColor; //the color to use in solid color mode
+	glm::vec2 radii = glm::vec2(0.5,0.5); //Inner and outer radii used
 	float range = 200.0f;
 	Camera myCamera; //Contains position and etc.
 	glm::mat4 MatrixCache; //Needed to call glUniformMatrix4fv

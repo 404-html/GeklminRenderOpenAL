@@ -79,15 +79,7 @@ struct cameralight{
 	float solidColor;
 	float range;
 	float shadows; //If this is enabled, solidcolor will be used and the texture sample will be treated as a sample into a shadowmap
-	vec4 sphere1;
-	vec4 sphere2;
-	vec4 sphere3;
-	vec4 sphere4;
-	vec3 AABBp1;
-	vec3 AABBp2;
-	vec3 AABBp3;
-	vec3 AABBp4;
-	uint isblacklist;
+	vec2 radii; //inner and outer radii
 };
 
 

@@ -6,7 +6,7 @@
 namespace GeklminRender {
 	
 //Render shadows to rendertarget (Just a depth buffer render
-void GkScene::drawShadowPipeline(int meshmask, FBO* CurrentRenderTarget, FBO* RenderTarget_Transparent, Camera* CurrentRenderCamera, bool doFrameBufferChecks, glm::vec4 backgroundColor, glm::vec2 fogRangeDescriptor){
+void GkScene::drawShadowPipeline(int meshmask, FBO* CurrentRenderTarget, Camera* CurrentRenderCamera, bool doFrameBufferChecks){
 	//Used for error checking
 	GLenum communism;
 	//Dont render to target unless we have both FBOs
@@ -305,7 +305,6 @@ void GkScene::drawShadowPipeline(int meshmask, FBO* CurrentRenderTarget, FBO* Re
 	//glm::vec4 tempBackgroundColor = glm::vec4(0,0,0,0);
 	//glm::vec2 tempFogRange = glm::vec2(500,800);
 	glUniform4f(MainShaderUniforms_SHADOWTEMP[MAINSHADER_BACKGROUND_COLOR], 1, 1, 1, 1);
-	glUniform2f(MainShaderUniforms_SHADOWTEMP[MAINSHADER_FOG_RANGE], fogRangeDescriptor.x, fogRangeDescriptor.y);
 	
 	glUniform1i(MainShaderUniforms_SHADOWTEMP[MAINSHADER_DIFFUSE],0);
 		
@@ -665,18 +664,19 @@ void GkScene::drawPipeline(int meshmask, FBO* CurrentRenderTarget, FBO* RenderTa
 			m_LightUniformHandles.push_back(MainShader->GetUniformLocation("camera_lightArray[" + std::to_string(i) + "].solidColor"));//3
 			m_LightUniformHandles.push_back(MainShader->GetUniformLocation("camera_lightArray[" + std::to_string(i) + "].range"));//4
 			m_LightUniformHandles.push_back(MainShader->GetUniformLocation("camera_lightArray[" + std::to_string(i) + "].shadows"));//5
+			m_LightUniformHandles.push_back(MainShader->GetUniformLocation("camera_lightArray[" + std::to_string(i) + "].radii"));//6
 			//AABB info
-			m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("camera_lightArray[" + std::to_string(i) + "].AABBp1"));
-			m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("camera_lightArray[" + std::to_string(i) + "].AABBp2"));
-			m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("camera_lightArray[" + std::to_string(i) + "].AABBp3"));
-			m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("camera_lightArray[" + std::to_string(i) + "].AABBp4"));
-			//Sphere Info
-			m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("camera_lightArray[" + std::to_string(i) + "].sphere1"));
-			m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("camera_lightArray[" + std::to_string(i) + "].sphere2"));
-			m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("camera_lightArray[" + std::to_string(i) + "].sphere3"));
-			m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("camera_lightArray[" + std::to_string(i) + "].sphere4"));
-			//The whitelist uint
-			m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("camera_lightArray[" + std::to_string(i) + "].iswhitelist"));
+			//~ m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("camera_lightArray[" + std::to_string(i) + "].AABBp1"));
+			//~ m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("camera_lightArray[" + std::to_string(i) + "].AABBp2"));
+			//~ m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("camera_lightArray[" + std::to_string(i) + "].AABBp3"));
+			//~ m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("camera_lightArray[" + std::to_string(i) + "].AABBp4"));
+			//~ //Sphere Info
+			//~ m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("camera_lightArray[" + std::to_string(i) + "].sphere1"));
+			//~ m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("camera_lightArray[" + std::to_string(i) + "].sphere2"));
+			//~ m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("camera_lightArray[" + std::to_string(i) + "].sphere3"));
+			//~ m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("camera_lightArray[" + std::to_string(i) + "].sphere4"));
+			//~ //The whitelist uint
+			//~ m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("camera_lightArray[" + std::to_string(i) + "].iswhitelist"));
 		}
 		//debug
 		// for (size_t i = 0; i < m_LightUniformHandles.size(); i++)
@@ -942,12 +942,13 @@ void GkScene::drawPipeline(int meshmask, FBO* CurrentRenderTarget, FBO* RenderTa
 				//bind
 				//grab all the things we need m_LightUniformHandles[4 * 32 + 2 * 2 + 3*3 + i * 4] //It now has 6...
 				CameraLights[currindex]->BindtoUniformCameraLight(
-					m_LightUniformHandles[4 * 32 + 2 * 2 + 3*3 + camLightsRegistered * 6],
-					m_LightUniformHandles[4 * 32 + 2 * 2 + 3*3 + camLightsRegistered * 6 +1],
-					m_LightUniformHandles[4 * 32 + 2 * 2 + 3*3 + camLightsRegistered * 6 +2],
-					m_LightUniformHandles[4 * 32 + 2 * 2 + 3*3 + camLightsRegistered * 6 +3],
-					m_LightUniformHandles[4 * 32 + 2 * 2 + 3*3 + camLightsRegistered * 6 +4],
-					m_LightUniformHandles[4 * 32 + 2 * 2 + 3*3 + camLightsRegistered * 6 +5],
+					m_LightUniformHandles[4 * 32 + 2 * 2 + 3*3 + camLightsRegistered * 7],
+					m_LightUniformHandles[4 * 32 + 2 * 2 + 3*3 + camLightsRegistered * 7 +1],
+					m_LightUniformHandles[4 * 32 + 2 * 2 + 3*3 + camLightsRegistered * 7 +2],
+					m_LightUniformHandles[4 * 32 + 2 * 2 + 3*3 + camLightsRegistered * 7 +3],
+					m_LightUniformHandles[4 * 32 + 2 * 2 + 3*3 + camLightsRegistered * 7 +4],
+					m_LightUniformHandles[4 * 32 + 2 * 2 + 3*3 + camLightsRegistered * 7 +5],
+					m_LightUniformHandles[4 * 32 + 2 * 2 + 3*3 + camLightsRegistered * 7 +6],
 					3+camLightsRegistered
 				);
 				
