@@ -135,8 +135,7 @@ struct CameraLight {
 		glUniform1f(m_shadows, isShadowed?1.0f:0.0f);
 		
 		//Bind texture
-		if(solidColor == 0.0f)
-			Tex2Project.Bind(textureunit);
+		Tex2Project.Bind(textureunit);
 	}
 	float solidColor = 0.0f; //By default, use a solid color
 	glm::vec3 myColor; //the color to use in solid color mode

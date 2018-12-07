@@ -525,7 +525,7 @@ void LoadResources()
 	theScene->ShadowOpaqueMainShader = MainshaderShadows;
 	theScene->ShowTextureShader = DisplayTexture; //Add a setter later
 	theScene->setWBOITCompositionShader(WBOITCompShader); //Has a setter, and it's been a long time, I should write a setter for the ShowTextureShader
-	FBOArray.push_back(new FBO(640,480, 1, GL_RGBA8)); //0, the test FBO render target
+	FBOArray.push_back(new FBO(640,480, 1, GL_RGBA32F)); //0, the test FBO render target
 	FBOArray.push_back(new FBO(640,480, 2, GL_RGBA16F, FBOArray[0]->getDepthBufferHandle())); //1, the FBO necessary for Weighted Blended OIT
 	FBOArray.push_back(new FBO(640,480, 1, GL_RGBA32F)); //2, the FBO for rendering Shadowmaps
 	theScene->registerCustomFBO(FBOArray[0]); //I was planning to use this to do reflections in the future, so I added a custom FBO registration feature.
@@ -594,7 +594,7 @@ void LoadResources()
 	//NotPointedTextureTest = Texture()
 	//Instanced Mesh texture and cubemap
 	//InstancedMesh->pushTexture(FileResourceManager->loadTexture("clouds.jpg",false));
-	InstancedMesh->pushTexture(*FBOArray[0]->getTex(0));
+	InstancedMesh->pushTexture(FBOArray[0]->getTex(0));
 	InstancedMesh->pushCubeMap(SkyboxTex);
 	
 	//Sphere_test Cubemaps
@@ -717,7 +717,11 @@ void initObjects()
 		RenderTargetCamera = *SceneRenderCamera;
 		theScene->setSceneCamera(SceneRenderCamera);
 		Cam_Lights.push_back(new CameraLight());
-		Cam_Lights[0]->Tex2Project = FileResourceManager->loadTexture("Art.jpg",false);
+		//~ Cam_Lights[0]->Tex2Project = FileResourceManager->loadTexture("Art.jpg",false);
+		Cam_Lights[0]->Tex2Project = FBOArray[0]->getTex(0);
+		Cam_Lights[0]->isShadowed = true;
+		Cam_Lights[0]->solidColor = 1.0;
+		Cam_Lights[0]->myColor = glm::vec3(1,0,0);
 		Cam_Lights[0]->myCamera = *SceneRenderCamera;
 		Cam_Lights[0]->range = 300;
 		theScene->RegisterCamLight(Cam_Lights[0]);
@@ -826,7 +830,7 @@ int main()
 		//Eof Game Code
 		syncCameraStateToALListener(SceneRenderCamera);
 		
-		theScene->drawShadowPipeline(1, FBOArray[0], nullptr, &RenderTargetCamera, false, glm::vec4(1.0,0,0,1.0), glm::vec2(300,500)); //Don't draw the ground
+		theScene->drawShadowPipeline(1, FBOArray[0], nullptr, &RenderTargetCamera, false, glm::vec4(0.0,0.0,0.0,1.0), glm::vec2(300,500)); //Don't draw the ground
 		theScene->drawPipeline(1, nullptr, nullptr, nullptr, false, glm::vec4(0,0,0,0), glm::vec2(800,1000));
 		myDevice->pollevents();
 		myDevice->swapBuffers(0);

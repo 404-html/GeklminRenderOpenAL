@@ -10,11 +10,11 @@ void GkScene::drawShadowPipeline(int meshmask, FBO* CurrentRenderTarget, FBO* Re
 	//Used for error checking
 	GLenum communism;
 	//Dont render to target unless we have both FBOs
-	//~ if ((CurrentRenderTarget != nullptr && RenderTarget_Transparent == nullptr) || (CurrentRenderTarget == nullptr && RenderTarget_Transparent != nullptr))
-		//~ {
-			//~ std::cout<<"\nYou got kicked out boi 1";
-			//~ return;
-		//~ }
+	if (!CurrentRenderTarget)
+		{
+			std::cout<<"\nYou got kicked out boi 1";
+			return;
+		}
 	if (nextRenderPipelineCallWillBeAfterVsync) //Reset everything if this render call was immediately after the vsync
 	{
 		// for (int iter = 0; iter < RendertargetCameras.size(); iter++)
@@ -47,27 +47,11 @@ void GkScene::drawShadowPipeline(int meshmask, FBO* CurrentRenderTarget, FBO* Re
 	
 	
 	
-	if (!SceneCamera || !MainShader || !MainShaderUniforms || !ShowTextureShader /*|| !CompositionShader*/){ //if one is not present
+	if (!ShadowOpaqueMainShader || !ShowTextureShader /*|| !CompositionShader*/){ //if one is not present
 		std::cout<<"\nYou got kicked out boi 3";
 		return; //gtfo
 	}
 	
-	//Setup Camera mat4s so that we can send in the addresses.
-	//In the future, we will append these to a vector.
-	if (CurrentRenderCamera == nullptr)
-	{
-		SceneRenderCameraMatrix = SceneCamera->GetViewProjection();
-		SceneRenderCameraViewMatrix = SceneCamera->GetViewMatrix();
-		SceneRenderCameraProjectionMatrix = SceneCamera->GetProjection();
-	} else { //This has to be done to avoid potential issues with the renderer reading bad memory
-		// RendertargetCameras.push_back(new glm::mat4(CurrentRenderCamera->GetViewProjection()));
-		// RendertargetCameras.push_back(new glm::mat4(CurrentRenderCamera->GetViewMatrix()));
-		// RendertargetCameras.push_back(new glm::mat4(CurrentRenderCamera->GetProjection()));
-	}
-	//In case we need it...
-	// InverseViewProjectionMatrix = glm::inverse(SceneRenderCameraMatrix); //Inverse of the Viewprojection Matrix.
-	// InverseProjectionMatrix = glm::inverse(SceneRenderCameraProjectionMatrix);//Matrix that undoes perspective transformation
-	// InverseViewMatrix = glm::inverse(SceneRenderCameraViewMatrix); 
 	
 	
 	
@@ -84,15 +68,15 @@ void GkScene::drawShadowPipeline(int meshmask, FBO* CurrentRenderTarget, FBO* Re
 	FBO* TransparencyFBO = nullptr;
 	if (CurrentRenderTarget == nullptr) {
 		MainFBO = FboArray[FORWARD_BUFFER1];
-		TransparencyFBO = FboArray[FORWARD_BUFFER2];
+		//~ TransparencyFBO = FboArray[FORWARD_BUFFER2];
 		//FboArray[FORWARD_BUFFER1]->BindRenderTarget();
 	} else {
 		MainFBO = CurrentRenderTarget;
-		TransparencyFBO = RenderTarget_Transparent;
+		//~ TransparencyFBO = RenderTarget_Transparent;
 		//CurrentRenderTarget->BindRenderTarget();
 	}
 	MainFBO->BindRenderTarget();
-	FBO::clearTexture(backgroundColor.x,backgroundColor.y,backgroundColor.z,backgroundColor.w);
+	FBO::clearTexture(1,1,1,1);
 	//std::cout<<"\nShould be clearing the screen";
 	/*
 	
@@ -101,203 +85,203 @@ void GkScene::drawShadowPipeline(int meshmask, FBO* CurrentRenderTarget, FBO* Re
 	
 	*/
 	//This draws the skybox in the background
-	if(SkyBoxCubemap && SkyboxShader)
-	{
-		SkyboxShader->Bind();
-		if (!haveInitializedSkyboxUniforms)
-		{
-			SkyboxUniforms[SKYBOX_WORLD2CAMERA] = SkyboxShader->GetUniformLocation("World2Camera");
-			SkyboxUniforms[SKYBOX_MODEL2WORLD] = SkyboxShader->GetUniformLocation("Model2World");
-			SkyboxUniforms[SKYBOX_VIEWMATRIX] = SkyboxShader->GetUniformLocation("viewMatrix");
-			SkyboxUniforms[SKYBOX_PROJECTION] = SkyboxShader->GetUniformLocation("projection");
-			SkyboxUniforms[SKYBOX_WORLDAROUNDME] = SkyboxShader->GetUniformLocation("worldaroundme");
-			haveInitializedSkyboxUniforms = true; //We've done it boys.
-		}
+	//~ if(SkyBoxCubemap && SkyboxShader)
+	//~ {
+		//~ SkyboxShader->Bind();
+		//~ if (!haveInitializedSkyboxUniforms)
+		//~ {
+			//~ SkyboxUniforms[SKYBOX_WORLD2CAMERA] = SkyboxShader->GetUniformLocation("World2Camera");
+			//~ SkyboxUniforms[SKYBOX_MODEL2WORLD] = SkyboxShader->GetUniformLocation("Model2World");
+			//~ SkyboxUniforms[SKYBOX_VIEWMATRIX] = SkyboxShader->GetUniformLocation("viewMatrix");
+			//~ SkyboxUniforms[SKYBOX_PROJECTION] = SkyboxShader->GetUniformLocation("projection");
+			//~ SkyboxUniforms[SKYBOX_WORLDAROUNDME] = SkyboxShader->GetUniformLocation("worldaroundme");
+			//~ haveInitializedSkyboxUniforms = true; //We've done it boys.
+		//~ }
 		
-		if (CurrentRenderCamera == nullptr)
-		{
-			glUniformMatrix4fv(SkyboxUniforms[SKYBOX_WORLD2CAMERA], 1, GL_FALSE, &SceneRenderCameraMatrix[0][0]);
-			glUniformMatrix4fv(SkyboxUniforms[SKYBOX_VIEWMATRIX], 1, GL_FALSE, &SceneRenderCameraViewMatrix[0][0]);
-			glUniformMatrix4fv(SkyboxUniforms[SKYBOX_PROJECTION], 1, GL_FALSE, &SceneRenderCameraProjectionMatrix[0][0]);
-		} else {
-			//&((*RendertargetCameras[RendertargetCameras.size()-3])[0][0])
-			glUniformMatrix4fv(SkyboxUniforms[SKYBOX_WORLD2CAMERA], 1, GL_FALSE, &(CurrentRenderCamera->GetViewProjection()[0][0]));
-			glUniformMatrix4fv(SkyboxUniforms[SKYBOX_VIEWMATRIX], 1, GL_FALSE, &(CurrentRenderCamera->GetViewMatrix()[0][0]));
-			glUniformMatrix4fv(SkyboxUniforms[SKYBOX_PROJECTION], 1, GL_FALSE, &(CurrentRenderCamera->GetProjection()[0][0]));
-		}
-		skybox_transform.reTransform(glm::vec3(0,0,0),glm::vec3(0,0,0),glm::vec3(SceneCamera->jafar * 0.5,SceneCamera->jafar * 0.5,SceneCamera->jafar * 0.5));
+		//~ if (CurrentRenderCamera == nullptr)
+		//~ {
+			//~ glUniformMatrix4fv(SkyboxUniforms[SKYBOX_WORLD2CAMERA], 1, GL_FALSE, &SceneRenderCameraMatrix[0][0]);
+			//~ glUniformMatrix4fv(SkyboxUniforms[SKYBOX_VIEWMATRIX], 1, GL_FALSE, &SceneRenderCameraViewMatrix[0][0]);
+			//~ glUniformMatrix4fv(SkyboxUniforms[SKYBOX_PROJECTION], 1, GL_FALSE, &SceneRenderCameraProjectionMatrix[0][0]);
+		//~ } else {
+			//~ //&((*RendertargetCameras[RendertargetCameras.size()-3])[0][0])
+			//~ glUniformMatrix4fv(SkyboxUniforms[SKYBOX_WORLD2CAMERA], 1, GL_FALSE, &(CurrentRenderCamera->GetViewProjection()[0][0]));
+			//~ glUniformMatrix4fv(SkyboxUniforms[SKYBOX_VIEWMATRIX], 1, GL_FALSE, &(CurrentRenderCamera->GetViewMatrix()[0][0]));
+			//~ glUniformMatrix4fv(SkyboxUniforms[SKYBOX_PROJECTION], 1, GL_FALSE, &(CurrentRenderCamera->GetProjection()[0][0]));
+		//~ }
+		//~ skybox_transform.reTransform(glm::vec3(0,0,0),glm::vec3(0,0,0),glm::vec3(SceneCamera->jafar * 0.5,SceneCamera->jafar * 0.5,SceneCamera->jafar * 0.5));
 	
 		
 	
 	
-		//Texture::SetActiveUnit(1); //??
-		SkyBoxCubemap->Bind(1); //Bind to 1
-		glDepthMask(GL_FALSE); //We want it to appear infinitely far away
-		// glEnable(GL_CULL_FACE);
-		glUniform1i(SkyboxUniforms[SKYBOX_WORLDAROUNDME], 1);
-		glEnableVertexAttribArray(0); //Position
-		glEnableVertexAttribArray(2); //Normal
-			Skybox_Transitional_Transform = skybox_transform.GetModel();
-			glUniformMatrix4fv(SkyboxUniforms[SKYBOX_MODEL2WORLD], 1, GL_FALSE, &Skybox_Transitional_Transform[0][0]);
-			m_skybox_Mesh->DrawGeneric();
-		glDepthMask(GL_TRUE);//We would like depth testing to be done again.
+		//~ //Texture::SetActiveUnit(1); //??
+		//~ SkyBoxCubemap->Bind(1); //Bind to 1
+		//~ glDepthMask(GL_FALSE); //We want it to appear infinitely far away
+		//~ // glEnable(GL_CULL_FACE);
+		//~ glUniform1i(SkyboxUniforms[SKYBOX_WORLDAROUNDME], 1);
+		//~ glEnableVertexAttribArray(0); //Position
+		//~ glEnableVertexAttribArray(2); //Normal
+			//~ Skybox_Transitional_Transform = skybox_transform.GetModel();
+			//~ glUniformMatrix4fv(SkyboxUniforms[SKYBOX_MODEL2WORLD], 1, GL_FALSE, &Skybox_Transitional_Transform[0][0]);
+			//~ m_skybox_Mesh->DrawGeneric();
+		//~ glDepthMask(GL_TRUE);//We would like depth testing to be done again.
 	
-	}
+	//~ }
 	
 	//This is where we would render any objects which don't use the mainshader
-	if (customRenderingAfterSkyboxBeforeMainShader != nullptr)
-		customRenderingAfterSkyboxBeforeMainShader(meshmask, CurrentRenderTarget, RenderTarget_Transparent, CurrentRenderCamera, doFrameBufferChecks, backgroundColor, fogRangeDescriptor);
+	//~ if (customRenderingAfterSkyboxBeforeMainShader != nullptr)
+		//~ customRenderingAfterSkyboxBeforeMainShader(meshmask, CurrentRenderTarget, RenderTarget_Transparent, CurrentRenderCamera, doFrameBufferChecks, backgroundColor, fogRangeDescriptor);
 	/*
 		MAINSHADER RENDERING
 	*/
-	MainShader->Bind(); //Bind the shader!
+	ShadowOpaqueMainShader->Bind(); //Bind the shader!
 	
 	
 	//Runs whenever the window is resized or a shader is reassigned, so that we only need to get uniform locations once. It's not optimized fully yet...
-	if(HasntRunYet){
+	if(HasntRunYet_Shadows){
 
-		HasntRunYet = false;
-		MainShaderUniforms[MAINSHADER_DIFFUSE] = MainShader->GetUniformLocation("diffuse"); //Literal texture unit
-		MainShaderUniforms[MAINSHADER_EMISSIVITY] = MainShader->GetUniformLocation("emissivity"); //Emissivity value
-		MainShaderUniforms[MAINSHADER_WORLD2CAMERA] = MainShader->GetUniformLocation("World2Camera"); //World --> NDC
-		MainShaderUniforms[MAINSHADER_MODEL2WORLD] = MainShader->GetUniformLocation("Model2World"); //Model --> World
-		//MainShaderUniforms[MAINSHADER_AMBIENT] = MainShader->GetUniformLocation("ambient"); //Ambient component of the material
-		MainShaderUniforms[MAINSHADER_SPECREFLECTIVITY] = MainShader->GetUniformLocation("specreflectivity"); //Specular reflectivity
-		MainShaderUniforms[MAINSHADER_SPECDAMP] = MainShader->GetUniformLocation("specdamp"); //Specular dampening
-		MainShaderUniforms[MAINSHADER_DIFFUSIVITY] = MainShader->GetUniformLocation("diffusivity"); //Diffusivity
-		MainShaderUniforms[MAINSHADER_RENDERFLAGS] = MainShader->GetUniformLocation("renderflags"); //Renderflags. Going to be used again b/c we're going to use per-vertex colors again!
-		MainShaderUniforms[MAINSHADER_WORLDAROUNDME] = MainShader->GetUniformLocation("worldaroundme");
-		MainShaderUniforms[MAINSHADER_ENABLE_CUBEMAP_REFLECTIONS] = MainShader->GetUniformLocation("enableCubeMapReflections");
-		MainShaderUniforms[MAINSHADER_ENABLE_CUBEMAP_DIFFUSION] = MainShader->GetUniformLocation("enableCubeMapDiffusivity");
-		MainShaderUniforms[MAINSHADER_CAMERAPOS] = MainShader->GetUniformLocation("CameraPos");
-		MainShaderUniforms[MAINSHADER_ENABLE_TRANSPARENCY] = MainShader->GetUniformLocation("EnableTransparency");
-		MainShaderUniforms[MAINSHADER_NUM_POINTLIGHTS] = MainShader->GetUniformLocation("numpointlights");
-		MainShaderUniforms[MAINSHADER_NUM_DIRLIGHTS] = MainShader->GetUniformLocation("numdirlights");
-		MainShaderUniforms[MAINSHADER_NUM_AMBLIGHTS] = MainShader->GetUniformLocation("numamblights");
-		MainShaderUniforms[MAINSHADER_NUM_CAMLIGHTS] = MainShader->GetUniformLocation("numcamlights");
-		MainShaderUniforms[MAINSHADER_IS_INSTANCED] = MainShader->GetUniformLocation("is_instanced");
-		MainShaderUniforms[MAINSHADER_CAMERATEX1] = MainShader->GetUniformLocation("CameraTex1");
-		MainShaderUniforms[MAINSHADER_CAMERATEX2] = MainShader->GetUniformLocation("CameraTex2");
-		MainShaderUniforms[MAINSHADER_CAMERATEX3] = MainShader->GetUniformLocation("CameraTex3");
-		MainShaderUniforms[MAINSHADER_CAMERATEX4] = MainShader->GetUniformLocation("CameraTex4");
-		MainShaderUniforms[MAINSHADER_CAMERATEX5] = MainShader->GetUniformLocation("CameraTex5");
-		MainShaderUniforms[MAINSHADER_CAMERATEX6] = MainShader->GetUniformLocation("CameraTex6");
-		MainShaderUniforms[MAINSHADER_CAMERATEX7] = MainShader->GetUniformLocation("CameraTex7");
-		MainShaderUniforms[MAINSHADER_CAMERATEX8] = MainShader->GetUniformLocation("CameraTex8");
-		MainShaderUniforms[MAINSHADER_CAMERATEX9] = MainShader->GetUniformLocation("CameraTex9");
-		MainShaderUniforms[MAINSHADER_CAMERATEX10] = MainShader->GetUniformLocation("CameraTex10");
+		HasntRunYet_Shadows = false;
+		MainShaderUniforms_SHADOWTEMP[MAINSHADER_DIFFUSE] = ShadowOpaqueMainShader->GetUniformLocation("diffuse"); //Literal texture unit
+		MainShaderUniforms_SHADOWTEMP[MAINSHADER_EMISSIVITY] = ShadowOpaqueMainShader->GetUniformLocation("emissivity"); //Emissivity value
+		MainShaderUniforms_SHADOWTEMP[MAINSHADER_WORLD2CAMERA] = ShadowOpaqueMainShader->GetUniformLocation("World2Camera"); //World --> NDC
+		MainShaderUniforms_SHADOWTEMP[MAINSHADER_MODEL2WORLD] = ShadowOpaqueMainShader->GetUniformLocation("Model2World"); //Model --> World
+		//MainShaderUniforms_SHADOWTEMP[MAINSHADER_AMBIENT] = ShadowOpaqueMainShader->GetUniformLocation("ambient"); //Ambient component of the material
+		MainShaderUniforms_SHADOWTEMP[MAINSHADER_SPECREFLECTIVITY] = ShadowOpaqueMainShader->GetUniformLocation("specreflectivity"); //Specular reflectivity
+		MainShaderUniforms_SHADOWTEMP[MAINSHADER_SPECDAMP] = ShadowOpaqueMainShader->GetUniformLocation("specdamp"); //Specular dampening
+		MainShaderUniforms_SHADOWTEMP[MAINSHADER_DIFFUSIVITY] = ShadowOpaqueMainShader->GetUniformLocation("diffusivity"); //Diffusivity
+		MainShaderUniforms_SHADOWTEMP[MAINSHADER_RENDERFLAGS] = ShadowOpaqueMainShader->GetUniformLocation("renderflags"); //Renderflags. Going to be used again b/c we're going to use per-vertex colors again!
+		MainShaderUniforms_SHADOWTEMP[MAINSHADER_WORLDAROUNDME] = ShadowOpaqueMainShader->GetUniformLocation("worldaroundme");
+		MainShaderUniforms_SHADOWTEMP[MAINSHADER_ENABLE_CUBEMAP_REFLECTIONS] = ShadowOpaqueMainShader->GetUniformLocation("enableCubeMapReflections");
+		MainShaderUniforms_SHADOWTEMP[MAINSHADER_ENABLE_CUBEMAP_DIFFUSION] = ShadowOpaqueMainShader->GetUniformLocation("enableCubeMapDiffusivity");
+		MainShaderUniforms_SHADOWTEMP[MAINSHADER_CAMERAPOS] = ShadowOpaqueMainShader->GetUniformLocation("CameraPos");
+		MainShaderUniforms_SHADOWTEMP[MAINSHADER_ENABLE_TRANSPARENCY] = ShadowOpaqueMainShader->GetUniformLocation("EnableTransparency");
+		MainShaderUniforms_SHADOWTEMP[MAINSHADER_NUM_POINTLIGHTS] = ShadowOpaqueMainShader->GetUniformLocation("numpointlights");
+		MainShaderUniforms_SHADOWTEMP[MAINSHADER_NUM_DIRLIGHTS] = ShadowOpaqueMainShader->GetUniformLocation("numdirlights");
+		MainShaderUniforms_SHADOWTEMP[MAINSHADER_NUM_AMBLIGHTS] = ShadowOpaqueMainShader->GetUniformLocation("numamblights");
+		MainShaderUniforms_SHADOWTEMP[MAINSHADER_NUM_CAMLIGHTS] = ShadowOpaqueMainShader->GetUniformLocation("numcamlights");
+		MainShaderUniforms_SHADOWTEMP[MAINSHADER_IS_INSTANCED] = ShadowOpaqueMainShader->GetUniformLocation("is_instanced");
+		MainShaderUniforms_SHADOWTEMP[MAINSHADER_CAMERATEX1] = ShadowOpaqueMainShader->GetUniformLocation("CameraTex1");
+		MainShaderUniforms_SHADOWTEMP[MAINSHADER_CAMERATEX2] = ShadowOpaqueMainShader->GetUniformLocation("CameraTex2");
+		MainShaderUniforms_SHADOWTEMP[MAINSHADER_CAMERATEX3] = ShadowOpaqueMainShader->GetUniformLocation("CameraTex3");
+		MainShaderUniforms_SHADOWTEMP[MAINSHADER_CAMERATEX4] = ShadowOpaqueMainShader->GetUniformLocation("CameraTex4");
+		MainShaderUniforms_SHADOWTEMP[MAINSHADER_CAMERATEX5] = ShadowOpaqueMainShader->GetUniformLocation("CameraTex5");
+		MainShaderUniforms_SHADOWTEMP[MAINSHADER_CAMERATEX6] = ShadowOpaqueMainShader->GetUniformLocation("CameraTex6");
+		MainShaderUniforms_SHADOWTEMP[MAINSHADER_CAMERATEX7] = ShadowOpaqueMainShader->GetUniformLocation("CameraTex7");
+		MainShaderUniforms_SHADOWTEMP[MAINSHADER_CAMERATEX8] = ShadowOpaqueMainShader->GetUniformLocation("CameraTex8");
+		MainShaderUniforms_SHADOWTEMP[MAINSHADER_CAMERATEX9] = ShadowOpaqueMainShader->GetUniformLocation("CameraTex9");
+		MainShaderUniforms_SHADOWTEMP[MAINSHADER_CAMERATEX10] = ShadowOpaqueMainShader->GetUniformLocation("CameraTex10");
 		/*
 		MAINSHADER_SKYBOX_CUBEMAP, //The cubemap of the Skybox
 		MAINSHADER_BACKGROUND_COLOR, //if a is 0, it uses the skybox cubemap, if a is 1, it uses the background color
 		MAINSHADER_FOG_RANGE, //What distance from the camera should fog start at and go to 100% at?
 		*/
-		MainShaderUniforms[MAINSHADER_SKYBOX_CUBEMAP] = MainShader->GetUniformLocation("SkyboxCubemap");
-		MainShaderUniforms[MAINSHADER_BACKGROUND_COLOR] = MainShader->GetUniformLocation("backgroundColor");
-		MainShaderUniforms[MAINSHADER_FOG_RANGE] = MainShader->GetUniformLocation("fogRange");
+		MainShaderUniforms_SHADOWTEMP[MAINSHADER_SKYBOX_CUBEMAP] = ShadowOpaqueMainShader->GetUniformLocation("SkyboxCubemap");
+		MainShaderUniforms_SHADOWTEMP[MAINSHADER_BACKGROUND_COLOR] = ShadowOpaqueMainShader->GetUniformLocation("backgroundColor");
+		MainShaderUniforms_SHADOWTEMP[MAINSHADER_FOG_RANGE] = ShadowOpaqueMainShader->GetUniformLocation("fogRange");
 		//Get the uniform locations for lights
-		//m_LightUniformHandles
-		if (m_LightUniformHandles.size() > 0)
-			m_LightUniformHandles.clear();
-		if (m_LightClippingVolumeUniformHandles.size() > 0)
-			m_LightClippingVolumeUniformHandles.clear();
+		//m_LightUniformHandles_SHADOWTEMP
+		if (m_LightUniformHandles_SHADOWTEMP.size() > 0)
+			m_LightUniformHandles_SHADOWTEMP.clear();
+		if (m_LightClippingVolumeUniformHandles_SHADOWTEMP.size() > 0)
+			m_LightClippingVolumeUniformHandles_SHADOWTEMP.clear();
 		for (int i = 0; i < 32; i++) //Point lights
 		{
 			//access by taking i, multiplying by 4 and adding an offset (0 for position, 1 for color...)
-			m_LightUniformHandles.push_back(MainShader->GetUniformLocation("point_lightArray[" + std::to_string(i) + "].position"));
-			m_LightUniformHandles.push_back(MainShader->GetUniformLocation("point_lightArray[" + std::to_string(i) + "].color"));
-			m_LightUniformHandles.push_back(MainShader->GetUniformLocation("point_lightArray[" + std::to_string(i) + "].range"));
-			m_LightUniformHandles.push_back(MainShader->GetUniformLocation("point_lightArray[" + std::to_string(i) + "].dropoff"));
+			m_LightUniformHandles_SHADOWTEMP.push_back(ShadowOpaqueMainShader->GetUniformLocation("point_lightArray[" + std::to_string(i) + "].position"));
+			m_LightUniformHandles_SHADOWTEMP.push_back(ShadowOpaqueMainShader->GetUniformLocation("point_lightArray[" + std::to_string(i) + "].color"));
+			m_LightUniformHandles_SHADOWTEMP.push_back(ShadowOpaqueMainShader->GetUniformLocation("point_lightArray[" + std::to_string(i) + "].range"));
+			m_LightUniformHandles_SHADOWTEMP.push_back(ShadowOpaqueMainShader->GetUniformLocation("point_lightArray[" + std::to_string(i) + "].dropoff"));
 			//AABB info
-			m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("point_lightArray[" + std::to_string(i) + "].AABBp1"));
-			m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("point_lightArray[" + std::to_string(i) + "].AABBp2"));
-			m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("point_lightArray[" + std::to_string(i) + "].AABBp3"));
-			m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("point_lightArray[" + std::to_string(i) + "].AABBp4"));
+			m_LightClippingVolumeUniformHandles_SHADOWTEMP.push_back(ShadowOpaqueMainShader->GetUniformLocation("point_lightArray[" + std::to_string(i) + "].AABBp1"));
+			m_LightClippingVolumeUniformHandles_SHADOWTEMP.push_back(ShadowOpaqueMainShader->GetUniformLocation("point_lightArray[" + std::to_string(i) + "].AABBp2"));
+			m_LightClippingVolumeUniformHandles_SHADOWTEMP.push_back(ShadowOpaqueMainShader->GetUniformLocation("point_lightArray[" + std::to_string(i) + "].AABBp3"));
+			m_LightClippingVolumeUniformHandles_SHADOWTEMP.push_back(ShadowOpaqueMainShader->GetUniformLocation("point_lightArray[" + std::to_string(i) + "].AABBp4"));
 			//Sphere Info
-			m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("point_lightArray[" + std::to_string(i) + "].sphere1"));
-			m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("point_lightArray[" + std::to_string(i) + "].sphere2"));
-			m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("point_lightArray[" + std::to_string(i) + "].sphere3"));
-			m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("point_lightArray[" + std::to_string(i) + "].sphere4"));
+			m_LightClippingVolumeUniformHandles_SHADOWTEMP.push_back(ShadowOpaqueMainShader->GetUniformLocation("point_lightArray[" + std::to_string(i) + "].sphere1"));
+			m_LightClippingVolumeUniformHandles_SHADOWTEMP.push_back(ShadowOpaqueMainShader->GetUniformLocation("point_lightArray[" + std::to_string(i) + "].sphere2"));
+			m_LightClippingVolumeUniformHandles_SHADOWTEMP.push_back(ShadowOpaqueMainShader->GetUniformLocation("point_lightArray[" + std::to_string(i) + "].sphere3"));
+			m_LightClippingVolumeUniformHandles_SHADOWTEMP.push_back(ShadowOpaqueMainShader->GetUniformLocation("point_lightArray[" + std::to_string(i) + "].sphere4"));
 			//The whitelist uint
-			m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("point_lightArray[" + std::to_string(i) + "].iswhitelist"));
+			m_LightClippingVolumeUniformHandles_SHADOWTEMP.push_back(ShadowOpaqueMainShader->GetUniformLocation("point_lightArray[" + std::to_string(i) + "].iswhitelist"));
 			//std::cout << "point_lightArray[" + std::to_string(i) + "].dropoff";
 		}
 		for (int i = 0; i < 2; i++) //Dir Lights
 		{
 			//access by taking i, multiplying by 2, adding 4 * max point lights, and adding an offset (0 for direction, 1 for color...)
-			m_LightUniformHandles.push_back(MainShader->GetUniformLocation("dir_lightArray[" + std::to_string(i) + "].direction"));
-			m_LightUniformHandles.push_back(MainShader->GetUniformLocation("dir_lightArray[" + std::to_string(i) + "].color"));
+			m_LightUniformHandles_SHADOWTEMP.push_back(ShadowOpaqueMainShader->GetUniformLocation("dir_lightArray[" + std::to_string(i) + "].direction"));
+			m_LightUniformHandles_SHADOWTEMP.push_back(ShadowOpaqueMainShader->GetUniformLocation("dir_lightArray[" + std::to_string(i) + "].color"));
 			
 			//AABB info
-			m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("dir_lightArray[" + std::to_string(i) + "].AABBp1"));
-			m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("dir_lightArray[" + std::to_string(i) + "].AABBp2"));
-			m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("dir_lightArray[" + std::to_string(i) + "].AABBp3"));
-			m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("dir_lightArray[" + std::to_string(i) + "].AABBp4"));
+			m_LightClippingVolumeUniformHandles_SHADOWTEMP.push_back(ShadowOpaqueMainShader->GetUniformLocation("dir_lightArray[" + std::to_string(i) + "].AABBp1"));
+			m_LightClippingVolumeUniformHandles_SHADOWTEMP.push_back(ShadowOpaqueMainShader->GetUniformLocation("dir_lightArray[" + std::to_string(i) + "].AABBp2"));
+			m_LightClippingVolumeUniformHandles_SHADOWTEMP.push_back(ShadowOpaqueMainShader->GetUniformLocation("dir_lightArray[" + std::to_string(i) + "].AABBp3"));
+			m_LightClippingVolumeUniformHandles_SHADOWTEMP.push_back(ShadowOpaqueMainShader->GetUniformLocation("dir_lightArray[" + std::to_string(i) + "].AABBp4"));
 			//Sphere Info
-			m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("dir_lightArray[" + std::to_string(i) + "].sphere1"));
-			m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("dir_lightArray[" + std::to_string(i) + "].sphere2"));
-			m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("dir_lightArray[" + std::to_string(i) + "].sphere3"));
-			m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("dir_lightArray[" + std::to_string(i) + "].sphere4"));
+			m_LightClippingVolumeUniformHandles_SHADOWTEMP.push_back(ShadowOpaqueMainShader->GetUniformLocation("dir_lightArray[" + std::to_string(i) + "].sphere1"));
+			m_LightClippingVolumeUniformHandles_SHADOWTEMP.push_back(ShadowOpaqueMainShader->GetUniformLocation("dir_lightArray[" + std::to_string(i) + "].sphere2"));
+			m_LightClippingVolumeUniformHandles_SHADOWTEMP.push_back(ShadowOpaqueMainShader->GetUniformLocation("dir_lightArray[" + std::to_string(i) + "].sphere3"));
+			m_LightClippingVolumeUniformHandles_SHADOWTEMP.push_back(ShadowOpaqueMainShader->GetUniformLocation("dir_lightArray[" + std::to_string(i) + "].sphere4"));
 			//The whitelist uint
-			m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("dir_lightArray[" + std::to_string(i) + "].iswhitelist"));
+			m_LightClippingVolumeUniformHandles_SHADOWTEMP.push_back(ShadowOpaqueMainShader->GetUniformLocation("dir_lightArray[" + std::to_string(i) + "].iswhitelist"));
 		}
 		
 		for (int i = 0; i < 3; i++) //Ambient Lights
 		{
 			//access by taking i, multiplying by 3, adding 4 * max pointlights + 2 * max dir lights, and adding an offset (0 for position, 1 for color...)
-			m_LightUniformHandles.push_back(MainShader->GetUniformLocation("amb_lightArray[" + std::to_string(i) + "].position"));
-			m_LightUniformHandles.push_back(MainShader->GetUniformLocation("amb_lightArray[" + std::to_string(i) + "].color"));
-			m_LightUniformHandles.push_back(MainShader->GetUniformLocation("amb_lightArray[" + std::to_string(i) + "].range"));
+			m_LightUniformHandles_SHADOWTEMP.push_back(ShadowOpaqueMainShader->GetUniformLocation("amb_lightArray[" + std::to_string(i) + "].position"));
+			m_LightUniformHandles_SHADOWTEMP.push_back(ShadowOpaqueMainShader->GetUniformLocation("amb_lightArray[" + std::to_string(i) + "].color"));
+			m_LightUniformHandles_SHADOWTEMP.push_back(ShadowOpaqueMainShader->GetUniformLocation("amb_lightArray[" + std::to_string(i) + "].range"));
 			
 			//AABB info
-			m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("amb_lightArray[" + std::to_string(i) + "].AABBp1"));
-			m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("amb_lightArray[" + std::to_string(i) + "].AABBp2"));
-			m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("amb_lightArray[" + std::to_string(i) + "].AABBp3"));
-			m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("amb_lightArray[" + std::to_string(i) + "].AABBp4"));
+			m_LightClippingVolumeUniformHandles_SHADOWTEMP.push_back(ShadowOpaqueMainShader->GetUniformLocation("amb_lightArray[" + std::to_string(i) + "].AABBp1"));
+			m_LightClippingVolumeUniformHandles_SHADOWTEMP.push_back(ShadowOpaqueMainShader->GetUniformLocation("amb_lightArray[" + std::to_string(i) + "].AABBp2"));
+			m_LightClippingVolumeUniformHandles_SHADOWTEMP.push_back(ShadowOpaqueMainShader->GetUniformLocation("amb_lightArray[" + std::to_string(i) + "].AABBp3"));
+			m_LightClippingVolumeUniformHandles_SHADOWTEMP.push_back(ShadowOpaqueMainShader->GetUniformLocation("amb_lightArray[" + std::to_string(i) + "].AABBp4"));
 			//Sphere Info
-			m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("amb_lightArray[" + std::to_string(i) + "].sphere1"));
-			m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("amb_lightArray[" + std::to_string(i) + "].sphere2"));
-			m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("amb_lightArray[" + std::to_string(i) + "].sphere3"));
-			m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("amb_lightArray[" + std::to_string(i) + "].sphere4"));
+			m_LightClippingVolumeUniformHandles_SHADOWTEMP.push_back(ShadowOpaqueMainShader->GetUniformLocation("amb_lightArray[" + std::to_string(i) + "].sphere1"));
+			m_LightClippingVolumeUniformHandles_SHADOWTEMP.push_back(ShadowOpaqueMainShader->GetUniformLocation("amb_lightArray[" + std::to_string(i) + "].sphere2"));
+			m_LightClippingVolumeUniformHandles_SHADOWTEMP.push_back(ShadowOpaqueMainShader->GetUniformLocation("amb_lightArray[" + std::to_string(i) + "].sphere3"));
+			m_LightClippingVolumeUniformHandles_SHADOWTEMP.push_back(ShadowOpaqueMainShader->GetUniformLocation("amb_lightArray[" + std::to_string(i) + "].sphere4"));
 			//The whitelist uint
-			m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("amb_lightArray[" + std::to_string(i) + "].iswhitelist"));
+			m_LightClippingVolumeUniformHandles_SHADOWTEMP.push_back(ShadowOpaqueMainShader->GetUniformLocation("amb_lightArray[" + std::to_string(i) + "].iswhitelist"));
 		}
 		
 		for (int i = 0; i < 5; i++) //Cameralights
 		{
 			//access by taking i, multiplying by 3, adding 4 * maxpointlights + 2 * maxdirlights + 3 * maxambientlights, and adding an offset (0 for viewproj, 1 for color...)
-			m_LightUniformHandles.push_back(MainShader->GetUniformLocation("camera_lightArray[" + std::to_string(i) + "].viewproj"));//0
-			m_LightUniformHandles.push_back(MainShader->GetUniformLocation("camera_lightArray[" + std::to_string(i) + "].position"));//1
-			m_LightUniformHandles.push_back(MainShader->GetUniformLocation("camera_lightArray[" + std::to_string(i) + "].color"));//2
-			m_LightUniformHandles.push_back(MainShader->GetUniformLocation("camera_lightArray[" + std::to_string(i) + "].solidColor"));//3
-			m_LightUniformHandles.push_back(MainShader->GetUniformLocation("camera_lightArray[" + std::to_string(i) + "].range"));//4
-			m_LightUniformHandles.push_back(MainShader->GetUniformLocation("camera_lightArray[" + std::to_string(i) + "].shadows"));//5
+			m_LightUniformHandles_SHADOWTEMP.push_back(ShadowOpaqueMainShader->GetUniformLocation("camera_lightArray[" + std::to_string(i) + "].viewproj"));//0
+			m_LightUniformHandles_SHADOWTEMP.push_back(ShadowOpaqueMainShader->GetUniformLocation("camera_lightArray[" + std::to_string(i) + "].position"));//1
+			m_LightUniformHandles_SHADOWTEMP.push_back(ShadowOpaqueMainShader->GetUniformLocation("camera_lightArray[" + std::to_string(i) + "].color"));//2
+			m_LightUniformHandles_SHADOWTEMP.push_back(ShadowOpaqueMainShader->GetUniformLocation("camera_lightArray[" + std::to_string(i) + "].solidColor"));//3
+			m_LightUniformHandles_SHADOWTEMP.push_back(ShadowOpaqueMainShader->GetUniformLocation("camera_lightArray[" + std::to_string(i) + "].range"));//4
+			m_LightUniformHandles_SHADOWTEMP.push_back(ShadowOpaqueMainShader->GetUniformLocation("camera_lightArray[" + std::to_string(i) + "].shadows"));//5
 			//AABB info
-			m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("camera_lightArray[" + std::to_string(i) + "].AABBp1"));
-			m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("camera_lightArray[" + std::to_string(i) + "].AABBp2"));
-			m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("camera_lightArray[" + std::to_string(i) + "].AABBp3"));
-			m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("camera_lightArray[" + std::to_string(i) + "].AABBp4"));
+			m_LightClippingVolumeUniformHandles_SHADOWTEMP.push_back(ShadowOpaqueMainShader->GetUniformLocation("camera_lightArray[" + std::to_string(i) + "].AABBp1"));
+			m_LightClippingVolumeUniformHandles_SHADOWTEMP.push_back(ShadowOpaqueMainShader->GetUniformLocation("camera_lightArray[" + std::to_string(i) + "].AABBp2"));
+			m_LightClippingVolumeUniformHandles_SHADOWTEMP.push_back(ShadowOpaqueMainShader->GetUniformLocation("camera_lightArray[" + std::to_string(i) + "].AABBp3"));
+			m_LightClippingVolumeUniformHandles_SHADOWTEMP.push_back(ShadowOpaqueMainShader->GetUniformLocation("camera_lightArray[" + std::to_string(i) + "].AABBp4"));
 			//Sphere Info
-			m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("camera_lightArray[" + std::to_string(i) + "].sphere1"));
-			m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("camera_lightArray[" + std::to_string(i) + "].sphere2"));
-			m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("camera_lightArray[" + std::to_string(i) + "].sphere3"));
-			m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("camera_lightArray[" + std::to_string(i) + "].sphere4"));
+			m_LightClippingVolumeUniformHandles_SHADOWTEMP.push_back(ShadowOpaqueMainShader->GetUniformLocation("camera_lightArray[" + std::to_string(i) + "].sphere1"));
+			m_LightClippingVolumeUniformHandles_SHADOWTEMP.push_back(ShadowOpaqueMainShader->GetUniformLocation("camera_lightArray[" + std::to_string(i) + "].sphere2"));
+			m_LightClippingVolumeUniformHandles_SHADOWTEMP.push_back(ShadowOpaqueMainShader->GetUniformLocation("camera_lightArray[" + std::to_string(i) + "].sphere3"));
+			m_LightClippingVolumeUniformHandles_SHADOWTEMP.push_back(ShadowOpaqueMainShader->GetUniformLocation("camera_lightArray[" + std::to_string(i) + "].sphere4"));
 			//The whitelist uint
-			m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("camera_lightArray[" + std::to_string(i) + "].iswhitelist"));
+			m_LightClippingVolumeUniformHandles_SHADOWTEMP.push_back(ShadowOpaqueMainShader->GetUniformLocation("camera_lightArray[" + std::to_string(i) + "].iswhitelist"));
 		}
 		//debug
-		// for (size_t i = 0; i < m_LightUniformHandles.size(); i++)
+		// for (size_t i = 0; i < m_LightUniformHandles_SHADOWTEMP.size(); i++)
 		// {
-			// std::cout << "\n DEBUG LIGHTUNIFORM HANDLES: " + std::to_string(m_LightUniformHandles[i]);
+			// std::cout << "\n DEBUG LIGHTUNIFORM HANDLES: " + std::to_string(m_LightUniformHandles_SHADOWTEMP[i]);
 		// }
 	}
 	//Custom Bindings
-	if (customMainShaderBinds != nullptr)
-		customMainShaderBinds(meshmask, CurrentRenderTarget, RenderTarget_Transparent, CurrentRenderCamera, doFrameBufferChecks, backgroundColor, fogRangeDescriptor); //TODO: Why aren't we passing the shader?
+	//~ if (customMainShaderBinds != nullptr)
+		//~ customMainShaderBinds(meshmask, CurrentRenderTarget, RenderTarget_Transparent, CurrentRenderCamera, doFrameBufferChecks, backgroundColor, fogRangeDescriptor); //TODO: Why aren't we passing the shader?
 	
 	if (CurrentRenderCamera == nullptr)
-		glUniform3f(MainShaderUniforms[MAINSHADER_CAMERAPOS], SceneCamera->pos.x, SceneCamera->pos.y, SceneCamera->pos.z);
+		glUniform3f(MainShaderUniforms_SHADOWTEMP[MAINSHADER_CAMERAPOS], SceneCamera->pos.x, SceneCamera->pos.y, SceneCamera->pos.z);
 	else
-		glUniform3f(MainShaderUniforms[MAINSHADER_CAMERAPOS], CurrentRenderCamera->pos.x, CurrentRenderCamera->pos.y, CurrentRenderCamera->pos.z);
+		glUniform3f(MainShaderUniforms_SHADOWTEMP[MAINSHADER_CAMERAPOS], CurrentRenderCamera->pos.x, CurrentRenderCamera->pos.y, CurrentRenderCamera->pos.z);
 	
 	/*
 		MAINSHADER_SKYBOX_CUBEMAP, //The cubemap of the Skybox
@@ -305,267 +289,35 @@ void GkScene::drawShadowPipeline(int meshmask, FBO* CurrentRenderTarget, FBO* Re
 		MAINSHADER_FOG_RANGE, //What distance from the camera should fog start at and go to 100% at?
 	*/
 	
-	glUniform1i(MainShaderUniforms[MAINSHADER_SKYBOX_CUBEMAP],2);
-	glUniform1i(MainShaderUniforms[MAINSHADER_CAMERATEX1], 3);
-	glUniform1i(MainShaderUniforms[MAINSHADER_CAMERATEX2], 4);
-	glUniform1i(MainShaderUniforms[MAINSHADER_CAMERATEX3], 5);
-	glUniform1i(MainShaderUniforms[MAINSHADER_CAMERATEX4], 6);
-	glUniform1i(MainShaderUniforms[MAINSHADER_CAMERATEX5], 7);
-	glUniform1i(MainShaderUniforms[MAINSHADER_CAMERATEX6], 8);
-	glUniform1i(MainShaderUniforms[MAINSHADER_CAMERATEX7], 9);
-	glUniform1i(MainShaderUniforms[MAINSHADER_CAMERATEX8], 10);
-	glUniform1i(MainShaderUniforms[MAINSHADER_CAMERATEX9], 11);
-	glUniform1i(MainShaderUniforms[MAINSHADER_CAMERATEX10], 12);
+	glUniform1i(MainShaderUniforms_SHADOWTEMP[MAINSHADER_SKYBOX_CUBEMAP],2);
+	glUniform1i(MainShaderUniforms_SHADOWTEMP[MAINSHADER_CAMERATEX1], 3);
+	glUniform1i(MainShaderUniforms_SHADOWTEMP[MAINSHADER_CAMERATEX2], 4);
+	glUniform1i(MainShaderUniforms_SHADOWTEMP[MAINSHADER_CAMERATEX3], 5);
+	glUniform1i(MainShaderUniforms_SHADOWTEMP[MAINSHADER_CAMERATEX4], 6);
+	glUniform1i(MainShaderUniforms_SHADOWTEMP[MAINSHADER_CAMERATEX5], 7);
+	glUniform1i(MainShaderUniforms_SHADOWTEMP[MAINSHADER_CAMERATEX6], 8);
+	glUniform1i(MainShaderUniforms_SHADOWTEMP[MAINSHADER_CAMERATEX7], 9);
+	glUniform1i(MainShaderUniforms_SHADOWTEMP[MAINSHADER_CAMERATEX8], 10);
+	glUniform1i(MainShaderUniforms_SHADOWTEMP[MAINSHADER_CAMERATEX9], 11);
+	glUniform1i(MainShaderUniforms_SHADOWTEMP[MAINSHADER_CAMERATEX10], 12);
 	if (SkyBoxCubemap)
 		SkyBoxCubemap->Bind(2);
 	//glm::vec4 tempBackgroundColor = glm::vec4(0,0,0,0);
 	//glm::vec2 tempFogRange = glm::vec2(500,800);
-	glUniform4f(MainShaderUniforms[MAINSHADER_BACKGROUND_COLOR], backgroundColor.x, backgroundColor.y, backgroundColor.z, backgroundColor.w);
-	glUniform2f(MainShaderUniforms[MAINSHADER_FOG_RANGE], fogRangeDescriptor.x, fogRangeDescriptor.y);
+	glUniform4f(MainShaderUniforms_SHADOWTEMP[MAINSHADER_BACKGROUND_COLOR], 1, 1, 1, 1);
+	glUniform2f(MainShaderUniforms_SHADOWTEMP[MAINSHADER_FOG_RANGE], fogRangeDescriptor.x, fogRangeDescriptor.y);
 	
-	glUniform1i(MainShaderUniforms[MAINSHADER_DIFFUSE],0);
+	glUniform1i(MainShaderUniforms_SHADOWTEMP[MAINSHADER_DIFFUSE],0);
 		
 	//Do this regardless of the presence of Skyboxcubemap
-	glUniform1i(MainShaderUniforms[MAINSHADER_WORLDAROUNDME], 1);//Cubemap unit 1 is reserved for the cubemap representing the world around the object, for reflections.
+	glUniform1i(MainShaderUniforms_SHADOWTEMP[MAINSHADER_WORLDAROUNDME], 1);//Cubemap unit 1 is reserved for the cubemap representing the world around the object, for reflections.
 	
 	//TODO: Change camera reference for sorting lights to the current render target camera (if applicable)
 
 	if (CurrentRenderCamera == nullptr)
-		{glUniformMatrix4fv(MainShaderUniforms[MAINSHADER_WORLD2CAMERA], 1, GL_FALSE, &SceneRenderCameraMatrix[0][0]);}
+		{glUniformMatrix4fv(MainShaderUniforms_SHADOWTEMP[MAINSHADER_WORLD2CAMERA], 1, GL_FALSE, &SceneRenderCameraMatrix[0][0]);}
 	else
-		{glUniformMatrix4fv(MainShaderUniforms[MAINSHADER_WORLD2CAMERA], 1, GL_FALSE, &(CurrentRenderCamera->GetViewProjection()[0][0]));}
-	//Bind Directional lights.
-	if (DirectionalLights.size() > 0)
-	{
-		for (int i = 0; i < 2 && i < DirectionalLights.size(); i++)
-		if(DirectionalLights[i] && DirectionalLights[i]->shouldRender)
-		{
-			//access by taking i, multiplying by 2, adding 4 * max point lights, and adding an offset (0 for direction, 1 for color...)
-			//m_LightUniformHandles
-			glUniform3f(m_LightUniformHandles[i * 2 + 4 * 32 + 0], DirectionalLights[i]->myDirection.x,DirectionalLights[i]->myDirection.y, DirectionalLights[i]->myDirection.z);
-			glUniform3f(m_LightUniformHandles[i * 2 + 4 * 32 + 1], DirectionalLights[i]->myColor.x,DirectionalLights[i]->myColor.y, DirectionalLights[i]->myColor.z);
-			
-			//Bind the Light Clipping Volumes
-			
-			
-			//FORMAT OF m_LightClippingVolumeUniformHandles
-			//Per Light:
-			//0 - 3 AABBp1-4 (4 vec3s)
-			//4-7 Spheres 0-3 (4 vec4s)
-			//8 whitelist or Whitelist UINT
-			
-			
-			glUniform3f(m_LightClippingVolumeUniformHandles[32*9 + i*9    ], DirectionalLights[i]->AABBp1.x, DirectionalLights[i]->AABBp1.y, DirectionalLights[i]->AABBp1.z); //AABBp1
-			glUniform3f(m_LightClippingVolumeUniformHandles[32*9 + i*9 + 1], DirectionalLights[i]->AABBp2.x, DirectionalLights[i]->AABBp2.y, DirectionalLights[i]->AABBp2.z); //AABBp2
-			glUniform3f(m_LightClippingVolumeUniformHandles[32*9 + i*9 + 2], DirectionalLights[i]->AABBp3.x, DirectionalLights[i]->AABBp3.y, DirectionalLights[i]->AABBp3.z); //AABBp3
-			glUniform3f(m_LightClippingVolumeUniformHandles[32*9 + i*9 + 3], DirectionalLights[i]->AABBp4.x, DirectionalLights[i]->AABBp4.y, DirectionalLights[i]->AABBp4.z); //AABBp4
-			
-			glUniform4f(m_LightClippingVolumeUniformHandles[32*9 + i*9 + 4], DirectionalLights[i]->sphere1.x, DirectionalLights[i]->sphere1.y, DirectionalLights[i]->sphere1.z, DirectionalLights[i]->sphere1.w); //Sphere 1
-			glUniform4f(m_LightClippingVolumeUniformHandles[32*9 + i*9 + 5], DirectionalLights[i]->sphere2.x, DirectionalLights[i]->sphere2.y, DirectionalLights[i]->sphere2.z, DirectionalLights[i]->sphere2.w); //Sphere 2
-			glUniform4f(m_LightClippingVolumeUniformHandles[32*9 + i*9 + 6], DirectionalLights[i]->sphere3.x, DirectionalLights[i]->sphere3.y, DirectionalLights[i]->sphere3.z, DirectionalLights[i]->sphere3.w); //Sphere 3
-			glUniform4f(m_LightClippingVolumeUniformHandles[32*9 + i*9 + 7], DirectionalLights[i]->sphere4.x, DirectionalLights[i]->sphere4.y, DirectionalLights[i]->sphere4.z, DirectionalLights[i]->sphere4.w); //Sphere 4
-			
-			glUniform1ui(m_LightClippingVolumeUniformHandles[32*9 + i*9 + 8], DirectionalLights[i]->whitelist?1:0);
-			if (i == 1 || i == DirectionalLights.size()-1)
-			{
-				glUniform1i(MainShaderUniforms[MAINSHADER_NUM_DIRLIGHTS], i + 1);
-			}
-		}
-	} else {
-		glUniform1i(MainShaderUniforms[MAINSHADER_NUM_DIRLIGHTS], 0);
-	}
-	
-	
-	
-	//Do point lights
-	if (SimplePointLights.size() > 0){
-		PointLight* LightsThisFrame[32]; //Array of pointers
-		//Grab the first 32
-		size_t howmanypointlightshavewedone = 0;
-		long long maxindex = -1;
-		for (size_t i = 0; i < SimplePointLights.size() && howmanypointlightshavewedone < 32; i++)
-		{
-			if(SimplePointLights[i]->shouldRender)
-			{
-				LightsThisFrame[howmanypointlightshavewedone] = SimplePointLights[i];
-				howmanypointlightshavewedone++;
-				maxindex = i;
-			}
-		}
-		//maxindex++;
-		//Compare all of the rest of them
-		if(maxindex > -1 && maxindex < SimplePointLights.size()){
-			for (size_t i = maxindex + 1; i < SimplePointLights.size(); i++) //for all of them
-			{
-				if (i < SimplePointLights.size() && SimplePointLights[i]->shouldRender) //don't bother checking if it shouldn't be rendered.
-				{
-					//Will never be a nullptr
-					PointLight* FarthestLight = LightsThisFrame[0];
-					size_t indexofFarthestLight = 0;
-					for (size_t j = 0; j < 32; j++)
-					{
-						if (glm::length2(FarthestLight->pos - SceneCamera->pos) < glm::length2(LightsThisFrame[j]->pos - SceneCamera->pos)) //FarthestLight is closer
-						{
-							FarthestLight = LightsThisFrame[j]; //Swap!
-							//break; //I'm hoping this breaks the inner for loop only. If it doesn't- set j to some massively huge value instead
-							indexofFarthestLight = j;
-						}
-					}
-					//FarthestLight
-					if (glm::length2(SimplePointLights[i]->pos - SceneCamera->pos) < glm::length2(FarthestLight->pos - SceneCamera->pos)) //FarthestLight is farther away than the light
-					{
-						LightsThisFrame[indexofFarthestLight] = SimplePointLights[i];
-					}
-				}
-			}
-		}
-		//Bind the lights
-		
-		glUniform1i(MainShaderUniforms[MAINSHADER_NUM_POINTLIGHTS], howmanypointlightshavewedone);
-		//if(maxindex > -1)
-			for (size_t i = 0; i < 32 && i < howmanypointlightshavewedone; i++){
-				glUniform3f(m_LightUniformHandles[i*4], LightsThisFrame[i]->pos.x, LightsThisFrame[i]->pos.y, LightsThisFrame[i]->pos.z);//pos
-				glUniform3f(m_LightUniformHandles[i*4+1], LightsThisFrame[i]->myColor.x, LightsThisFrame[i]->myColor.y, LightsThisFrame[i]->myColor.z);//color
-				glUniform1f(m_LightUniformHandles[i*4+2], LightsThisFrame[i]->range);//range
-				glUniform1f(m_LightUniformHandles[i*4+3], LightsThisFrame[i]->dropoff);//dropoff
-				//std::cout << "\nBOUND POINT LIGHT " << i;
-				
-				//Bind the Light Clipping Volumes
-			
-			
-				//FORMAT OF m_LightClippingVolumeUniformHandles
-				//Per Light:
-				//0 - 3 AABBp1-4 (4 vec3s)
-				//4-7 Spheres 0-3 (4 vec4s)
-				//8 whitelist or Whitelist UINT
-				
-				
-				glUniform3f(m_LightClippingVolumeUniformHandles[i*9], LightsThisFrame[i]->AABBp1.x, LightsThisFrame[i]->AABBp1.y, LightsThisFrame[i]->AABBp1.z); //AABBp1
-				glUniform3f(m_LightClippingVolumeUniformHandles[ 1 + i*9], LightsThisFrame[i]->AABBp2.x, LightsThisFrame[i]->AABBp2.y, LightsThisFrame[i]->AABBp2.z); //AABBp2
-				glUniform3f(m_LightClippingVolumeUniformHandles[ 2 + i*9], LightsThisFrame[i]->AABBp3.x, LightsThisFrame[i]->AABBp3.y, LightsThisFrame[i]->AABBp3.z); //AABBp3
-				glUniform3f(m_LightClippingVolumeUniformHandles[ 3 + i*9], LightsThisFrame[i]->AABBp4.x, LightsThisFrame[i]->AABBp4.y, LightsThisFrame[i]->AABBp4.z); //AABBp4
-				
-				glUniform4f(m_LightClippingVolumeUniformHandles[ 4 + i*9], LightsThisFrame[i]->sphere1.x, LightsThisFrame[i]->sphere1.y, LightsThisFrame[i]->sphere1.z, LightsThisFrame[i]->sphere1.w); //Sphere 1
-				glUniform4f(m_LightClippingVolumeUniformHandles[ 5 + i*9], LightsThisFrame[i]->sphere2.x, LightsThisFrame[i]->sphere2.y, LightsThisFrame[i]->sphere2.z, LightsThisFrame[i]->sphere2.w); //Sphere 2
-				glUniform4f(m_LightClippingVolumeUniformHandles[ 6 + i*9], LightsThisFrame[i]->sphere3.x, LightsThisFrame[i]->sphere3.y, LightsThisFrame[i]->sphere3.z, LightsThisFrame[i]->sphere3.w); //Sphere 3
-				glUniform4f(m_LightClippingVolumeUniformHandles[ 7 + i*9], LightsThisFrame[i]->sphere4.x, LightsThisFrame[i]->sphere4.y, LightsThisFrame[i]->sphere4.z, LightsThisFrame[i]->sphere4.w); //Sphere 4
-				
-				glUniform1ui(m_LightClippingVolumeUniformHandles[i*9 + 8], LightsThisFrame[i]->whitelist?1:0);
-			}
-		//std::cout << "\n DEBUGGING POINTLIGHT BINDINGS: MAXINDEX " << maxindex << " howmanypointlightshavewedone " << howmanypointlightshavewedone << "!" ;
-	} else {
-		glUniform1i(MainShaderUniforms[MAINSHADER_NUM_POINTLIGHTS], 0);
-	}
-	
-	//Ambient Lights
-	if (AmbientLights.size() > 0){
-		AmbientLight* LightsThisFrame[3]; //Array of pointers
-		//Grab the first 3
-		size_t howmanyAmbientlightshavewedone = 0;
-		long long maxindex = -1;
-		for (size_t i = 0; i < AmbientLights.size() && howmanyAmbientlightshavewedone < 3; i++)
-		{
-			if(AmbientLights[i]->shouldRender)
-			{
-				LightsThisFrame[howmanyAmbientlightshavewedone] = AmbientLights[i];
-				howmanyAmbientlightshavewedone++;
-				maxindex = i;
-			}
-		}
-		maxindex++;
-		//Compare all of the rest of them
-		if(maxindex > -1 && maxindex != AmbientLights.size()-1){
-			for (size_t i = maxindex; i < AmbientLights.size(); i++) //for all of them
-			{
-				if (AmbientLights[i]->shouldRender) //don't bother checking if it shouldn't be rendered.
-				{
-					AmbientLight* FarthestLight = LightsThisFrame[0];
-					size_t indexofFarthestLight = 0;
-					for (size_t j = 0; j < 3; j++)
-					{
-						if (glm::length2(FarthestLight->myPos - SceneCamera->pos) < glm::length2(LightsThisFrame[j]->myPos - SceneCamera->pos)) //This one is closer
-						{
-							FarthestLight = LightsThisFrame[j]; //Swap!
-							indexofFarthestLight = j;
-						}
-					}
-					if (glm::length2(FarthestLight->myPos - SceneCamera->pos) > glm::length2(AmbientLights[i]->myPos - SceneCamera->pos)) //This one is closer
-						LightsThisFrame[indexofFarthestLight] = AmbientLights[i];
-				}
-			}
-		}
-		//Bind the lights
-		glUniform1i(MainShaderUniforms[MAINSHADER_NUM_AMBLIGHTS], howmanyAmbientlightshavewedone);
-		//if(maxindex > -1)
-			for (size_t i = 0; i < 32 && i < howmanyAmbientlightshavewedone; i++){
-				 glUniform3f(m_LightUniformHandles[4 * 32 + 2 * 2 + i*3], LightsThisFrame[i]->myPos.x, LightsThisFrame[i]->myPos.y, LightsThisFrame[i]->myPos.z);//pos
-				 glUniform3f(m_LightUniformHandles[4 * 32 + 2 * 2 + i*3 +1], LightsThisFrame[i]->myColor.x, LightsThisFrame[i]->myColor.y, LightsThisFrame[i]->myColor.z);//color
-				 glUniform1f(m_LightUniformHandles[4 * 32 + 2 * 2 + i*3 +2], LightsThisFrame[i]->myRange);//range
-				
-				//access by taking i, multiplying by 3, adding 4 * max pointlights + 2 * max dir lights, and adding an offset (0 for position, 1 for color...)
-				//m_LightUniformHandles.push_back(MainShader->GetUniformLocation("amb_lightArray[" + std::to_string(i) + "].position"));
-				//m_LightUniformHandles.push_back(MainShader->GetUniformLocation("amb_lightArray[" + std::to_string(i) + "].color"));
-				//m_LightUniformHandles.push_back(MainShader->GetUniformLocation("amb_lightArray[" + std::to_string(i) + "].range"));
-				
-				//Bind the Light Clipping Volumes
-			
-			
-				//FORMAT OF m_LightClippingVolumeUniformHandles
-				//Per Light:
-				//0 - 3 AABBp1-4 (4 vec3s)
-				//4-7 Spheres 0-3 (4 vec4s)
-				//8 whitelist or Whitelist UINT
-				
-				
-				glUniform3f(m_LightClippingVolumeUniformHandles[34*9 + i*9], LightsThisFrame[i]->AABBp1.x, LightsThisFrame[i]->AABBp1.y, LightsThisFrame[i]->AABBp1.z); //AABBp1
-				glUniform3f(m_LightClippingVolumeUniformHandles[34*9 + 1 + i*9], LightsThisFrame[i]->AABBp2.x, LightsThisFrame[i]->AABBp2.y, LightsThisFrame[i]->AABBp2.z); //AABBp2
-				glUniform3f(m_LightClippingVolumeUniformHandles[34*9 + 2 + i*9], LightsThisFrame[i]->AABBp3.x, LightsThisFrame[i]->AABBp3.y, LightsThisFrame[i]->AABBp3.z); //AABBp3
-				glUniform3f(m_LightClippingVolumeUniformHandles[34*9 + 3 + i*9], LightsThisFrame[i]->AABBp4.x, LightsThisFrame[i]->AABBp4.y, LightsThisFrame[i]->AABBp4.z); //AABBp4
-				
-				glUniform4f(m_LightClippingVolumeUniformHandles[34*9 + 4 + i*9], LightsThisFrame[i]->sphere1.x, LightsThisFrame[i]->sphere1.y, LightsThisFrame[i]->sphere1.z, LightsThisFrame[i]->sphere1.w); //Sphere 1
-				glUniform4f(m_LightClippingVolumeUniformHandles[34*9 + 5 + i*9], LightsThisFrame[i]->sphere2.x, LightsThisFrame[i]->sphere2.y, LightsThisFrame[i]->sphere2.z, LightsThisFrame[i]->sphere2.w); //Sphere 2
-				glUniform4f(m_LightClippingVolumeUniformHandles[34*9 + 6 + i*9], LightsThisFrame[i]->sphere3.x, LightsThisFrame[i]->sphere3.y, LightsThisFrame[i]->sphere3.z, LightsThisFrame[i]->sphere3.w); //Sphere 3
-				glUniform4f(m_LightClippingVolumeUniformHandles[34*9 + 7 + i*9], LightsThisFrame[i]->sphere4.x, LightsThisFrame[i]->sphere4.y, LightsThisFrame[i]->sphere4.z, LightsThisFrame[i]->sphere4.w); //Sphere 4
-				
-				glUniform1ui(m_LightClippingVolumeUniformHandles[34*9 + 8 + i*9], LightsThisFrame[i]->whitelist?1:0); //whitelist yes or no
-				
-			}
-		//std::cout << "\n DEBUGGING POINTLIGHT BINDINGS: MAXINDEX " << maxindex << " howmanypointlightshavewedone " << howmanypointlightshavewedone << "!" ;
-	} else {
-		glUniform1i(MainShaderUniforms[MAINSHADER_NUM_AMBLIGHTS], 0);
-	}
-	
-	//Camera Lights
-	if (CameraLights.size() > 0){
-		int camLightsRegistered = 0;
-		size_t currindex = 0;
-		//Replace with a system that sorts by distance later
-		while (currindex < CameraLights.size() && camLightsRegistered < 5)
-		{
-			if (CameraLights[currindex] && CameraLights[currindex]->shouldRender)
-			{
-				//std::cout << "\nBindingCameraLight " << camLightsRegistered;
-				//bind
-				//grab all the things we need m_LightUniformHandles[4 * 32 + 2 * 2 + 3*3 + i * 4] //It now has 6...
-				CameraLights[currindex]->BindtoUniformCameraLight(
-					m_LightUniformHandles[4 * 32 + 2 * 2 + 3*3 + camLightsRegistered * 6],
-					m_LightUniformHandles[4 * 32 + 2 * 2 + 3*3 + camLightsRegistered * 6 +1],
-					m_LightUniformHandles[4 * 32 + 2 * 2 + 3*3 + camLightsRegistered * 6 +2],
-					m_LightUniformHandles[4 * 32 + 2 * 2 + 3*3 + camLightsRegistered * 6 +3],
-					m_LightUniformHandles[4 * 32 + 2 * 2 + 3*3 + camLightsRegistered * 6 +4],
-					m_LightUniformHandles[4 * 32 + 2 * 2 + 3*3 + camLightsRegistered * 6 +5],
-					3+camLightsRegistered
-				);
-				
-				camLightsRegistered++;
-			}
-			
-			currindex++;
-		}
-		glUniform1i(MainShaderUniforms[MAINSHADER_NUM_CAMLIGHTS], camLightsRegistered);
-	} else {
-		glUniform1i(MainShaderUniforms[MAINSHADER_NUM_CAMLIGHTS], 0);
-	}
+		{glUniformMatrix4fv(MainShaderUniforms_SHADOWTEMP[MAINSHADER_WORLD2CAMERA], 1, GL_FALSE, &(CurrentRenderCamera->GetViewProjection()[0][0]));}
 	// glEnable(GL_CULL_FACE);
 	//Now that we have the shader stuff set up, let's get to rendering!
 	glEnableVertexAttribArray(0); //Position
@@ -580,20 +332,20 @@ void GkScene::drawShadowPipeline(int meshmask, FBO* CurrentRenderTarget, FBO* Re
 					// unsigned int flagerinos = Meshes[i]->getFlags(); //Set flags
 					// glUniform1ui(MainShaderUniforms[MAINSHADER_RENDERFLAGS], flagerinos); //Set flags on GPU
 					Meshes[i]->DrawInstancesPhong(
-						MainShaderUniforms[MAINSHADER_MODEL2WORLD], 		//Model->World transformation matrix
-						MainShaderUniforms[MAINSHADER_RENDERFLAGS],
-						MainShaderUniforms[MAINSHADER_SPECREFLECTIVITY], 	//Specular reflective material component
-						MainShaderUniforms[MAINSHADER_SPECDAMP], 		//Specular dampening material component
-						MainShaderUniforms[MAINSHADER_DIFFUSIVITY],   //Diffusivity. Reaction to diffuse light.
-						MainShaderUniforms[MAINSHADER_EMISSIVITY],
-						MainShaderUniforms[MAINSHADER_ENABLE_CUBEMAP_REFLECTIONS],
-						MainShaderUniforms[MAINSHADER_ENABLE_CUBEMAP_DIFFUSION],
-						MainShaderUniforms[MAINSHADER_ENABLE_TRANSPARENCY],
-						MainShaderUniforms[MAINSHADER_IS_INSTANCED],
+						MainShaderUniforms_SHADOWTEMP[MAINSHADER_MODEL2WORLD], 		//Model->World transformation matrix
+						MainShaderUniforms_SHADOWTEMP[MAINSHADER_RENDERFLAGS],
+						MainShaderUniforms_SHADOWTEMP[MAINSHADER_SPECREFLECTIVITY], 	//Specular reflective material component
+						MainShaderUniforms_SHADOWTEMP[MAINSHADER_SPECDAMP], 		//Specular dampening material component
+						MainShaderUniforms_SHADOWTEMP[MAINSHADER_DIFFUSIVITY],   //Diffusivity. Reaction to diffuse light.
+						MainShaderUniforms_SHADOWTEMP[MAINSHADER_EMISSIVITY],
+						MainShaderUniforms_SHADOWTEMP[MAINSHADER_ENABLE_CUBEMAP_REFLECTIONS],
+						MainShaderUniforms_SHADOWTEMP[MAINSHADER_ENABLE_CUBEMAP_DIFFUSION],
+						MainShaderUniforms_SHADOWTEMP[MAINSHADER_ENABLE_TRANSPARENCY],
+						MainShaderUniforms_SHADOWTEMP[MAINSHADER_IS_INSTANCED],
 						false,		//NOT transparent
 						(CurrentRenderTarget != nullptr)?true:false,		//is it to render target?
 						meshmask,
-						true, //Phong?
+						false, //Phong?
 						true, //Do not use maps
 						false //Force non-instanced
 					);
@@ -602,7 +354,10 @@ void GkScene::drawShadowPipeline(int meshmask, FBO* CurrentRenderTarget, FBO* Re
 		
 	//IF TEST FOR IF WE HAVE THE COMPOSITION SHADER (DON'T ATTEMPT TO DO TRANSPARENCY UNLESS WE HAVE IT)
 	
-	
+	glDisableVertexAttribArray(0); //Position
+	glDisableVertexAttribArray(1); //Texture
+	glDisableVertexAttribArray(2); //Normal
+	glDisableVertexAttribArray(3); //Color
 	
 	
 	if (CurrentRenderTarget == nullptr) //This part is just for displaying the FBO to the screen... Not used for the FBO stuff.

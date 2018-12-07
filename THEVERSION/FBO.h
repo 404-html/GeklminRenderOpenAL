@@ -40,7 +40,7 @@ class FBO
 		bool get_was_instantiated_with_Depth_Buffer() const {return was_instantiated_with_Depth_Buffer;}
 		virtual ~FBO();
 		GLuint getHandle() {return m_FBO;}
-		SafeTexture* getTex(int attachment);
+		SafeTexture getTex(int attachment);
 		GLuint getDepthBufferHandle() const;
 		FBO(const FBO& Other);
 	protected:

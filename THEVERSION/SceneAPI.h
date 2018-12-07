@@ -269,10 +269,7 @@ class GkScene //Gk for Geklmin
 			void enableShadowFiltering(){doshadowfiltering = true;}
 			void disableShadowFiltering(){doshadowfiltering = false;}
 
-		//Public Variables
-		// IODevice* globalDevicePointer = nullptr; //This shouldn't be necessary, but hey it's here if I need it.
-		Shader* ShowTextureShader = nullptr; //TODO: Make getters and setters for this
-		Shader* ShadowOpaqueMainShader = nullptr; //TODO: Make getters and setters for this too
+		
 
 	bool ImDeletingThisShaderOKThanks(Shader* currentShader){//If you delete a shader and then make another, and both were used in screenquadtoFBO, there is a chance that it will be allocated in the exact same memory location... A really good chance. So make sure that we delete any info we have on the shader in the std::maps before proceeding.
 		bool did_deregister = false;
@@ -394,41 +391,7 @@ class GkScene //Gk for Geklmin
 			//glBindVertexArray(0);
 		//glDisableVertexAttribArray(0);
 	}
-	/*
-	void ScreenquadtoScreen(Shader* currentShader)
-	{
-		static std::map<Shader*, GLuint> World2CameraLocations; //I tend to believe that static variables should appear at the tops of functions.
-		FBO::unBindRenderTarget(width,height);
-		
-		//Write World2Camera glGetUniformLocation location. NOTE: My first time using auto in C++.
-		auto iter = World2CameraLocations.find(currentShader); //Auto is pretty cool but I don't like it... So just remember it's an iterator.
-		if (iter == World2CameraLocations.end())
-		{
-			// key does not exist, write to the spot!
-			World2CameraLocations[currentShader] = currentShader->GetUniformLocation("World2Camera");
-			// I don't even understand how [] works anymore... I thought it was a direct memory mapping... Must be an operator of some sort.
-		}
-		//
-		glUniformMatrix4fv(World2CameraLocations[currentShader], 1, GL_FALSE, &Screenquad_CameraMatrix[0][0]);
-			GLuint m_handle = m_screenquad_Mesh->getVAOHandle();
-			glEnableVertexAttribArray(0);
-				glBindVertexArray(m_handle);
-					glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-				//glBindVertexArray(0); //Unnecessary as long as the user never tries to edit the currently bound VBOs
-			//glDisableVertexAttribArray(0);
-			//I don't think we ever want vertexattribarray of 0 to be disabled
-	}
-	*/
-	/*
-	//meshes
-		std::vector<Mesh*> Meshes;
-		//lights
-		std::vector<PointLight*> SimplePointLights;	
-		std::vector<DirectionalLight*> DirectionalLights;
-		//std::vector<Spotlight*> Spotlights;
-		std::vector<AmbientLight*> AmbientLights;
-		std::vector<CameraLight*> CameraLights;
-	*/
+
 	std::vector<Mesh*>* getMeshVectorPtr()
 	{
 		return &Meshes;
@@ -453,6 +416,12 @@ class GkScene //Gk for Geklmin
 	{
 		return &CustomFBOArray;
 	}
+	
+	
+	//Public Variables
+		// IODevice* globalDevicePointer = nullptr; //This shouldn't be necessary, but hey it's here if I need it.
+		Shader* ShowTextureShader = nullptr; //TODO: Make getters and setters for this
+		Shader* ShadowOpaqueMainShader = nullptr; //TODO: Make getters and setters for this too
     protected:
 	// I dunno
     private: /*
@@ -470,6 +439,7 @@ class GkScene //Gk for Geklmin
 	//Toggles and engine settings
 	bool HasntRunYet = true; //default value.
 	bool HasntRunYet_CompositionShader = true; //Ditto!
+	bool HasntRunYet_Shadows = true;
 	//const unsigned int MAX_LIGHTS_PER_SHADOWLESS_LIGHT_PASS = 1024; //How many uniform variable lights can we send per no-shadow pass? NOTE: We are going to use 1-dimensional textures to store the lights. UNUSED REMOVE BEFORE FINAL RELEASE.
 	bool doshadows = true;
 	bool doshadowfiltering = false;
@@ -576,10 +546,16 @@ class GkScene //Gk for Geklmin
 		SKYBOX_NUM_SKYBOX_SHADER_UNIFORMS //Self explanatory
 	};
 	GLuint MainShaderUniforms[MAINSHADER_NUM_SceneRender_SHADER_UNIFORMS]; //Why the fuck did we ever malloc this
+	
+	GLuint MainShaderUniforms_SHADOWTEMP[MAINSHADER_NUM_SceneRender_SHADER_UNIFORMS]; //Why the fuck did we ever malloc this
+	
 	GLuint MainShaderShadowUniforms[MAINSHADER_SHADOWS_NUM_MAINSHADER_SHADOWS_UNIFORMS]; //Shadow uniforms
+	
 	std::vector<GLuint> m_LightUniformHandles;//See SceneAPI.cpp for format
+	std::vector<GLuint> m_LightUniformHandles_SHADOWTEMP;//See SceneAPI.cpp for format
 	//std::vector<GLuint> m_CameraLightUniformHandles; //See SceneAPI.cpp for details and format
 	std::vector<GLuint> m_LightClippingVolumeUniformHandles;//See SceneAPI.cpp for format or look below
+	std::vector<GLuint> m_LightClippingVolumeUniformHandles_SHADOWTEMP;//Used for transitioning to the shadow system for drawshadowpipeline function
 		//FORMAT OF m_LightClippingVolumeUniformHandles
 	//Per Light:
 	//0 - 3 AABBp1-4

@@ -201,11 +201,8 @@ namespace GeklminRender {
 	
 	
 	// GLuint FBO::getHandle() {return m_FBO;} //This was added so that shader.update could be removed
-	SafeTexture* FBO::getTex(int attachment){
-			if (m_RenderTex != nullptr && numcolorattachments > attachment && attachment > -1)
-				return new SafeTexture(m_RenderTex[attachment]);
-			else
-				return (SafeTexture*)nullptr;
+	SafeTexture FBO::getTex(int attachment){
+			return SafeTexture(m_RenderTex[attachment]);;
 		}
 	GLuint FBO::getDepthBufferHandle() const { //Gonna use this in the transparency pass.
 			return m_DepthBuffer;
