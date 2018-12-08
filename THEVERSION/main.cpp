@@ -512,7 +512,7 @@ void LoadResources()
 	theScene->setMainShader(MainShad);
 	theScene->ShadowOpaqueMainShader = MainshaderShadows;
 	theScene->ShowTextureShader = DisplayTexture; //Add a setter later
-	//~ theScene->setWBOITCompositionShader(WBOITCompShader); //Has a setter, and it's been a long time, I should write a setter for the ShowTextureShader
+	theScene->setWBOITCompositionShader(WBOITCompShader); //Has a setter, and it's been a long time, I should write a setter for the ShowTextureShader
 	FBOArray.push_back(new FBO(640,480, 1, GL_RGBA32F)); //0, the test FBO render target
 	FBOArray.push_back(new FBO(640,480, 2, GL_RGBA16F, FBOArray[0]->getDepthBufferHandle())); //1, the FBO necessary for Weighted Blended OIT
 	FBOArray.push_back(new FBO(640,480, 1, GL_RGBA32F)); //2, the FBO for rendering Shadowmaps //TODO: Actually use this one for the shadowmap instead of FBOArray[0]
@@ -715,6 +715,7 @@ void initObjects()
 		Cam_Lights[0]->solidColor = 1.0;
 		Cam_Lights[0]->myColor = glm::vec3(1,0,0);
 		Cam_Lights[0]->range = 300;
+		Cam_Lights[0]->radii = glm::vec2(0.3,0.5);
 		theScene->RegisterCamLight(Cam_Lights[0]);
 		Cam_Lights[0]->myCamera = RenderTargetCameraShadowMapping;
 		LetterTester.myTransform.SetPos(glm::vec3(0,100,0));

@@ -333,27 +333,27 @@ void main()
 	vec4 samplecoord1 = (camera_lightArray[0].viewproj * vec4(worldout,1.0));
 	samplecoord1 = samplecoord1/samplecoord1.w; //NDC
 	samplecoord1.xy = (samplecoord1.xy/2.0) + 0.5;
-	CameraTexSamples[0] = texture2D(CameraTex1, vec2(samplecoord1.x, samplecoord1.y));
+	CameraTexSamples[0] = texture2D(CameraTex1, vec2(samplecoord1.x, (camera_lightArray[0].shadows > 0.0)?1.0:-1.0 *samplecoord1.y));
 	//CameraTex2
 	samplecoord1 = (camera_lightArray[1].viewproj * vec4(worldout,1.0));
 	samplecoord1 = samplecoord1/samplecoord1.w; //NDC
 	samplecoord1.xy = (samplecoord1.xy/2.0) + 0.5;
-	CameraTexSamples[1] = texture2D(CameraTex2, vec2(samplecoord1.x, samplecoord1.y));
+	CameraTexSamples[1] = texture2D(CameraTex2, vec2(samplecoord1.x, (camera_lightArray[1].shadows > 0.0)?1.0:-1.0 *samplecoord1.y));
 	//CameraTex3
 	samplecoord1 = (camera_lightArray[2].viewproj * vec4(worldout,1.0));
 	samplecoord1 = samplecoord1/samplecoord1.w; //NDC
 	samplecoord1.xy = (samplecoord1.xy/2.0) + 0.5;
-	CameraTexSamples[2] = texture2D(CameraTex3, vec2(samplecoord1.x, samplecoord1.y));
+	CameraTexSamples[2] = texture2D(CameraTex3, vec2(samplecoord1.x, (camera_lightArray[2].shadows > 0.0)?1.0:-1.0 *samplecoord1.y));
 	//CameraTex4
 	samplecoord1 = (camera_lightArray[3].viewproj * vec4(worldout,1.0));
 	samplecoord1 = samplecoord1/samplecoord1.w; //NDC
 	samplecoord1.xy = (samplecoord1.xy/2.0) + 0.5;
-	CameraTexSamples[3] = texture2D(CameraTex4, vec2(samplecoord1.x, samplecoord1.y));
+	CameraTexSamples[3] = texture2D(CameraTex4, vec2(samplecoord1.x, (camera_lightArray[3].shadows > 0.0)?1.0:-1.0 *samplecoord1.y));
 	//CameraTex5
 	samplecoord1 = (camera_lightArray[4].viewproj * vec4(worldout,1.0));
 	samplecoord1 = samplecoord1/samplecoord1.w; //NDC
 	samplecoord1.xy = (samplecoord1.xy/2.0) + 0.5;
-	CameraTexSamples[4] = texture2D(CameraTex5, vec2(samplecoord1.x, samplecoord1.y));
+	CameraTexSamples[4] = texture2D(CameraTex5, vec2(samplecoord1.x, (camera_lightArray[4].shadows > 0.0)?1.0:-1.0 * samplecoord1.y));
 	//Camera Lights
 	for (int i = 0; i < MAX_CAM_LIGHTS; i++)
 	{
@@ -376,7 +376,7 @@ void main()
 		//handling shadows
 		float shouldRenderCaseShadow = float((camera_lightArray[i].shadows == 0) || (camera_lightArray[i].shadows == 1) && (CameraTexSamples[i].x + 0.001 > screenspace_light.z)); //Avoid shadow banding 
 		float radial_distance = length(vec2(0.5,0.5) - screenspace_light.xy);
-		float shouldRenderCaseRadii = float(camera_lightArray[i].radii.y > radial_distance);
+		float shouldRenderCaseRadii = 1.0-smoothstep(camera_lightArray[i].radii.x, camera_lightArray[i].radii.y, radial_distance);//float(camera_lightArray[i].radii.y > radial_distance);
 		//~ float shouldRenderCaseShadow = float(CameraTexSamples[i].x > screenspace_light.z); //Avoid shadow banding 
 		//float lightdist = length2vec3(frag_to_light); //Can never be negative
 		float nDotl = dot(UnitNormal, unit_frag_to_light);
