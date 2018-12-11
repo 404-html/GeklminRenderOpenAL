@@ -776,12 +776,12 @@ int main()
 		{
 				//Changing shape demo
 				// /*
-					IndexedModel tempshape = createBox(1, 1, 1);
-					for (size_t i = 0; i < tempshape.colors.size(); i++){
-						tempshape.colors[i] = glm::vec3((rand()%100)/100.0, (rand()%100)/100.0, (rand()%100)/100.0);
-					}
-					InstancedMesh->reShapeMesh(createBox(3, 3, 7));
-					NotPointedTextureTest.reInitFromDataPointer(true);
+					//~ IndexedModel tempshape = createBox(1, 1, 1);
+					//~ for (size_t i = 0; i < tempshape.colors.size(); i++){
+						//~ tempshape.colors[i] = glm::vec3((rand()%100)/100.0, (rand()%100)/100.0, (rand()%100)/100.0);
+					//~ }
+					//~ InstancedMesh->reShapeMesh(createBox(3, 3, 7));
+					//~ NotPointedTextureTest.reInitFromDataPointer(true);
 				// */
 					// LetterTester.myTransform.SetRot(glm::vec3(sinf(ordinarycounter/10.0) * 5,sinf(ordinarycounter/10.0)*3,sinf(ordinarycounter/11.2)*2));
 				for (size_t communists_killed = 0; communists_killed < ProgramMeshInstances.size() && communists_killed < 100; communists_killed++)

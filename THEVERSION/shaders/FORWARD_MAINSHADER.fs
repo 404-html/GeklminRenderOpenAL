@@ -333,27 +333,27 @@ void main()
 	vec4 samplecoord1 = (camera_lightArray[0].viewproj * vec4(worldout,1.0));
 	samplecoord1 = samplecoord1/samplecoord1.w; //NDC
 	samplecoord1.xy = (samplecoord1.xy/2.0) + 0.5;
-	CameraTexSamples[0] = texture2D(CameraTex1, vec2(samplecoord1.x, (camera_lightArray[0].shadows > 0.0)?1.0:-1.0 *samplecoord1.y));
+	CameraTexSamples[0] = texture2D(CameraTex1, vec2(samplecoord1.x, float(camera_lightArray[0].shadows <= 0.0) * -samplecoord1.y + float(camera_lightArray[0].shadows > 0.0) * samplecoord1.y));
 	//CameraTex2
 	samplecoord1 = (camera_lightArray[1].viewproj * vec4(worldout,1.0));
 	samplecoord1 = samplecoord1/samplecoord1.w; //NDC
 	samplecoord1.xy = (samplecoord1.xy/2.0) + 0.5;
-	CameraTexSamples[1] = texture2D(CameraTex2, vec2(samplecoord1.x, (camera_lightArray[1].shadows > 0.0)?1.0:-1.0 *samplecoord1.y));
+	CameraTexSamples[1] = texture2D(CameraTex2, vec2(samplecoord1.x, float(camera_lightArray[1].shadows <= 0.0) * -samplecoord1.y + float(camera_lightArray[1].shadows > 0.0) * samplecoord1.y));
 	//CameraTex3
 	samplecoord1 = (camera_lightArray[2].viewproj * vec4(worldout,1.0));
 	samplecoord1 = samplecoord1/samplecoord1.w; //NDC
 	samplecoord1.xy = (samplecoord1.xy/2.0) + 0.5;
-	CameraTexSamples[2] = texture2D(CameraTex3, vec2(samplecoord1.x, (camera_lightArray[2].shadows > 0.0)?1.0:-1.0 *samplecoord1.y));
+	CameraTexSamples[2] = texture2D(CameraTex3, vec2(samplecoord1.x, float(camera_lightArray[2].shadows <= 0.0) * -samplecoord1.y + float(camera_lightArray[2].shadows > 0.0) * samplecoord1.y));
 	//CameraTex4
 	samplecoord1 = (camera_lightArray[3].viewproj * vec4(worldout,1.0));
 	samplecoord1 = samplecoord1/samplecoord1.w; //NDC
 	samplecoord1.xy = (samplecoord1.xy/2.0) + 0.5;
-	CameraTexSamples[3] = texture2D(CameraTex4, vec2(samplecoord1.x, (camera_lightArray[3].shadows > 0.0)?1.0:-1.0 *samplecoord1.y));
+	CameraTexSamples[3] = texture2D(CameraTex4, vec2(samplecoord1.x, float(camera_lightArray[3].shadows <= 0.0) * -samplecoord1.y + float(camera_lightArray[3].shadows > 0.0) * samplecoord1.y));
 	//CameraTex5
 	samplecoord1 = (camera_lightArray[4].viewproj * vec4(worldout,1.0));
 	samplecoord1 = samplecoord1/samplecoord1.w; //NDC
 	samplecoord1.xy = (samplecoord1.xy/2.0) + 0.5;
-	CameraTexSamples[4] = texture2D(CameraTex5, vec2(samplecoord1.x, (camera_lightArray[4].shadows > 0.0)?1.0:-1.0 * samplecoord1.y));
+	CameraTexSamples[4] = texture2D(CameraTex5, vec2(samplecoord1.x, float(camera_lightArray[4].shadows <= 0.0) * -samplecoord1.y + float(camera_lightArray[4].shadows > 0.0) * samplecoord1.y));
 	//Camera Lights
 	for (int i = 0; i < MAX_CAM_LIGHTS; i++)
 	{
