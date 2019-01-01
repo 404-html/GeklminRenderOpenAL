@@ -48,12 +48,18 @@ ALuint audiosource1 = 0;
 ALuint audiobuffer1 = 0;
 GeklminRender::Mesh* CubeMesh = nullptr;
 GeklminRender::Mesh* SphereMesh = nullptr;
+GeklminRender::CubeMap* SkyboxTex = nullptr;
 GeklminRender::MeshInstance myCube = GeklminRender::MeshInstance();
 GeklminRender::MeshInstance mySphere = GeklminRender::MeshInstance();
 GeklminRender::Texture* CloudsJpeg = nullptr;
 GeklminRender::DirectionalLight theSun = GeklminRender::DirectionalLight();
 GeklminRender::PointLight thePoint = GeklminRender::PointLight(glm::vec3(10,20,10), glm::vec3(1,1,1));
 GeklminRender::Texture* AmigaPng = nullptr;
+
+
+//Controls the spin of the cube
+float ordinarycounter = 0.0f;
+
 
 
 //Callbacks
@@ -148,10 +154,29 @@ void loadResources(){
 	theScene->setSkyboxShader(SkyboxShad);
 	theScene->setMainShader(MainShad);
 	theScene->ShowTextureShader = DisplayTexture; //Add a setter later
-	//theScene->setWBOITCompositionShader(WBOITCompShader); //Has a setter, and it's been a long time, I should write a setter for the ShowTextureShader
+	theScene->setWBOITCompositionShader(WBOITCompShader); //Has a setter, and it's been a long time, I should write a setter for the ShowTextureShader
 	
 	
+	//Load the cubemap we're going to use
+	std::string cubemapfilenames[6] = {
+			"Cubemap/Skybox_Water10_128_right.jpg", //right
+			"Cubemap/Skybox_Water10_128_left.jpg", //left
+			"Cubemap/Skybox_Water10_128_top.jpg", //up
+			"Cubemap/Skybox_Water10_128_base.jpg", //down
+			"Cubemap/Skybox_Water10_128_back.jpg", //back
+			"Cubemap/Skybox_Water10_128_front.jpg" //front
+	};
 	
+	//Load the textures for the cube
+	SkyboxTex = new CubeMap(cubemapfilenames[0],cubemapfilenames[1],cubemapfilenames[2],cubemapfilenames[3],cubemapfilenames[4],cubemapfilenames[5]);
+	//And set the skybox
+	theScene->SetSkyBoxCubemap(SkyboxTex);
+	CloudsJpeg = new Texture("CLOUDS.JPG", false);
+	//Load the cube mesh and install the right textures into it
+	CubeMesh = new Mesh("Cube_Test_Low_Poly.obj",false,false,true); //Instanced, Static, Asset
+	CubeMesh->pushTexture(SafeTexture(CloudsJpeg));//0
+	CubeMesh->pushCubeMap(SkyboxTex);//0
+	theScene->registerMesh(CubeMesh);
 	//loadWAVintoALBuffer(const char* fn);
 	
 }
@@ -169,6 +194,13 @@ void initGame(){
 	//Load lights and register them
 	theScene->registerPointLight(&thePoint);
 	theScene->RegisterDirLight(&theSun);
+	
+	//Set up our cube instance
+	myCube.tex = 0;
+	myCube.EnableCubemapReflections = 1;
+	myCube.myPhong = Phong_Material(0.1, 0.9, 0.5, 25, 0.0);
+	myCube.myTransform = Transform(glm::vec3(0,0,0), glm::vec3(0,0,0), glm::vec3(1,1,1));
+	CubeMesh->RegisterInstance(&myCube);
 }
 
 void checkKeys(){
@@ -176,7 +208,16 @@ void checkKeys(){
 }
 
 void everyFrame(){
+	using namespace GeklminRender;
+	//The counter which controls the program
+	ordinarycounter += 0.1f;
+	if (ordinarycounter > 5000.0f){
+		ordinarycounter = 0.0f;
+	}
 	
+	//Spin the cube
+	myCube.myTransform.SetRot(glm::vec3(sinf(ordinarycounter/10.0) * 5,sinf(ordinarycounter/10.0)*3,sinf(ordinarycounter/11.2)*2));
+	myCube.myPhong = Phong_Material(0.1, 0.9, (sinf(ordinarycounter/100) + 1)/2.0f, 25, 0.0);
 }
 
 void Draw(){
@@ -196,6 +237,9 @@ void cleanUp(){
 		delete WBOITCompShader;
 	if(SceneRenderCamera)
 		delete SceneRenderCamera;
+	
+	if(SkyboxTex)
+		delete SkyboxTex;
 	
 	if(CubeMesh)
 		delete CubeMesh;

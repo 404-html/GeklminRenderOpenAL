@@ -556,7 +556,9 @@ void LoadResources()
 	//FileResourceManager->loadMesh("Cube_Test_Low_Poly.obj",false,true);
 	FileResourceManager->loadMesh("sphere_test.obj",false,true);
 	FileResourceManager->loadMesh("First_Terrain_With_Caves.obj",false,true);
-	InstancedMesh = new Mesh("Cube_Test_Low_Poly.obj",false,false,true); //Instanced, Static, Asset
+	InstancedMesh = new Mesh("Cube_Test_Low_Poly.obj",true,false,true); //Instanced, Static, Asset
+	//~ InstancedMesh->instanced_enable_cubemap_reflections = 1;
+	//~ InstancedMesh->InstancedMaterial.specreflectivity = 0.8;
 	
 	FileResourceManager->loadTexture("Amiga.png",true);
 	FileResourceManager->loadTexture("Art.jpg",false);
