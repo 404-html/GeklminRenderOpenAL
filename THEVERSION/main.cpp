@@ -261,7 +261,7 @@ void checkKeys(){
 				
 				
 				
-				RenderTargetCameraShadowMapping = RenderTargetCameraShadowMapping = Camera(SceneRenderCamera->pos + glm::vec3(0,20,0),            //World Pos
+				RenderTargetCameraShadowMapping = Camera(SceneRenderCamera->pos + glm::vec3(0,20,0),            //World Pos
 																							70.0f,                       //FOV
 																							1.0f,		 //Aspect
 																							1.0f,                       //Znear
