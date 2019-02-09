@@ -1,0 +1,13 @@
+stb_image and all of stb is in the public domain
+GLFW is Zlib
+Benny's code is under the MiT license
+AntTweakBar is under this license: http://anttweakbar.sourceforge.net/doc/tools:anttweakbar:license which is clearly permissive
+Bullet is under Zlib
+
+
+Scene API has the following dependencies:
+* OpenGL Spec (It's fine)
+* GLM (Happy Bunny License)
+* GLFW (ZLIB License)
+* Benny's code (BSD 3-Clause License)
+* gl3.h (MiT License Variant)

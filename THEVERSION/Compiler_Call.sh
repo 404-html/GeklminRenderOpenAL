@@ -8,6 +8,6 @@ echo "Compiled SO file!"
 #cp GeklminRender.so /usr/lib/GeklminRender.so
 #echo "copied SO!"
 #Use -Wl,-rpath=$(pwd) to have GeklminRender.so be in this same directory 
-g++ -O3 -ffast-math -msse4 -lGL -lglfw -lopenal -m64 -Wno-undef -L. -l:GeklminRender.so -Wl,-rpath=$(pwd) -o prog.bin main.cpp
-g++ -O3 -ffast-math -msse4 -lGL -lglfw -lopenal -m64 -Wno-undef -L. -l:GeklminRender.so -Wl,-rpath=$(pwd) -o prog2.bin main2.cpp
+g++ -O3 -ffast-math -msse4 -lGL -lglfw -lopenal -m64 -Wno-undef -L. -l:GeklminRender.so -Wl,-rpath="$(pwd)" -o prog.bin main.cpp
+g++ -O3 -ffast-math -msse4 -lGL -lglfw -lopenal -m64 -Wno-undef -L. -l:GeklminRender.so -Wl,-rpath="$(pwd)" -o prog2.bin main2.cpp
 #./prog2.bin

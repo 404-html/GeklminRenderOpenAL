@@ -28,12 +28,7 @@ long_line_behaviour=1
 long_line_column=72
 
 [files]
-current_page=4
-FILE_NAME_0=15251;C++;0;EUTF-8;1;1;0;%2Fhome%2Fgek%2FProgramming%2FGeklminRenderOpenAL%2FTHEVERSION%2Fshaders%2FFORWARD_MAINSHADER.fs;0;4
-FILE_NAME_1=3751;C++;0;EUTF-8;1;1;0;%2Fhome%2Fgek%2FProgramming%2FGeklminRenderOpenAL%2FTHEVERSION%2FSceneAPI.h;0;4
-FILE_NAME_2=28977;C++;0;EUTF-8;1;1;0;%2Fhome%2Fgek%2FProgramming%2FGeklminRenderOpenAL%2FTHEVERSION%2Fmain.cpp;0;4
-FILE_NAME_3=5147;C++;0;EUTF-8;1;1;0;%2Fhome%2Fgek%2FProgramming%2FGeklminRenderOpenAL%2FTHEVERSION%2Fmesh.h;0;4
-FILE_NAME_4=5959;C++;0;EUTF-8;1;1;0;%2Fhome%2Fgek%2FProgramming%2FGeklminRenderOpenAL%2FTHEVERSION%2FMesh.cpp;0;4
+current_page=-1
 
 [VTE]
 last_dir=/home/gek
