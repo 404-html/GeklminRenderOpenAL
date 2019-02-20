@@ -24,7 +24,6 @@ GkScene Demo Program 1 main.cpp
 
 
 #include "geklminrender.h"
-#include "font.h"
 #include "resource_manager.h"
 #include "Global_Variables.h" //theScene and FileResourceManager
 //My AL Utils
@@ -64,7 +63,7 @@ GeklminRender::Camera RenderTargetCameraShadowMapping; //render target camera fo
 GeklminRender::CubeMap* SkyboxTex = nullptr; //Skybox texture
 GeklminRender::CubeMap* SkyboxTwo = nullptr; //Second skybox texture, for testing per-mesh cubemaps
 
-GeklminRender::Font* myFont = nullptr; //my super special font!
+//GeklminRender::Font* myFont = nullptr; //my super special font!
 GeklminRender::Mesh* DeleteMeshTest = nullptr;
 
 
