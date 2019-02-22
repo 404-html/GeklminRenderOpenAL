@@ -1,2 +1,2 @@
 #/bin/bash
-exec ./prog.bin
+exec xterm "./prog.bin"

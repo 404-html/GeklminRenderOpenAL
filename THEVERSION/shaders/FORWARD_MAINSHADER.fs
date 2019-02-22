@@ -377,7 +377,7 @@ void main()
 		float shouldRenderCaseShadow = float((camera_lightArray[i].shadows == 0) || (camera_lightArray[i].shadows == 1) && (CameraTexSamples[i].x + 0.001 > screenspace_light.z)); //Avoid shadow banding 
 		float radial_distance = length(vec2(0.5,0.5) - screenspace_light.xy);
 		float shouldRenderCaseRadii = 1.0-smoothstep(camera_lightArray[i].radii.x, camera_lightArray[i].radii.y, radial_distance);//float(camera_lightArray[i].radii.y > radial_distance);
-		//~ float shouldRenderCaseShadow = float(CameraTexSamples[i].x > screenspace_light.z); //Avoid shadow banding 
+		//float shouldRenderCaseShadow = float(CameraTexSamples[i].x > screenspace_light.z); //Avoid shadow banding 
 		//float lightdist = length2vec3(frag_to_light); //Can never be negative
 		float nDotl = dot(UnitNormal, unit_frag_to_light);
 		float rangevar = 1.0 - clamp(dot(unit_frag_to_light,frag_to_light)/camera_lightArray[i].range, 0.0 , 1);
