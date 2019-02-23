@@ -138,6 +138,8 @@ class Texture
 		std::string MyName;
 		int getMyWidth() const {return myWidth;}
 		int getMyHeight() const {return myHeight;}
+		void setMyWidth(int new_Width) {myWidth = new_Width;}
+		void setMyHeight(int new_Height) {myHeight = new_Height;}
 		int getMyComponents() const {return myComponents;}
 		unsigned char* getDataPointer() const {return Permanent_Data_Pointer;}
 		unsigned char* getDataPointerNotConst() {return Permanent_Data_Pointer;}

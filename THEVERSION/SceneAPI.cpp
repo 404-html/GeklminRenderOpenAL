@@ -532,7 +532,7 @@ void GkScene::drawPipeline(int meshmask, FBO* CurrentRenderTarget, FBO* RenderTa
 		}
 		//maxindex++;
 		//Compare all of the rest of them
-		if(maxindex > -1 && maxindex < SimplePointLights.size()){
+		if(maxindex > -1 && maxindex < SimplePointLights.size() && false){
 			for (size_t i = maxindex + 1; i < SimplePointLights.size(); i++) //for all of them
 			{
 				if (i < SimplePointLights.size() && SimplePointLights[i]->shouldRender) //don't bother checking if it shouldn't be rendered.

@@ -365,7 +365,7 @@ class GkScene //Gk for Geklmin
 	}
 
 		//Public drawing code- needed for testing
-	void ScreenquadtoFBO(Shader* currentShader){ //Shaders ALWAYS need to be reinstantiated if they are going to be compiled again, since (at time of writing) there are only static shaders. Our static std::map should work, although it will build up redundant and outdated copies of GLuints if we decide to keep making new shaders or something. ALSO, if we ever delete shaders and then allocate new ones, we might allocate the same bit of memory meaning same pointer
+	void ScreenquadtoFBO(Shader* currentShader){
 		//For caching uniform locations.
 		// static std::map<Shader*, GLuint> World2CameraLocations;
 		// static std::map<Shader*, GLuint> TextureUnitLocations; //This will be added soon... or I will implement it manually

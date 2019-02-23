@@ -26,6 +26,7 @@ GkScene Demo Program 1 main.cpp
 #include "geklminrender.h"
 #include "resource_manager.h"
 #include "Global_Variables.h" //theScene and FileResourceManager
+#include "FontRenderer.h"
 //My AL Utils
 #include "GekAL.h"
 //#define GLFW_DLL // Do we need this? //No.
@@ -63,7 +64,7 @@ GeklminRender::Camera RenderTargetCameraShadowMapping; //render target camera fo
 GeklminRender::CubeMap* SkyboxTex = nullptr; //Skybox texture
 GeklminRender::CubeMap* SkyboxTwo = nullptr; //Second skybox texture, for testing per-mesh cubemaps
 
-//GeklminRender::Font* myFont = nullptr; //my super special font!
+GeklminRender::BMPFontRenderer* myFont = nullptr; //my super special font!
 GeklminRender::Mesh* DeleteMeshTest = nullptr;
 
 
@@ -436,6 +437,9 @@ void window_size_callback(GLFWwindow* window, int width, int height)
 	HEIGHT = height;
 	if (SceneRenderCamera != nullptr)
 		SceneRenderCamera->buildPerspective(70, ((float)WIDTH)/((float)HEIGHT), 1, 1000);
+		
+	if(myFont != nullptr)
+		myFont->resize(width, height, 1.0f);
 }
 
 
@@ -588,13 +592,14 @@ void LoadResources()
 	//More Cubemaps
 	//FileResourceManager->loadMesh("Cube_Test_Low_Poly.obj",false,true)->pushCubeMap(SkyboxTwo);//0
 	//FileResourceManager->loadMesh("Cube_Test_Low_Poly.obj",false,true)->pushCubeMap(SkyboxTex);//1
+	myFont = new BMPFontRenderer("AMIGA.PNG",WIDTH, HEIGHT, 1.0); //Load font for testing
 	
 	//Custom rendering pipeline callbacks for your rendering needs
 	theScene->customMainShaderBinds = &MainshaderUniformFunctionDemo;
 	theScene->customRenderingAfterSkyboxBeforeMainShader = &CustomRenderingFunction; //Draw to your heart's content!
 	
 	//See GekAL.h for how this is done
-	audiobuffer1 = FileResourceManager->loadSound("SOUNDS/CAVES_OF_STEEL1.WAV");
+	audiobuffer1 = FileResourceManager->loadSound("SOUNDS/TONE.WAV");
 }
 
 
@@ -821,6 +826,8 @@ int main()
 		
 		theScene->drawShadowPipeline(1, FBOArray[0], &Cam_Lights[0]->myCamera, false);
 		theScene->drawPipeline(1, nullptr, nullptr,  nullptr, false, glm::vec4(0,0,0,0), glm::vec2(800,1000));
+		//myFont->pushChangestoTexture();
+		myFont->Draw();
 		myDevice->pollevents();
 		myDevice->swapBuffers(0);
 	} //EOF game loop
