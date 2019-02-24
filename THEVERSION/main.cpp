@@ -506,6 +506,8 @@ void LoadResources()
 {
 	using namespace GeklminRender;
 	//it puts .vs and .fs after the string. The EXE Is the starting folder, but I could probably change that if I tried.
+	MainShad = new Shader("shaders/FORWARD_MAINSHADER_UBO");
+	delete MainShad;MainShad = nullptr;
 	MainShad = new Shader("shaders/FORWARD_MAINSHADER");
 	MainshaderShadows = new Shader("shaders/FORWARD_MAINSHADER_SHADOWS");
 	DisplayTexture = new Shader("shaders/SHOWTEX");
