@@ -734,6 +734,8 @@ void GkScene::OrganizeUBOforUpload(){
 		}
 	} else {
 		glUniform1i(MainShaderUniforms[MAINSHADER_NUM_DIRLIGHTS], 0);
+		//Assign the value in the UBO data cpu-side
+		*((int*)(&(LightingDataUBOData[8388]))) = 0; //num dir lights
 	}
 	
 	
@@ -783,6 +785,7 @@ void GkScene::OrganizeUBOforUpload(){
 		//Bind the lights
 		
 		glUniform1i(MainShaderUniforms[MAINSHADER_NUM_POINTLIGHTS], howmanypointlightshavewedone);
+		*((int*)(&(LightingDataUBOData[8384]))) = howmanypointlightshavewedone;
 		//if(maxindex > -1)
 			for (size_t i = 0; i < 32 && i < howmanypointlightshavewedone; i++){
 				glUniform3f(m_LightUniformHandles[i*4], LightsThisFrame[i]->pos.x, LightsThisFrame[i]->pos.y, LightsThisFrame[i]->pos.z);//pos
@@ -816,6 +819,7 @@ void GkScene::OrganizeUBOforUpload(){
 		//std::cout << "\n DEBUGGING POINTLIGHT BINDINGS: MAXINDEX " << maxindex << " howmanypointlightshavewedone " << howmanypointlightshavewedone << "!" ;
 	} else {
 		glUniform1i(MainShaderUniforms[MAINSHADER_NUM_POINTLIGHTS], 0);
+		*((int*)(&(LightingDataUBOData[8384]))) = 0;
 	}
 	
 	//Ambient Lights
@@ -857,6 +861,7 @@ void GkScene::OrganizeUBOforUpload(){
 		}
 		//Bind the lights
 		glUniform1i(MainShaderUniforms[MAINSHADER_NUM_AMBLIGHTS], howmanyAmbientlightshavewedone);
+		*((int*)(&(LightingDataUBOData[8392]))) = howmanyAmbientlightshavewedone;
 		//if(maxindex > -1)
 			for (size_t i = 0; i < 32 && i < howmanyAmbientlightshavewedone; i++){
 				 glUniform3f(m_LightUniformHandles[4 * 32 + 2 * 2 + i*3], LightsThisFrame[i]->myPos.x, LightsThisFrame[i]->myPos.y, LightsThisFrame[i]->myPos.z);//pos
@@ -894,6 +899,7 @@ void GkScene::OrganizeUBOforUpload(){
 		//std::cout << "\n DEBUGGING POINTLIGHT BINDINGS: MAXINDEX " << maxindex << " howmanypointlightshavewedone " << howmanypointlightshavewedone << "!" ;
 	} else {
 		glUniform1i(MainShaderUniforms[MAINSHADER_NUM_AMBLIGHTS], 0);
+		*((int*)(&(LightingDataUBOData[8392]))) = 0;
 	}
 	
 	//Camera Lights
@@ -925,8 +931,10 @@ void GkScene::OrganizeUBOforUpload(){
 			currindex++;
 		}
 		glUniform1i(MainShaderUniforms[MAINSHADER_NUM_CAMLIGHTS], camLightsRegistered);
+		*((int*)(&(LightingDataUBOData[8396]))) = camLightsRegistered;
 	} else {
 		glUniform1i(MainShaderUniforms[MAINSHADER_NUM_CAMLIGHTS], 0);
+		*((int*)(&(LightingDataUBOData[8396]))) = 0;
 	}
 }
 

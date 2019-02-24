@@ -150,55 +150,55 @@ layout (std140) uniform light_data{
 	
 	//I don't trust structs, so the values are being stored here directly
 	//dir lights
-	vec4 dir_direction[MAX_DIR_LIGHTS]; // 4 bytes per float * 4 floats per element * 2 elements = 32 bytes 1
-	vec4 dir_color[MAX_DIR_LIGHTS]; // 4 bytes per float * 4 floats per element * 2 elements = 32 bytes 2
-	vec4 dir_sphere1[MAX_DIR_LIGHTS]; // 4 bytes per float * 4 floats per element * 2 elements = 32 bytes 3
-	vec4 dir_sphere2[MAX_DIR_LIGHTS]; // 4 bytes per float * 4 floats per element * 2 elements = 32 bytes 4
-	vec4 dir_sphere3[MAX_DIR_LIGHTS]; // 4 bytes per float * 4 floats per element * 2 elements = 32 bytes 5
-	vec4 dir_sphere4[MAX_DIR_LIGHTS]; // 4 bytes per float * 4 floats per element * 2 elements = 32 bytes 6
-	vec4 dir_AABBp1[MAX_DIR_LIGHTS]; // 4 bytes per float * 4 floats per element * 2 elements = 32 bytes 7
-	vec4 dir_AABBp2[MAX_DIR_LIGHTS]; // 4 bytes per float * 4 floats per element * 2 elements = 32 bytes 8
-	vec4 dir_AABBp3[MAX_DIR_LIGHTS]; // 4 bytes per float * 4 floats per element * 2 elements = 32 bytes 9
-	vec4 dir_AABBp4[MAX_DIR_LIGHTS]; // 4 bytes per float * 4 floats per element * 2 elements = 32 bytes 10
+	vec4 dir_direction[MAX_DIR_LIGHTS]; // 4 bytes per float * 4 floats per element * 2 elements = 32 bytes 1 (STARTS AT 0)
+	vec4 dir_color[MAX_DIR_LIGHTS]; // 4 bytes per float * 4 floats per element * 2 elements = 32 bytes 2 (STARTS AT 16 * 2 * 1 + 0)
+	vec4 dir_sphere1[MAX_DIR_LIGHTS]; // 4 bytes per float * 4 floats per element * 2 elements = 32 bytes 3 (STARTS AT 16 * 2 * 2 + 0)
+	vec4 dir_sphere2[MAX_DIR_LIGHTS]; // 4 bytes per float * 4 floats per element * 2 elements = 32 bytes 4 (STARTS AT 16 * 2 * 3 + 0)
+	vec4 dir_sphere3[MAX_DIR_LIGHTS]; // 4 bytes per float * 4 floats per element * 2 elements = 32 bytes 5 (STARTS AT 16 * 2 * 4 + 0)
+	vec4 dir_sphere4[MAX_DIR_LIGHTS]; // 4 bytes per float * 4 floats per element * 2 elements = 32 bytes 6 (STARTS AT 16 * 2 * 5 + 0)
+	vec4 dir_AABBp1[MAX_DIR_LIGHTS]; // 4 bytes per float * 4 floats per element * 2 elements = 32 bytes 7 (STARTS AT 16 * 2 * 6 + 0)
+	vec4 dir_AABBp2[MAX_DIR_LIGHTS]; // 4 bytes per float * 4 floats per element * 2 elements = 32 bytes 8 (STARTS AT 16 * 2 * 7 + 0)
+	vec4 dir_AABBp3[MAX_DIR_LIGHTS]; // 4 bytes per float * 4 floats per element * 2 elements = 32 bytes 9 (STARTS AT 16 * 2 * 8 + 0)
+	vec4 dir_AABBp4[MAX_DIR_LIGHTS]; // 4 bytes per float * 4 floats per element * 2 elements = 32 bytes 10 (STARTS AT 16 * 2 * 9 + 0)
 	//320 subtotal
 	//320 bytes so far
 	
 	//point lights
-	vec4 point_position[MAX_POINT_LIGHTS]; // 4 bytes per float * 4 floats per element * 32 elements = 512 bytes 1
-	vec4 point_color[MAX_POINT_LIGHTS]; // 4 bytes per float * 4 floats per element * 32 elements = 512 bytes 2
+	vec4 point_position[MAX_POINT_LIGHTS]; // 4 bytes per float * 4 floats per element * 32 elements = 512 bytes 1 (STARTS AT 16 * 32 * 0 + 320)
+	vec4 point_color[MAX_POINT_LIGHTS]; // 4 bytes per float * 4 floats per element * 32 elements = 512 bytes 2 (STARTS AT 16 * 32 * 1 + 320)
 	
-	vec4 point_sphere1[MAX_POINT_LIGHTS]; // 4 bytes per float * 4 floats per element * 32 elements = 512 bytes 3
-	vec4 point_sphere2[MAX_POINT_LIGHTS]; // 4 bytes per float * 4 floats per element * 32 elements = 512 bytes 4
-	vec4 point_sphere3[MAX_POINT_LIGHTS]; // 4 bytes per float * 4 floats per element * 32 elements = 512 bytes 5
-	vec4 point_sphere4[MAX_POINT_LIGHTS]; // 4 bytes per float * 4 floats per element * 32 elements = 512 bytes 6
-	vec4 point_AABBp1[MAX_POINT_LIGHTS]; // 4 bytes per float * 4 floats per element * 32 elements = 512 bytes 7
-	vec4 point_AABBp2[MAX_POINT_LIGHTS]; // 4 bytes per float * 4 floats per element * 32 elements = 512 bytes 8
-	vec4 point_AABBp3[MAX_POINT_LIGHTS]; // 4 bytes per float * 4 floats per element * 32 elements = 512 bytes 9
-	vec4 point_AABBp4[MAX_POINT_LIGHTS]; // 4 bytes per float * 4 floats per element * 32 elements = 512 bytes 10
+	vec4 point_sphere1[MAX_POINT_LIGHTS]; // 4 bytes per float * 4 floats per element * 32 elements = 512 bytes 3 (STARTS AT 16 * 32 * 2 + 320)
+	vec4 point_sphere2[MAX_POINT_LIGHTS]; // 4 bytes per float * 4 floats per element * 32 elements = 512 bytes 4 (STARTS AT 16 * 32 * 3 + 320)
+	vec4 point_sphere3[MAX_POINT_LIGHTS]; // 4 bytes per float * 4 floats per element * 32 elements = 512 bytes 5 (STARTS AT 16 * 32 * 4 + 320)
+	vec4 point_sphere4[MAX_POINT_LIGHTS]; // 4 bytes per float * 4 floats per element * 32 elements = 512 bytes 6 (STARTS AT 16 * 32 * 5 + 320)
+	vec4 point_AABBp1[MAX_POINT_LIGHTS]; // 4 bytes per float * 4 floats per element * 32 elements = 512 bytes 7 (STARTS AT 16 * 32 * 6 + 320)
+	vec4 point_AABBp2[MAX_POINT_LIGHTS]; // 4 bytes per float * 4 floats per element * 32 elements = 512 bytes 8 (STARTS AT 16 * 32 * 7 + 320)
+	vec4 point_AABBp3[MAX_POINT_LIGHTS]; // 4 bytes per float * 4 floats per element * 32 elements = 512 bytes 9 (STARTS AT 16 * 32 * 8 + 320)
+	vec4 point_AABBp4[MAX_POINT_LIGHTS]; // 4 bytes per float * 4 floats per element * 32 elements = 512 bytes 10 (STARTS AT 16 * 32 * 9 + 320)
 	//5120 subtotal
 	//320 + 5120 bytes = 5440 bytes so far
 	
 	//amb lights
-	vec4 amb_position[MAX_AMB_LIGHTS]; // 4 bytes per float * 4 floats per element * 3 elements = 48 bytes
-	vec4 amb_color[MAX_AMB_LIGHTS]; // 4 bytes per float * 4 floats per element * 3 elements = 48 bytes
+	vec4 amb_position[MAX_AMB_LIGHTS]; // 4 bytes per float * 4 floats per element * 3 elements = 48 bytes (STARTS AT 16 * 3 * 0 + 5440)
+	vec4 amb_color[MAX_AMB_LIGHTS]; // 4 bytes per float * 4 floats per element * 3 elements = 48 bytes (STARTS AT 16 * 3 * 1 + 5440)
 	
-	vec4 amb_sphere1[MAX_AMB_LIGHTS]; // 4 bytes per float * 4 floats per element * 3 elements = 48 bytes
-	vec4 amb_sphere2[MAX_AMB_LIGHTS]; // 4 bytes per float * 4 floats per element * 3 elements = 48 bytes
-	vec4 amb_sphere3[MAX_AMB_LIGHTS]; // 4 bytes per float * 4 floats per element * 3 elements = 48 bytes
-	vec4 amb_sphere4[MAX_AMB_LIGHTS]; // 4 bytes per float * 4 floats per element * 3 elements = 48 bytes
-	vec4 amb_AABBp1[MAX_AMB_LIGHTS]; // 4 bytes per float * 4 floats per element * 3 elements = 48 bytes
-	vec4 amb_AABBp2[MAX_AMB_LIGHTS]; // 4 bytes per float * 4 floats per element * 3 elements = 48 bytes
-	vec4 amb_AABBp3[MAX_AMB_LIGHTS]; // 4 bytes per float * 4 floats per element * 3 elements = 48 bytes
-	vec4 amb_AABBp4[MAX_AMB_LIGHTS]; // 4 bytes per float * 4 floats per element * 3 elements = 48 bytes 10
+	vec4 amb_sphere1[MAX_AMB_LIGHTS]; // 4 bytes per float * 4 floats per element * 3 elements = 48 bytes (STARTS AT 16 * 3 * 2 + 5440)
+	vec4 amb_sphere2[MAX_AMB_LIGHTS]; // 4 bytes per float * 4 floats per element * 3 elements = 48 bytes (STARTS AT 16 * 3 * 3 + 5440)
+	vec4 amb_sphere3[MAX_AMB_LIGHTS]; // 4 bytes per float * 4 floats per element * 3 elements = 48 bytes (STARTS AT 16 * 3 * 4 + 5440)
+	vec4 amb_sphere4[MAX_AMB_LIGHTS]; // 4 bytes per float * 4 floats per element * 3 elements = 48 bytes (STARTS AT 16 * 3 * 5 + 5440)
+	vec4 amb_AABBp1[MAX_AMB_LIGHTS]; // 4 bytes per float * 4 floats per element * 3 elements = 48 bytes (STARTS AT 16 * 3 * 6 + 5440)
+	vec4 amb_AABBp2[MAX_AMB_LIGHTS]; // 4 bytes per float * 4 floats per element * 3 elements = 48 bytes (STARTS AT 16 * 3 * 7 + 5440)
+	vec4 amb_AABBp3[MAX_AMB_LIGHTS]; // 4 bytes per float * 4 floats per element * 3 elements = 48 bytes (STARTS AT 16 * 3 * 8 + 5440)
+	vec4 amb_AABBp4[MAX_AMB_LIGHTS]; // 4 bytes per float * 4 floats per element * 3 elements = 48 bytes 10 (STARTS AT 16 * 3 * 9 + 5440)
 	//480 subtotal
 	
 	//5440 + 480 = 5920 bytes so far
 	
 	
 	//cam lights
-	vec4 cam_position[MAX_CAM_LIGHTS];//Is Direction if range < 0 // 4 bytes per float * 4 floats per element * 5 elements = 80 bytes
-	vec4 cam_color[MAX_CAM_LIGHTS]; // 4 bytes per float * 4 floats per element * 5 elements = 80 bytes
-	mat4 cam_viewproj[MAX_CAM_LIGHTS]; // 4 bytes per float * 16 floats per element * 5 elements = 320 bytes
+	vec4 cam_position[MAX_CAM_LIGHTS];//Is Direction if range < 0 // 4 bytes per float * 4 floats per element * 5 elements = 80 bytes   (STARTS AT 16 * 5 * 0 + 5920)
+	vec4 cam_color[MAX_CAM_LIGHTS]; // 4 bytes per float * 4 floats per element * 5 elements = 80 bytes 								(STARTS AT 16 * 5 * 1 + 5920)
+	mat4 cam_viewproj[MAX_CAM_LIGHTS]; // 4 bytes per float * 16 floats per element * 5 elements = 320 bytes 							(STARTS AT 16 * 5 * 2 + 5920)
 	//480 subtotal
 	
 	//5920 + 480 = 6400 bytes so far
@@ -206,32 +206,34 @@ layout (std140) uniform light_data{
 	
 	
 	//All non-4-aligned things are down here, organized in this pattern: vec2s, floats, uints, ints
-	vec2 cam_radii[MAX_CAM_LIGHTS]; 		// 4 bytes per float * 4 floats per element(2 float or 8 byte padding) * 5 elements = 80 bytes
+	vec2 cam_radii[MAX_CAM_LIGHTS]; 		// 4 bytes per float * 4 floats per element(2 float or 8 byte padding) * 5 elements = 80 bytes (STARTS AT 6400)
 	//Arrays, no matter the type, every element is at least 4 bytes.
-	float point_range[MAX_POINT_LIGHTS]; 	// 4 * 4(3 floats or 12 bytes of padding) * 32 = 512
-	float point_dropoff[MAX_POINT_LIGHTS]; 	// 4 * 4(3 floats or 12 bytes of padding) * 32 = 512
+	float point_range[MAX_POINT_LIGHTS]; 	// 4 * 4(3 floats or 12 bytes of padding) * 32 = 512 (STARTS AT 6480)
+	float point_dropoff[MAX_POINT_LIGHTS]; 	// 4 * 4(3 floats or 12 bytes of padding) * 32 = 512 (STARTS AT 6992)
 	
-	float amb_range[MAX_AMB_LIGHTS]; 		// 4 * 4(3 floats or 12 bytes of padding) * 3 = 48
+	float amb_range[MAX_AMB_LIGHTS]; 		// 4 * 4(3 floats or 12 bytes of padding) * 3 = 48 (STARTS AT 7504)
 	
-	float cam_solidColor[MAX_CAM_LIGHTS]; 	// 4 * 4(3 floats or 12 bytes of padding) * 5 = 80
-	float cam_range[MAX_CAM_LIGHTS]; 		// 4 * 4(3 floats or 12 bytes of padding) * 5 = 80
-	float cam_shadows[MAX_CAM_LIGHTS]; 		// 4 * 4(3 floats or 12 bytes of padding) * 5 = 80
+	float cam_solidColor[MAX_CAM_LIGHTS]; 	// 4 * 4(3 floats or 12 bytes of padding) * 5 = 80 (STARTS AT 7552)
+	float cam_range[MAX_CAM_LIGHTS]; 		// 4 * 4(3 floats or 12 bytes of padding) * 5 = 80 (STARTS AT 7632)
+	float cam_shadows[MAX_CAM_LIGHTS]; 		// 4 * 4(3 floats or 12 bytes of padding) * 5 = 80 (STARTS AT 7712)
 	//^If this is enabled, solidcolor will be used and the texture sample will be treated as a sample into a shadowmap
 	//1392 subtotal
 	//6400 + 1392 = 7792 bytes
 	
-	uint dir_isblacklist[MAX_DIR_LIGHTS];   	// 4(padded) * 4(padded) * 2 = 32 bytes
-	uint point_isblacklist[MAX_POINT_LIGHTS]; 	// 4(padded) * 4(padded) * 32 = 512 bytes
-	uint amb_isblacklist[MAX_AMB_LIGHTS];		// 4(padded) * 4(padded) * 3 = 48 bytes
+	uint dir_isblacklist[MAX_DIR_LIGHTS];   	// 4 * 4(padded) * 2 = 32 bytes (STARTS AT 7792)
+	uint point_isblacklist[MAX_POINT_LIGHTS]; 	// 4 * 4(padded) * 32 = 512 bytes (STARTS AT 7824)
+	uint amb_isblacklist[MAX_AMB_LIGHTS];		// 4 * 4(padded) * 3 = 48 bytes (STARTS AT 8336)
 	//592 byte subtotal
 	//7792 + 592 = 8384 bytes so far
 	
 	//how many are actually being sent in?
-	int numpointlights;						
-	int numdirlights;						
-	int numamblights;						
-	int numcamlights;						
+	int numpointlights;						//AT 8384
+	int numdirlights;						//AT 8388
+	int numamblights;						//AT 8392
+	int numcamlights;						//AT 8396
 	//These 4 are all packed into a single sizeof(vec4)
+	//TOTAL 8400
+	//Almost certainly supported by all target machines (3.3+)
 };
 
 vec2 bettertexcoord;
