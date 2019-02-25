@@ -687,7 +687,7 @@ void GkScene::OrganizeUBOforUpload(){
 		}
 		glGenBuffers(1, &LightingDataUBO);
 		glBindBuffer(GL_UNIFORM_BUFFER, LightingDataUBO);//Work with this UBO
-		glBufferData(GL_UNIFORM_BUFFER, 16000, LightingDataUBOData, GL_DYNAMIC_DRAW); //Use dynamic draw
+		glBufferData(GL_UNIFORM_BUFFER, 8500, LightingDataUBOData, GL_DYNAMIC_DRAW); //Use dynamic draw
 		//from now on we will use glBufferSubData to update the VBO
 		haveCreatedLightingUBO = true;
 		 
@@ -992,20 +992,58 @@ void GkScene::OrganizeUBOforUpload(){
 		{
 			if (CameraLights[currindex] && CameraLights[currindex]->shouldRender)
 			{
+				const int i = camLightsRegistered; //BAM! 
 				//std::cout << "\nBindingCameraLight " << camLightsRegistered;
 				//bind
 				//grab all the things we need m_LightUniformHandles[4 * 32 + 2 * 2 + 3*3 + i * 4] //It now has 6...
-				CameraLights[currindex]->BindtoUniformCameraLight(
-					m_LightUniformHandles[4 * 32 + 2 * 2 + 3*3 + camLightsRegistered * 7],
-					m_LightUniformHandles[4 * 32 + 2 * 2 + 3*3 + camLightsRegistered * 7 +1],
-					m_LightUniformHandles[4 * 32 + 2 * 2 + 3*3 + camLightsRegistered * 7 +2],
-					m_LightUniformHandles[4 * 32 + 2 * 2 + 3*3 + camLightsRegistered * 7 +3],
-					m_LightUniformHandles[4 * 32 + 2 * 2 + 3*3 + camLightsRegistered * 7 +4],
-					m_LightUniformHandles[4 * 32 + 2 * 2 + 3*3 + camLightsRegistered * 7 +5],
-					m_LightUniformHandles[4 * 32 + 2 * 2 + 3*3 + camLightsRegistered * 7 +6], //Radii
-					3+camLightsRegistered
-				);
+				//~ CameraLights[currindex]->BindtoUniformCameraLight(
+					//~ m_LightUniformHandles[4 * 32 + 2 * 2 + 3*3 + camLightsRegistered * 7],
+					//~ m_LightUniformHandles[4 * 32 + 2 * 2 + 3*3 + camLightsRegistered * 7 +1],
+					//~ m_LightUniformHandles[4 * 32 + 2 * 2 + 3*3 + camLightsRegistered * 7 +2],
+					//~ m_LightUniformHandles[4 * 32 + 2 * 2 + 3*3 + camLightsRegistered * 7 +3],
+					//~ m_LightUniformHandles[4 * 32 + 2 * 2 + 3*3 + camLightsRegistered * 7 +4],
+					//~ m_LightUniformHandles[4 * 32 + 2 * 2 + 3*3 + camLightsRegistered * 7 +5],
+					//~ m_LightUniformHandles[4 * 32 + 2 * 2 + 3*3 + camLightsRegistered * 7 +6], //Radii
+					//~ 3+camLightsRegistered
+				//~ );
+				glm::mat4 m_matrix; //done
+				glm::vec3 m_camerapos; //done
+				glm::vec3 m_color;  //done
+				GLfloat m_SolidColorToggle; //done
+				GLfloat m_range; //done
+				GLfloat m_shadows; //done
+				glm::vec2 m_radii; //done
+				CameraLights[currindex]->BindtoUniformBufferCameraLight(&m_matrix,
+																		&m_camerapos, 
+																		&m_color, 
+																		&m_SolidColorToggle, 
+																		&m_range, 
+																		&m_shadows, 
+																		&m_radii, 
+																		3 + camLightsRegistered);
+				//BINDING INFO
 				
+				//CAMERAPOS
+				temp_ptr = (float*)(&(LightingDataUBOData[             5920 + 16 * i])); //Cameralight Position (4 floats (padded), 4 bytes per float)
+				memcpy(temp_ptr, &(m_camerapos[0]), 12); //copy 3 floats of size 4 each
+				//COLOR
+				temp_ptr = (float*)(&(LightingDataUBOData[16 * 5 * 1 + 5920 + 16 * i])); //Cameralight Color    (4 floats (padded), 4 bytes per float)
+				memcpy(temp_ptr, &(m_color[0]), 12); //copy 3 floats of size 4 each
+				//RADII
+				temp_ptr = (float*)(&(LightingDataUBOData[6400 + 16 * i])); //Cameralight RADII                 (4 floats (padded), 4 bytes per float)
+				memcpy(temp_ptr, &(m_radii[0]), 8); //copy 2 floats of size 4 each
+				//SOLID COLOR TOGGLE
+				temp_ptr = (float*)(&(LightingDataUBOData[7552 + 16 * i])); //Cameralight SOLID COLOR           (4 floats (padded), 4 bytes per float)
+				memcpy(temp_ptr, &(m_SolidColorToggle), 4); //copy 1 floats of size 4 each
+				//RANGE
+				temp_ptr = (float*)(&(LightingDataUBOData[7632 + 16 * i])); //Cameralight RANGE                 (4 floats (padded), 4 bytes per float)
+				memcpy(temp_ptr, &(m_range), 4); //copy 1 floats of size 4 each
+				//RANGE
+				temp_ptr = (float*)(&(LightingDataUBOData[7712 + 16 * i])); //Cameralight SHADOWS               (4 floats (padded), 4 bytes per float)
+				memcpy(temp_ptr, &(m_shadows), 4); //copy 1 floats of size 4 each
+				//MATRIX
+				temp_ptr = (float*)(&(LightingDataUBOData[16 * 5 * 2 + 5920 + 64 * i])); //Cameralight Matrix   (16 floats, 4 bytes per float)
+				memcpy(temp_ptr, &(m_matrix[0][0]), 64); //copy 16 floats of size 4 each
 				camLightsRegistered++;
 			}
 			
@@ -1021,7 +1059,7 @@ void GkScene::OrganizeUBOforUpload(){
 	
 	//Update the buffer
 	glBindBuffer(GL_UNIFORM_BUFFER, LightingDataUBO);//Work with this UBO
-	glBufferData(GL_UNIFORM_BUFFER, 16000, LightingDataUBOData, GL_DYNAMIC_DRAW); //Use dynamic draw //TODO: Change to glBufferSubData which is much faster
+	glBufferSubData(GL_UNIFORM_BUFFER, 0, 8450, LightingDataUBOData); //Nothing more to do
 	communism = glGetError(); //Ensure there are no errors listed before we start.
 	if (communism != GL_NO_ERROR) //communism is a mistake
 	{

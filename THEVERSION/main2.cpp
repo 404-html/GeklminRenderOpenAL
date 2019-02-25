@@ -147,14 +147,14 @@ void init()
 void loadResources(){
 	using namespace GeklminRender;
 	//it puts .vs and .fs after the string. The EXE Is the starting folder, but I could probably change that if I tried.
-	MainShad = new Shader("shaders/FORWARD_MAINSHADER");
+	MainShad = new Shader("shaders/FORWARD_MAINSHADER_UBO");
 	DisplayTexture = new Shader("shaders/SHOWTEX");
 	SkyboxShad = new Shader("shaders/Skybox");
 	WBOITCompShader = new Shader("shaders/WBOIT_COMPOSITION_SHADER");
 	theScene->setSkyboxShader(SkyboxShad);
 	theScene->setMainShader(MainShad);
 	theScene->ShowTextureShader = DisplayTexture; //Add a setter later
-	theScene->setWBOITCompositionShader(WBOITCompShader); //Has a setter, and it's been a long time, I should write a setter for the ShowTextureShader
+	//theScene->setWBOITCompositionShader(WBOITCompShader); //Has a setter, and it's been a long time, I should write a setter for the ShowTextureShader
 	
 	
 	//Load the cubemap we're going to use
