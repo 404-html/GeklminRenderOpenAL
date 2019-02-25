@@ -40,6 +40,8 @@ public:
 		glBindAttribLocation(m_program, x, y);
 	}
 	GLint GetUniformLocation(std::string name);
+	GLint GetUniformBlockIndex(std::string name){return glGetUniformBlockIndex(m_program, name.c_str());}
+	void UniformBlockBinding(GLuint index, GLuint binding_point){glUniformBlockBinding(m_program, index, binding_point);} //BINDING POINT is a number between 0 and GL_MAX_UNIFORM_BUFFERS
 	GLuint getHandle() const {return m_program;} //In case it is necessary...
 	
 	void setUniform1f(std::string name, GLfloat value); //1 float

@@ -472,239 +472,11 @@ void GkScene::drawPipeline(int meshmask, FBO* CurrentRenderTarget, FBO* RenderTa
 		{glUniformMatrix4fv(MainShaderUniforms[MAINSHADER_WORLD2CAMERA], 1, GL_FALSE, &SceneRenderCameraMatrix[0][0]);}
 	else
 		{glUniformMatrix4fv(MainShaderUniforms[MAINSHADER_WORLD2CAMERA], 1, GL_FALSE, &(CurrentRenderCamera->GetViewProjection()[0][0]));}
-	//Bind Directional lights.
-	if (DirectionalLights.size() > 0)
-	{
-		for (int i = 0; i < 2 && i < DirectionalLights.size(); i++)
-		if(DirectionalLights[i] && DirectionalLights[i]->shouldRender)
-		{
-			//access by taking i, multiplying by 2, adding 4 * max point lights, and adding an offset (0 for direction, 1 for color...)
-			//m_LightUniformHandles
-			glUniform3f(m_LightUniformHandles[i * 2 + 4 * 32 + 0], DirectionalLights[i]->myDirection.x,DirectionalLights[i]->myDirection.y, DirectionalLights[i]->myDirection.z);
-			glUniform3f(m_LightUniformHandles[i * 2 + 4 * 32 + 1], DirectionalLights[i]->myColor.x,DirectionalLights[i]->myColor.y, DirectionalLights[i]->myColor.z);
-			
-			//Bind the Light Clipping Volumes
-			
-			
-			//FORMAT OF m_LightClippingVolumeUniformHandles
-			//Per Light:
-			//0 - 3 AABBp1-4 (4 vec3s)
-			//4-7 Spheres 0-3 (4 vec4s)
-			//8 whitelist or Whitelist UINT
-			
-			
-			glUniform3f(m_LightClippingVolumeUniformHandles[32*9 + i*9    ], DirectionalLights[i]->AABBp1.x, DirectionalLights[i]->AABBp1.y, DirectionalLights[i]->AABBp1.z); //AABBp1
-			glUniform3f(m_LightClippingVolumeUniformHandles[32*9 + i*9 + 1], DirectionalLights[i]->AABBp2.x, DirectionalLights[i]->AABBp2.y, DirectionalLights[i]->AABBp2.z); //AABBp2
-			glUniform3f(m_LightClippingVolumeUniformHandles[32*9 + i*9 + 2], DirectionalLights[i]->AABBp3.x, DirectionalLights[i]->AABBp3.y, DirectionalLights[i]->AABBp3.z); //AABBp3
-			glUniform3f(m_LightClippingVolumeUniformHandles[32*9 + i*9 + 3], DirectionalLights[i]->AABBp4.x, DirectionalLights[i]->AABBp4.y, DirectionalLights[i]->AABBp4.z); //AABBp4
-			
-			glUniform4f(m_LightClippingVolumeUniformHandles[32*9 + i*9 + 4], DirectionalLights[i]->sphere1.x, DirectionalLights[i]->sphere1.y, DirectionalLights[i]->sphere1.z, DirectionalLights[i]->sphere1.w); //Sphere 1
-			glUniform4f(m_LightClippingVolumeUniformHandles[32*9 + i*9 + 5], DirectionalLights[i]->sphere2.x, DirectionalLights[i]->sphere2.y, DirectionalLights[i]->sphere2.z, DirectionalLights[i]->sphere2.w); //Sphere 2
-			glUniform4f(m_LightClippingVolumeUniformHandles[32*9 + i*9 + 6], DirectionalLights[i]->sphere3.x, DirectionalLights[i]->sphere3.y, DirectionalLights[i]->sphere3.z, DirectionalLights[i]->sphere3.w); //Sphere 3
-			glUniform4f(m_LightClippingVolumeUniformHandles[32*9 + i*9 + 7], DirectionalLights[i]->sphere4.x, DirectionalLights[i]->sphere4.y, DirectionalLights[i]->sphere4.z, DirectionalLights[i]->sphere4.w); //Sphere 4
-			
-			glUniform1ui(m_LightClippingVolumeUniformHandles[32*9 + i*9 + 8], DirectionalLights[i]->whitelist?1:0);
-			if (i == 1 || i == DirectionalLights.size()-1)
-			{
-				glUniform1i(MainShaderUniforms[MAINSHADER_NUM_DIRLIGHTS], i + 1);
-			}
-		}
-	} else {
-		glUniform1i(MainShaderUniforms[MAINSHADER_NUM_DIRLIGHTS], 0);
-	}
+	
+	//Make the code significantly prettier by packing all the light binding stuff into a function
+	OrganizeUBOforUpload();
 	
 	
-	
-	//Do point lights
-	if (SimplePointLights.size() > 0){
-		PointLight* LightsThisFrame[32]; //Array of pointers
-		//Grab the first 32
-		size_t howmanypointlightshavewedone = 0;
-		long long maxindex = -1;
-		for (size_t i = 0; i < SimplePointLights.size() && howmanypointlightshavewedone < 32; i++)
-		{
-			if(SimplePointLights[i]->shouldRender)
-			{
-				LightsThisFrame[howmanypointlightshavewedone] = SimplePointLights[i];
-				howmanypointlightshavewedone++;
-				maxindex = i;
-			}
-		}
-		//maxindex++;
-		//Compare all of the rest of them
-		if(maxindex > -1 && maxindex < SimplePointLights.size()){
-			for (size_t i = maxindex + 1; i < SimplePointLights.size(); i++) //for all of them
-			{
-				if (i < SimplePointLights.size() && SimplePointLights[i]->shouldRender) //don't bother checking if it shouldn't be rendered.
-				{
-					//Will never be a nullptr
-					PointLight* FarthestLight = LightsThisFrame[0];
-					size_t indexofFarthestLight = 0;
-					for (size_t j = 0; j < 32; j++)
-					{
-						if (glm::length2(FarthestLight->pos - SceneCamera->pos) < glm::length2(LightsThisFrame[j]->pos - SceneCamera->pos)) //FarthestLight is closer
-						{
-							FarthestLight = LightsThisFrame[j]; //Swap!
-							//break; //I'm hoping this breaks the inner for loop only. If it doesn't- set j to some massively huge value instead
-							indexofFarthestLight = j;
-						}
-					}
-					//FarthestLight
-					if (glm::length2(SimplePointLights[i]->pos - SceneCamera->pos) < glm::length2(FarthestLight->pos - SceneCamera->pos)) //FarthestLight is farther away than the light
-					{
-						LightsThisFrame[indexofFarthestLight] = SimplePointLights[i];
-					}
-				}
-			}
-		}
-		//Bind the lights
-		
-		glUniform1i(MainShaderUniforms[MAINSHADER_NUM_POINTLIGHTS], howmanypointlightshavewedone);
-		//if(maxindex > -1)
-			for (size_t i = 0; i < 32 && i < howmanypointlightshavewedone; i++){
-				glUniform3f(m_LightUniformHandles[i*4], LightsThisFrame[i]->pos.x, LightsThisFrame[i]->pos.y, LightsThisFrame[i]->pos.z);//pos
-				glUniform3f(m_LightUniformHandles[i*4+1], LightsThisFrame[i]->myColor.x, LightsThisFrame[i]->myColor.y, LightsThisFrame[i]->myColor.z);//color
-				glUniform1f(m_LightUniformHandles[i*4+2], LightsThisFrame[i]->range);//range
-				glUniform1f(m_LightUniformHandles[i*4+3], LightsThisFrame[i]->dropoff);//dropoff
-				//std::cout << "\nBOUND POINT LIGHT " << i;
-				
-				//Bind the Light Clipping Volumes
-			
-			
-				//FORMAT OF m_LightClippingVolumeUniformHandles
-				//Per Light:
-				//0 - 3 AABBp1-4 (4 vec3s)
-				//4-7 Spheres 0-3 (4 vec4s)
-				//8 whitelist or Whitelist UINT
-				
-				
-				glUniform3f(m_LightClippingVolumeUniformHandles[i*9], LightsThisFrame[i]->AABBp1.x, LightsThisFrame[i]->AABBp1.y, LightsThisFrame[i]->AABBp1.z); //AABBp1
-				glUniform3f(m_LightClippingVolumeUniformHandles[ 1 + i*9], LightsThisFrame[i]->AABBp2.x, LightsThisFrame[i]->AABBp2.y, LightsThisFrame[i]->AABBp2.z); //AABBp2
-				glUniform3f(m_LightClippingVolumeUniformHandles[ 2 + i*9], LightsThisFrame[i]->AABBp3.x, LightsThisFrame[i]->AABBp3.y, LightsThisFrame[i]->AABBp3.z); //AABBp3
-				glUniform3f(m_LightClippingVolumeUniformHandles[ 3 + i*9], LightsThisFrame[i]->AABBp4.x, LightsThisFrame[i]->AABBp4.y, LightsThisFrame[i]->AABBp4.z); //AABBp4
-				
-				glUniform4f(m_LightClippingVolumeUniformHandles[ 4 + i*9], LightsThisFrame[i]->sphere1.x, LightsThisFrame[i]->sphere1.y, LightsThisFrame[i]->sphere1.z, LightsThisFrame[i]->sphere1.w); //Sphere 1
-				glUniform4f(m_LightClippingVolumeUniformHandles[ 5 + i*9], LightsThisFrame[i]->sphere2.x, LightsThisFrame[i]->sphere2.y, LightsThisFrame[i]->sphere2.z, LightsThisFrame[i]->sphere2.w); //Sphere 2
-				glUniform4f(m_LightClippingVolumeUniformHandles[ 6 + i*9], LightsThisFrame[i]->sphere3.x, LightsThisFrame[i]->sphere3.y, LightsThisFrame[i]->sphere3.z, LightsThisFrame[i]->sphere3.w); //Sphere 3
-				glUniform4f(m_LightClippingVolumeUniformHandles[ 7 + i*9], LightsThisFrame[i]->sphere4.x, LightsThisFrame[i]->sphere4.y, LightsThisFrame[i]->sphere4.z, LightsThisFrame[i]->sphere4.w); //Sphere 4
-				
-				glUniform1ui(m_LightClippingVolumeUniformHandles[i*9 + 8], LightsThisFrame[i]->whitelist?1:0);
-			}
-		//std::cout << "\n DEBUGGING POINTLIGHT BINDINGS: MAXINDEX " << maxindex << " howmanypointlightshavewedone " << howmanypointlightshavewedone << "!" ;
-	} else {
-		glUniform1i(MainShaderUniforms[MAINSHADER_NUM_POINTLIGHTS], 0);
-	}
-	
-	//Ambient Lights
-	if (AmbientLights.size() > 0){
-		AmbientLight* LightsThisFrame[3]; //Array of pointers
-		//Grab the first 3
-		size_t howmanyAmbientlightshavewedone = 0;
-		long long maxindex = -1;
-		for (size_t i = 0; i < AmbientLights.size() && howmanyAmbientlightshavewedone < 3; i++)
-		{
-			if(AmbientLights[i]->shouldRender)
-			{
-				LightsThisFrame[howmanyAmbientlightshavewedone] = AmbientLights[i];
-				howmanyAmbientlightshavewedone++;
-				maxindex = i;
-			}
-		}
-		maxindex++;
-		//Compare all of the rest of them
-		if(maxindex > -1 && maxindex != AmbientLights.size()-1){
-			for (size_t i = maxindex; i < AmbientLights.size(); i++) //for all of them
-			{
-				if (AmbientLights[i]->shouldRender) //don't bother checking if it shouldn't be rendered.
-				{
-					AmbientLight* FarthestLight = LightsThisFrame[0];
-					size_t indexofFarthestLight = 0;
-					for (size_t j = 0; j < 3; j++)
-					{
-						if (glm::length2(FarthestLight->myPos - SceneCamera->pos) < glm::length2(LightsThisFrame[j]->myPos - SceneCamera->pos)) //This one is closer
-						{
-							FarthestLight = LightsThisFrame[j]; //Swap!
-							indexofFarthestLight = j;
-						}
-					}
-					if (glm::length2(FarthestLight->myPos - SceneCamera->pos) > glm::length2(AmbientLights[i]->myPos - SceneCamera->pos)) //This one is closer
-						LightsThisFrame[indexofFarthestLight] = AmbientLights[i];
-				}
-			}
-		}
-		//Bind the lights
-		glUniform1i(MainShaderUniforms[MAINSHADER_NUM_AMBLIGHTS], howmanyAmbientlightshavewedone);
-		//if(maxindex > -1)
-			for (size_t i = 0; i < 32 && i < howmanyAmbientlightshavewedone; i++){
-				 glUniform3f(m_LightUniformHandles[4 * 32 + 2 * 2 + i*3], LightsThisFrame[i]->myPos.x, LightsThisFrame[i]->myPos.y, LightsThisFrame[i]->myPos.z);//pos
-				 glUniform3f(m_LightUniformHandles[4 * 32 + 2 * 2 + i*3 +1], LightsThisFrame[i]->myColor.x, LightsThisFrame[i]->myColor.y, LightsThisFrame[i]->myColor.z);//color
-				 glUniform1f(m_LightUniformHandles[4 * 32 + 2 * 2 + i*3 +2], LightsThisFrame[i]->myRange);//range
-				
-				//access by taking i, multiplying by 3, adding 4 * max pointlights + 2 * max dir lights, and adding an offset (0 for position, 1 for color...)
-				//m_LightUniformHandles.push_back(MainShader->GetUniformLocation("amb_lightArray[" + std::to_string(i) + "].position"));
-				//m_LightUniformHandles.push_back(MainShader->GetUniformLocation("amb_lightArray[" + std::to_string(i) + "].color"));
-				//m_LightUniformHandles.push_back(MainShader->GetUniformLocation("amb_lightArray[" + std::to_string(i) + "].range"));
-				
-				//Bind the Light Clipping Volumes
-			
-			
-				//FORMAT OF m_LightClippingVolumeUniformHandles
-				//Per Light:
-				//0 - 3 AABBp1-4 (4 vec3s)
-				//4-7 Spheres 0-3 (4 vec4s)
-				//8 whitelist or Whitelist UINT
-				
-				
-				glUniform3f(m_LightClippingVolumeUniformHandles[34*9 + i*9], LightsThisFrame[i]->AABBp1.x, LightsThisFrame[i]->AABBp1.y, LightsThisFrame[i]->AABBp1.z); //AABBp1
-				glUniform3f(m_LightClippingVolumeUniformHandles[34*9 + 1 + i*9], LightsThisFrame[i]->AABBp2.x, LightsThisFrame[i]->AABBp2.y, LightsThisFrame[i]->AABBp2.z); //AABBp2
-				glUniform3f(m_LightClippingVolumeUniformHandles[34*9 + 2 + i*9], LightsThisFrame[i]->AABBp3.x, LightsThisFrame[i]->AABBp3.y, LightsThisFrame[i]->AABBp3.z); //AABBp3
-				glUniform3f(m_LightClippingVolumeUniformHandles[34*9 + 3 + i*9], LightsThisFrame[i]->AABBp4.x, LightsThisFrame[i]->AABBp4.y, LightsThisFrame[i]->AABBp4.z); //AABBp4
-				
-				glUniform4f(m_LightClippingVolumeUniformHandles[34*9 + 4 + i*9], LightsThisFrame[i]->sphere1.x, LightsThisFrame[i]->sphere1.y, LightsThisFrame[i]->sphere1.z, LightsThisFrame[i]->sphere1.w); //Sphere 1
-				glUniform4f(m_LightClippingVolumeUniformHandles[34*9 + 5 + i*9], LightsThisFrame[i]->sphere2.x, LightsThisFrame[i]->sphere2.y, LightsThisFrame[i]->sphere2.z, LightsThisFrame[i]->sphere2.w); //Sphere 2
-				glUniform4f(m_LightClippingVolumeUniformHandles[34*9 + 6 + i*9], LightsThisFrame[i]->sphere3.x, LightsThisFrame[i]->sphere3.y, LightsThisFrame[i]->sphere3.z, LightsThisFrame[i]->sphere3.w); //Sphere 3
-				glUniform4f(m_LightClippingVolumeUniformHandles[34*9 + 7 + i*9], LightsThisFrame[i]->sphere4.x, LightsThisFrame[i]->sphere4.y, LightsThisFrame[i]->sphere4.z, LightsThisFrame[i]->sphere4.w); //Sphere 4
-				
-				glUniform1ui(m_LightClippingVolumeUniformHandles[34*9 + 8 + i*9], LightsThisFrame[i]->whitelist?1:0); //whitelist yes or no
-				
-			}
-		//std::cout << "\n DEBUGGING POINTLIGHT BINDINGS: MAXINDEX " << maxindex << " howmanypointlightshavewedone " << howmanypointlightshavewedone << "!" ;
-	} else {
-		glUniform1i(MainShaderUniforms[MAINSHADER_NUM_AMBLIGHTS], 0);
-	}
-	
-	//Camera Lights
-	if (CameraLights.size() > 0){
-		int camLightsRegistered = 0;
-		size_t currindex = 0;
-		//Replace with a system that sorts by distance later
-		while (currindex < CameraLights.size() && camLightsRegistered < 5)
-		{
-			if (CameraLights[currindex] && CameraLights[currindex]->shouldRender)
-			{
-				//std::cout << "\nBindingCameraLight " << camLightsRegistered;
-				//bind
-				//grab all the things we need m_LightUniformHandles[4 * 32 + 2 * 2 + 3*3 + i * 4] //It now has 6...
-				CameraLights[currindex]->BindtoUniformCameraLight(
-					m_LightUniformHandles[4 * 32 + 2 * 2 + 3*3 + camLightsRegistered * 7],
-					m_LightUniformHandles[4 * 32 + 2 * 2 + 3*3 + camLightsRegistered * 7 +1],
-					m_LightUniformHandles[4 * 32 + 2 * 2 + 3*3 + camLightsRegistered * 7 +2],
-					m_LightUniformHandles[4 * 32 + 2 * 2 + 3*3 + camLightsRegistered * 7 +3],
-					m_LightUniformHandles[4 * 32 + 2 * 2 + 3*3 + camLightsRegistered * 7 +4],
-					m_LightUniformHandles[4 * 32 + 2 * 2 + 3*3 + camLightsRegistered * 7 +5],
-					m_LightUniformHandles[4 * 32 + 2 * 2 + 3*3 + camLightsRegistered * 7 +6], //Radii
-					3+camLightsRegistered
-				);
-				
-				camLightsRegistered++;
-			}
-			
-			currindex++;
-		}
-		glUniform1i(MainShaderUniforms[MAINSHADER_NUM_CAMLIGHTS], camLightsRegistered);
-	} else {
-		glUniform1i(MainShaderUniforms[MAINSHADER_NUM_CAMLIGHTS], 0);
-	}
 	// glEnable(GL_CULL_FACE);
 	//Now that we have the shader stuff set up, let's get to rendering!
 	glEnableVertexAttribArray(0); //Position
@@ -893,7 +665,418 @@ void GkScene::drawPipeline(int meshmask, FBO* CurrentRenderTarget, FBO* RenderTa
 
 
 
-
+void GkScene::OrganizeUBOforUpload(){
+	//Do all the stuff to sort the lights out and place them in their spots
+	GLenum communism;
+	float* temp_ptr;
+	
+	
+	//Setting up the UBO
+	/*
+	 * 
+	unsigned char LightingDataUBOData[16000];//maximum of 16k in size to be compatible with old systems
+	GLuint LightingDataUBO = 0; //handle for the lighting data UBO
+	bool haveCreatedLightingUBO = false; //Have we created it? determines whether or not we destroy it and whether or not we have to make it again
+	 * 
+	 * */
+	if(!haveCreatedLightingUBO){
+		glGetError();
+		for(int i = 0; i < 16000; i++)
+		{
+			LightingDataUBOData[i] = 0;
+		}
+		glGenBuffers(1, &LightingDataUBO);
+		glBindBuffer(GL_UNIFORM_BUFFER, LightingDataUBO);//Work with this UBO
+		glBufferData(GL_UNIFORM_BUFFER, 8500, LightingDataUBOData, GL_DYNAMIC_DRAW); //Use dynamic draw
+		//from now on we will use glBufferSubData to update the VBO
+		haveCreatedLightingUBO = true;
+		 
+	}
+	if(!haveFoundLocationOfLightingUBO){
+		glBindBufferBase(GL_UNIFORM_BUFFER, 0, LightingDataUBO);
+		LightingDataUBOLocation = MainShader->GetUniformBlockIndex("light_data");
+		MainShader->UniformBlockBinding(LightingDataUBOLocation, 0);
+		haveFoundLocationOfLightingUBO = true;
+	}
+	
+	
+	if (communism != GL_NO_ERROR) //if communism has made an error (which is pretty typical)
+	{
+		std::cout<<"\n OpenGL reports an ERROR! (AFTER CREATION)";
+		if (communism == GL_INVALID_ENUM)
+			std::cout<<"\n Invalid enum.";
+		if (communism == GL_INVALID_OPERATION)
+			std::cout<<"\n Invalid operation.";
+		if (communism == GL_INVALID_FRAMEBUFFER_OPERATION)
+			std::cout <<"\n Invalid Framebuffer Operation.";
+		if (communism == GL_OUT_OF_MEMORY)
+		{
+			std::cout <<"\n Out of memory. You've really done it now. I'm so angry, i'm going to close the program. ARE YOU HAPPY NOW, DAVE?!?!";
+			std::abort();
+		}
+	}
+	
+	if (DirectionalLights.size() > 0)
+	{
+		for (int i = 0; i < 2 && i < DirectionalLights.size(); i++)
+		if(DirectionalLights[i] && DirectionalLights[i]->shouldRender)
+		{
+			//access by taking i, multiplying by 2, adding 4 * max point lights, and adding an offset (0 for direction, 1 for color...)
+			//m_LightUniformHandles
+			//glUniform3f(m_LightUniformHandles[i * 2 + 4 * 32 + 0], DirectionalLights[i]->myDirection.x,DirectionalLights[i]->myDirection.y, DirectionalLights[i]->myDirection.z); //STARTS AT 0
+			temp_ptr = (float*)(&(LightingDataUBOData[0 + i * 16])); //dirlight direction (STARTS AT 0, VEC4S)
+			memcpy(temp_ptr, &(DirectionalLights[i]->myDirection[0]), 12); //copy 3 floats of size 4 each 
+			
+			//glUniform3f(m_LightUniformHandles[i * 2 + 4 * 32 + 1], DirectionalLights[i]->myColor.x,DirectionalLights[i]->myColor.y, DirectionalLights[i]->myColor.z);
+			temp_ptr = (float*)(&(LightingDataUBOData[32 + i * 16])); //dirlight color
+			memcpy(temp_ptr, &(DirectionalLights[i]->myColor[0]), 12); //copy 3 floats of size 4 each 
+			//Bind the Light Clipping Volumes
+			
+			
+			//FORMAT OF m_LightClippingVolumeUniformHandles
+			//Per Light:
+			//0 - 3 AABBp1-4 (4 vec3s)
+			//4-7 Spheres 0-3 (4 vec4s)
+			//8 whitelist or Whitelist UINT
+			
+			
+			//glUniform4f(m_LightClippingVolumeUniformHandles[32*9 + i*9 + 4], DirectionalLights[i]->sphere1.x, DirectionalLights[i]->sphere1.y, DirectionalLights[i]->sphere1.z, DirectionalLights[i]->sphere1.w); //Sphere 1
+			temp_ptr = (float*)(&(LightingDataUBOData[64 + i * 16])); //dirlight sphere1
+			memcpy(temp_ptr, &(DirectionalLights[i]->sphere1[0]), 16); //copy 4 floats of size 4 each 
+			//glUniform4f(m_LightClippingVolumeUniformHandles[32*9 + i*9 + 5], DirectionalLights[i]->sphere2.x, DirectionalLights[i]->sphere2.y, DirectionalLights[i]->sphere2.z, DirectionalLights[i]->sphere2.w); //Sphere 2
+			temp_ptr = (float*)(&(LightingDataUBOData[32 * 3 + i * 16])); //dirlight sphere2
+			memcpy(temp_ptr, &(DirectionalLights[i]->sphere2[0]), 16); //copy 4 floats of size 4 each 
+			//glUniform4f(m_LightClippingVolumeUniformHandles[32*9 + i*9 + 6], DirectionalLights[i]->sphere3.x, DirectionalLights[i]->sphere3.y, DirectionalLights[i]->sphere3.z, DirectionalLights[i]->sphere3.w); //Sphere 3
+			temp_ptr = (float*)(&(LightingDataUBOData[32 * 4 + i * 16])); //dirlight sphere3
+			memcpy(temp_ptr, &(DirectionalLights[i]->sphere3[0]), 16); //copy 4 floats of size 4 each 
+			//glUniform4f(m_LightClippingVolumeUniformHandles[32*9 + i*9 + 7], DirectionalLights[i]->sphere4.x, DirectionalLights[i]->sphere4.y, DirectionalLights[i]->sphere4.z, DirectionalLights[i]->sphere4.w); //Sphere 4
+			temp_ptr = (float*)(&(LightingDataUBOData[32 * 5 + i * 16])); //dirlight sphere4
+			memcpy(temp_ptr, &(DirectionalLights[i]->sphere4[0]), 16); //copy 4 floats of size 4 each 
+			
+			
+			//glUniform3f(m_LightClippingVolumeUniformHandles[32*9 + i*9    ], DirectionalLights[i]->AABBp1.x, DirectionalLights[i]->AABBp1.y, DirectionalLights[i]->AABBp1.z); //AABBp1
+			temp_ptr = (float*)(&(LightingDataUBOData[32 * 6 + i * 16])); //dirlight AABBp1
+			memcpy(temp_ptr, &(DirectionalLights[i]->AABBp1[0]), 12); //copy 3 floats of size 4 each 
+			//glUniform3f(m_LightClippingVolumeUniformHandles[32*9 + i*9 + 1], DirectionalLights[i]->AABBp2.x, DirectionalLights[i]->AABBp2.y, DirectionalLights[i]->AABBp2.z); //AABBp2
+			temp_ptr = (float*)(&(LightingDataUBOData[32 * 7 + i * 16])); //dirlight AABBp2
+			memcpy(temp_ptr, &(DirectionalLights[i]->AABBp2[0]), 12); //copy 3 floats of size 4 each 
+			//glUniform3f(m_LightClippingVolumeUniformHandles[32*9 + i*9 + 2], DirectionalLights[i]->AABBp3.x, DirectionalLights[i]->AABBp3.y, DirectionalLights[i]->AABBp3.z); //AABBp3
+			temp_ptr = (float*)(&(LightingDataUBOData[32 * 8 + i * 16])); //dirlight AABBp3
+			memcpy(temp_ptr, &(DirectionalLights[i]->AABBp3[0]), 12); //copy 3 floats of size 4 each 
+			//glUniform3f(m_LightClippingVolumeUniformHandles[32*9 + i*9 + 3], DirectionalLights[i]->AABBp4.x, DirectionalLights[i]->AABBp4.y, DirectionalLights[i]->AABBp4.z); //AABBp4
+			temp_ptr = (float*)(&(LightingDataUBOData[32 * 9 + i * 16])); //dirlight AABBp4
+			memcpy(temp_ptr, &(DirectionalLights[i]->AABBp4[0]), 12); //copy 3 floats of size 4 each 
+			
+			
+			//glUniform1ui(m_LightClippingVolumeUniformHandles[32*9 + i*9 + 8], DirectionalLights[i]->whitelist?1:0);
+			if (i == 1 || i == DirectionalLights.size()-1)
+			{
+				glUniform1i(MainShaderUniforms[MAINSHADER_NUM_DIRLIGHTS], i + 1);
+				*((int*)(&(LightingDataUBOData[8388]))) = i + 1; //num dir lights 
+			}
+		}
+	} else {
+		//glUniform1i(MainShaderUniforms[MAINSHADER_NUM_DIRLIGHTS], 0);
+		//Assign the value in the UBO data cpu-side
+		*((int*)(&(LightingDataUBOData[8388]))) = 0; //num dir lights
+	}
+	
+	
+	
+	//Do point lights
+	if (SimplePointLights.size() > 0){
+		PointLight* LightsThisFrame[32]; //Array of pointers
+		//Grab the first 32
+		size_t howmanypointlightshavewedone = 0;
+		long long maxindex = -1;
+		for (size_t i = 0; i < SimplePointLights.size() && howmanypointlightshavewedone < 32; i++)
+		{
+			if(SimplePointLights[i]->shouldRender)
+			{
+				LightsThisFrame[howmanypointlightshavewedone] = SimplePointLights[i];
+				howmanypointlightshavewedone++;
+				maxindex = i;
+			}
+		}
+		//maxindex++;
+		//Compare all of the rest of them
+		if(maxindex > -1 && maxindex < SimplePointLights.size()){
+			for (size_t i = maxindex + 1; i < SimplePointLights.size(); i++) //for all of them
+			{
+				if (i < SimplePointLights.size() && SimplePointLights[i]->shouldRender) //don't bother checking if it shouldn't be rendered.
+				{
+					//Will never be a nullptr
+					PointLight* FarthestLight = LightsThisFrame[0];
+					size_t indexofFarthestLight = 0;
+					for (size_t j = 0; j < 32; j++)
+					{
+						if (glm::length2(FarthestLight->pos - SceneCamera->pos) < glm::length2(LightsThisFrame[j]->pos - SceneCamera->pos)) //FarthestLight is closer
+						{
+							FarthestLight = LightsThisFrame[j]; //Swap!
+							//break; //I'm hoping this breaks the inner for loop only. If it doesn't- set j to some massively huge value instead
+							indexofFarthestLight = j;
+						}
+					}
+					//FarthestLight
+					if (glm::length2(SimplePointLights[i]->pos - SceneCamera->pos) < glm::length2(FarthestLight->pos - SceneCamera->pos)) //FarthestLight is farther away than the light
+					{
+						LightsThisFrame[indexofFarthestLight] = SimplePointLights[i];
+					}
+				}
+			}
+		}
+		//Bind the lights
+		
+		//glUniform1i(MainShaderUniforms[MAINSHADER_NUM_POINTLIGHTS], howmanypointlightshavewedone);
+		*((int*)(&(LightingDataUBOData[8384]))) = howmanypointlightshavewedone;
+		//if(maxindex > -1)
+			for (size_t i = 0; i < 32 && i < howmanypointlightshavewedone; i++){
+				
+				//glUniform3f(m_LightUniformHandles[i*4], LightsThisFrame[i]->pos.x, LightsThisFrame[i]->pos.y, LightsThisFrame[i]->pos.z);//pos
+				temp_ptr = (float*)(&(LightingDataUBOData[320 + i*16])); //pointlight position
+				memcpy(temp_ptr, &(LightsThisFrame[i]->pos[0]), 12); //copy 3 floats of size 4 each 
+				//glUniform3f(m_LightUniformHandles[i*4+1], LightsThisFrame[i]->myColor.x, LightsThisFrame[i]->myColor.y, LightsThisFrame[i]->myColor.z);//color
+				temp_ptr = (float*)(&(LightingDataUBOData[16 * 32 * 1 + 320 + i*16])); //pointlight color
+				memcpy(temp_ptr, &(LightsThisFrame[i]->myColor[0]), 12); //copy 3 floats of size 4 each 
+				//glUniform1f(m_LightUniformHandles[i*4+2], LightsThisFrame[i]->range);//range
+				temp_ptr = (float*)(&(LightingDataUBOData[6480 + i*16])); //pointlight range
+				memcpy(temp_ptr, &(LightsThisFrame[i]->range), 4); //copy 1 floats of size 4 each 
+				//glUniform1f(m_LightUniformHandles[i*4+3], LightsThisFrame[i]->dropoff);//dropoff
+				temp_ptr = (float*)(&(LightingDataUBOData[6992 + i*16])); //pointlight dropoff
+				memcpy(temp_ptr, &(LightsThisFrame[i]->dropoff), 4); //copy 1 floats of size 4 each 
+				//std::cout << "\nBOUND POINT LIGHT " << i;
+				
+				//Bind the Light Clipping Volumes
+			
+			
+				//FORMAT OF m_LightClippingVolumeUniformHandles
+				//Per Light:
+				//0 - 3 AABBp1-4 (4 vec3s)
+				//4-7 Spheres 0-3 (4 vec4s)
+				//8 whitelist or Whitelist UINT
+				
+				//TODO: write the memcpy lines for this stuff
+				//~ glUniform3f(m_LightClippingVolumeUniformHandles[i*9], LightsThisFrame[i]->AABBp1.x, LightsThisFrame[i]->AABBp1.y, LightsThisFrame[i]->AABBp1.z); //AABBp1
+				//~ glUniform3f(m_LightClippingVolumeUniformHandles[ 1 + i*9], LightsThisFrame[i]->AABBp2.x, LightsThisFrame[i]->AABBp2.y, LightsThisFrame[i]->AABBp2.z); //AABBp2
+				//~ glUniform3f(m_LightClippingVolumeUniformHandles[ 2 + i*9], LightsThisFrame[i]->AABBp3.x, LightsThisFrame[i]->AABBp3.y, LightsThisFrame[i]->AABBp3.z); //AABBp3
+				//~ glUniform3f(m_LightClippingVolumeUniformHandles[ 3 + i*9], LightsThisFrame[i]->AABBp4.x, LightsThisFrame[i]->AABBp4.y, LightsThisFrame[i]->AABBp4.z); //AABBp4
+				
+				//~ glUniform4f(m_LightClippingVolumeUniformHandles[ 4 + i*9], LightsThisFrame[i]->sphere1.x, LightsThisFrame[i]->sphere1.y, LightsThisFrame[i]->sphere1.z, LightsThisFrame[i]->sphere1.w); //Sphere 1
+				//~ glUniform4f(m_LightClippingVolumeUniformHandles[ 5 + i*9], LightsThisFrame[i]->sphere2.x, LightsThisFrame[i]->sphere2.y, LightsThisFrame[i]->sphere2.z, LightsThisFrame[i]->sphere2.w); //Sphere 2
+				//~ glUniform4f(m_LightClippingVolumeUniformHandles[ 6 + i*9], LightsThisFrame[i]->sphere3.x, LightsThisFrame[i]->sphere3.y, LightsThisFrame[i]->sphere3.z, LightsThisFrame[i]->sphere3.w); //Sphere 3
+				//~ glUniform4f(m_LightClippingVolumeUniformHandles[ 7 + i*9], LightsThisFrame[i]->sphere4.x, LightsThisFrame[i]->sphere4.y, LightsThisFrame[i]->sphere4.z, LightsThisFrame[i]->sphere4.w); //Sphere 4
+				
+				//~ glUniform1ui(m_LightClippingVolumeUniformHandles[i*9 + 8], LightsThisFrame[i]->whitelist?1:0);
+			}
+		//std::cout << "\n DEBUGGING POINTLIGHT BINDINGS: MAXINDEX " << maxindex << " howmanypointlightshavewedone " << howmanypointlightshavewedone << "!" ;
+	} else {
+		//glUniform1i(MainShaderUniforms[MAINSHADER_NUM_POINTLIGHTS], 0);
+		*((int*)(&(LightingDataUBOData[8384]))) = 0;
+	}
+	
+	//Ambient Lights
+	if (AmbientLights.size() > 0){
+		AmbientLight* LightsThisFrame[3]; //Array of pointers
+		//Grab the first 3
+		size_t howmanyAmbientlightshavewedone = 0;
+		long long maxindex = -1;
+		for (size_t i = 0; i < AmbientLights.size() && howmanyAmbientlightshavewedone < 3; i++)
+		{
+			if(AmbientLights[i]->shouldRender)
+			{
+				LightsThisFrame[howmanyAmbientlightshavewedone] = AmbientLights[i];
+				howmanyAmbientlightshavewedone++;
+				maxindex = i;
+			}
+		}
+		maxindex++;
+		//Compare all of the rest of them
+		if(maxindex > -1 && maxindex != AmbientLights.size()-1){
+			for (size_t i = maxindex; i < AmbientLights.size(); i++) //for all of them
+			{
+				if (AmbientLights[i]->shouldRender) //don't bother checking if it shouldn't be rendered.
+				{
+					AmbientLight* FarthestLight = LightsThisFrame[0];
+					size_t indexofFarthestLight = 0;
+					for (size_t j = 0; j < 3; j++)
+					{
+						if (glm::length2(FarthestLight->myPos - SceneCamera->pos) < glm::length2(LightsThisFrame[j]->myPos - SceneCamera->pos)) //This one is closer
+						{
+							FarthestLight = LightsThisFrame[j]; //Swap!
+							indexofFarthestLight = j;
+						}
+					}
+					if (glm::length2(FarthestLight->myPos - SceneCamera->pos) > glm::length2(AmbientLights[i]->myPos - SceneCamera->pos)) //This one is closer
+						LightsThisFrame[indexofFarthestLight] = AmbientLights[i];
+				}
+			}
+		}
+		//Bind the lights
+		//glUniform1i(MainShaderUniforms[MAINSHADER_NUM_AMBLIGHTS], howmanyAmbientlightshavewedone);
+		*((int*)(&(LightingDataUBOData[8392]))) = howmanyAmbientlightshavewedone;
+		//if(maxindex > -1)
+			for (size_t i = 0; i < 3 && i < howmanyAmbientlightshavewedone; i++){
+				 //glUniform3f(m_LightUniformHandles[4 * 32 + 2 * 2 + i*3], LightsThisFrame[i]->myPos.x, LightsThisFrame[i]->myPos.y, LightsThisFrame[i]->myPos.z);//pos
+				 temp_ptr = (float*)(&(LightingDataUBOData[5440 + i*16])); //Ambient light position
+				 memcpy(temp_ptr, &(LightsThisFrame[i]->myPos[0]), 12); //copy 3 floats of size 4 each 
+				 //glUniform3f(m_LightUniformHandles[4 * 32 + 2 * 2 + i*3 +1], LightsThisFrame[i]->myColor.x, LightsThisFrame[i]->myColor.y, LightsThisFrame[i]->myColor.z);//color
+				 temp_ptr = (float*)(&(LightingDataUBOData[16 * 3 * 1 + 5440+ i*16])); //Ambient light color
+				 memcpy(temp_ptr, &(LightsThisFrame[i]->myColor[0]), 12); //copy 3 floats of size 4 each 
+				 
+				 glUniform1f(m_LightUniformHandles[4 * 32 + 2 * 2 + i*3 +2], LightsThisFrame[i]->myRange);//range
+				 temp_ptr = (float*)(&(LightingDataUBOData[7504+ i*16])); //Ambient light color
+				 memcpy(temp_ptr, &(LightsThisFrame[i]->myRange), 4); //copy 1 floats of size 4 each 
+				//access by taking i, multiplying by 3, adding 4 * max pointlights + 2 * max dir lights, and adding an offset (0 for position, 1 for color...)
+				//m_LightUniformHandles.push_back(MainShader->GetUniformLocation("amb_lightArray[" + std::to_string(i) + "].position"));
+				//m_LightUniformHandles.push_back(MainShader->GetUniformLocation("amb_lightArray[" + std::to_string(i) + "].color"));
+				//m_LightUniformHandles.push_back(MainShader->GetUniformLocation("amb_lightArray[" + std::to_string(i) + "].range"));
+				
+				//Bind the Light Clipping Volumes
+			
+			
+				//FORMAT OF m_LightClippingVolumeUniformHandles
+				//Per Light:
+				//0 - 3 AABBp1-4 (4 vec3s)
+				//4-7 Spheres 0-3 (4 vec4s)
+				//8 whitelist or Whitelist UINT
+				
+				//glUniform4f(m_LightClippingVolumeUniformHandles[34*9 + 4 + i*9], LightsThisFrame[i]->sphere1.x, LightsThisFrame[i]->sphere1.y, LightsThisFrame[i]->sphere1.z, LightsThisFrame[i]->sphere1.w); //Sphere 1
+				temp_ptr = (float*)(&(LightingDataUBOData[16 * 3 * 2 + 5440+ i*16])); //Ambient light sphere1
+				memcpy(temp_ptr, &(LightsThisFrame[i]->sphere1[0]), 16); //copy 4 floats of size 4 each 
+				//glUniform4f(m_LightClippingVolumeUniformHandles[34*9 + 5 + i*9], LightsThisFrame[i]->sphere2.x, LightsThisFrame[i]->sphere2.y, LightsThisFrame[i]->sphere2.z, LightsThisFrame[i]->sphere2.w); //Sphere 2
+				temp_ptr = (float*)(&(LightingDataUBOData[16 * 3 * 3 + 5440+ i*16])); //Ambient light sphere2
+				memcpy(temp_ptr, &(LightsThisFrame[i]->sphere2[0]), 16); //copy 4 floats of size 4 each 
+				
+				//glUniform4f(m_LightClippingVolumeUniformHandles[34*9 + 6 + i*9], LightsThisFrame[i]->sphere3.x, LightsThisFrame[i]->sphere3.y, LightsThisFrame[i]->sphere3.z, LightsThisFrame[i]->sphere3.w); //Sphere 3
+				temp_ptr = (float*)(&(LightingDataUBOData[16 * 3 * 4 + 5440+ i*16])); //Ambient light sphere3
+				memcpy(temp_ptr, &(LightsThisFrame[i]->sphere3[0]), 16); //copy 4 floats of size 4 each 
+				
+				//glUniform4f(m_LightClippingVolumeUniformHandles[34*9 + 7 + i*9], LightsThisFrame[i]->sphere4.x, LightsThisFrame[i]->sphere4.y, LightsThisFrame[i]->sphere4.z, LightsThisFrame[i]->sphere4.w); //Sphere 4
+				temp_ptr = (float*)(&(LightingDataUBOData[16 * 3 * 5 + 5440+ i*16])); //Ambient light sphere4
+				memcpy(temp_ptr, &(LightsThisFrame[i]->sphere4[0]), 16); //copy 4 floats of size 4 each 
+				
+				
+				//glUniform3f(m_LightClippingVolumeUniformHandles[34*9 + i*9], LightsThisFrame[i]->AABBp1.x, LightsThisFrame[i]->AABBp1.y, LightsThisFrame[i]->AABBp1.z); //AABBp1
+				temp_ptr = (float*)(&(LightingDataUBOData[16 * 3 * 6 + 5440+ i*16])); //Ambient light AABBp1
+				memcpy(temp_ptr, &(LightsThisFrame[i]->AABBp1[0]), 12); //copy 3 floats of size 4 each 
+				
+				//glUniform3f(m_LightClippingVolumeUniformHandles[34*9 + 1 + i*9], LightsThisFrame[i]->AABBp2.x, LightsThisFrame[i]->AABBp2.y, LightsThisFrame[i]->AABBp2.z); //AABBp2
+				temp_ptr = (float*)(&(LightingDataUBOData[16 * 3 * 7 + 5440+ i*16])); //Ambient light AABBp2
+				memcpy(temp_ptr, &(LightsThisFrame[i]->AABBp2[0]), 12); //copy 3 floats of size 4 each 
+				
+				//glUniform3f(m_LightClippingVolumeUniformHandles[34*9 + 2 + i*9], LightsThisFrame[i]->AABBp3.x, LightsThisFrame[i]->AABBp3.y, LightsThisFrame[i]->AABBp3.z); //AABBp3
+				temp_ptr = (float*)(&(LightingDataUBOData[16 * 3 * 8 + 5440+ i*16])); //Ambient light AABBp3
+				memcpy(temp_ptr, &(LightsThisFrame[i]->AABBp3[0]), 12); //copy 3 floats of size 4 each 
+				
+				//glUniform3f(m_LightClippingVolumeUniformHandles[34*9 + 3 + i*9], LightsThisFrame[i]->AABBp4.x, LightsThisFrame[i]->AABBp4.y, LightsThisFrame[i]->AABBp4.z); //AABBp4
+				temp_ptr = (float*)(&(LightingDataUBOData[16 * 3 * 9 + 5440+ i*16])); //Ambient light AABBp4
+				memcpy(temp_ptr, &(LightsThisFrame[i]->AABBp4[0]), 12); //copy 3 floats of size 4 each 
+				
+				//glUniform1ui(m_LightClippingVolumeUniformHandles[34*9 + 8 + i*9], LightsThisFrame[i]->whitelist?1:0); //whitelist yes or no
+				temp_ptr = (float*)(&(LightingDataUBOData[8336+ i*16])); //Ambient light whitelist var
+				*((GLuint*)(temp_ptr)) = LightsThisFrame[i]->whitelist?1:0;
+				
+			}
+		//std::cout << "\n DEBUGGING POINTLIGHT BINDINGS: MAXINDEX " << maxindex << " howmanypointlightshavewedone " << howmanypointlightshavewedone << "!" ;
+	} else {
+		//glUniform1i(MainShaderUniforms[MAINSHADER_NUM_AMBLIGHTS], 0);
+		*((int*)(&(LightingDataUBOData[8392]))) = 0;
+	}
+	
+	//Camera Lights
+	if (CameraLights.size() > 0){
+		int camLightsRegistered = 0;
+		size_t currindex = 0;
+		//Replace with a system that sorts by distance later
+		while (currindex < CameraLights.size() && camLightsRegistered < 5)
+		{
+			if (CameraLights[currindex] && CameraLights[currindex]->shouldRender)
+			{
+				const int i = camLightsRegistered; //BAM! 
+				//std::cout << "\nBindingCameraLight " << camLightsRegistered;
+				//bind
+				//grab all the things we need m_LightUniformHandles[4 * 32 + 2 * 2 + 3*3 + i * 4] //It now has 6...
+				//~ CameraLights[currindex]->BindtoUniformCameraLight(
+					//~ m_LightUniformHandles[4 * 32 + 2 * 2 + 3*3 + camLightsRegistered * 7],
+					//~ m_LightUniformHandles[4 * 32 + 2 * 2 + 3*3 + camLightsRegistered * 7 +1],
+					//~ m_LightUniformHandles[4 * 32 + 2 * 2 + 3*3 + camLightsRegistered * 7 +2],
+					//~ m_LightUniformHandles[4 * 32 + 2 * 2 + 3*3 + camLightsRegistered * 7 +3],
+					//~ m_LightUniformHandles[4 * 32 + 2 * 2 + 3*3 + camLightsRegistered * 7 +4],
+					//~ m_LightUniformHandles[4 * 32 + 2 * 2 + 3*3 + camLightsRegistered * 7 +5],
+					//~ m_LightUniformHandles[4 * 32 + 2 * 2 + 3*3 + camLightsRegistered * 7 +6], //Radii
+					//~ 3+camLightsRegistered
+				//~ );
+				glm::mat4 m_matrix; //done
+				glm::vec3 m_camerapos; //done
+				glm::vec3 m_color;  //done
+				GLfloat m_SolidColorToggle; //done
+				GLfloat m_range; //done
+				GLfloat m_shadows; //done
+				glm::vec2 m_radii; //done
+				CameraLights[currindex]->BindtoUniformBufferCameraLight(&m_matrix,
+																		&m_camerapos, 
+																		&m_color, 
+																		&m_SolidColorToggle, 
+																		&m_range, 
+																		&m_shadows, 
+																		&m_radii, 
+																		3 + camLightsRegistered);
+				//BINDING INFO
+				
+				//CAMERAPOS
+				temp_ptr = (float*)(&(LightingDataUBOData[             5920 + 16 * i])); //Cameralight Position (4 floats (padded), 4 bytes per float)
+				memcpy(temp_ptr, &(m_camerapos[0]), 12); //copy 3 floats of size 4 each
+				//COLOR
+				temp_ptr = (float*)(&(LightingDataUBOData[16 * 5 * 1 + 5920 + 16 * i])); //Cameralight Color    (4 floats (padded), 4 bytes per float)
+				memcpy(temp_ptr, &(m_color[0]), 12); //copy 3 floats of size 4 each
+				//RADII
+				temp_ptr = (float*)(&(LightingDataUBOData[6400 + 16 * i])); //Cameralight RADII                 (4 floats (padded), 4 bytes per float)
+				memcpy(temp_ptr, &(m_radii[0]), 8); //copy 2 floats of size 4 each
+				//SOLID COLOR TOGGLE
+				temp_ptr = (float*)(&(LightingDataUBOData[7552 + 16 * i])); //Cameralight SOLID COLOR           (4 floats (padded), 4 bytes per float)
+				memcpy(temp_ptr, &(m_SolidColorToggle), 4); //copy 1 floats of size 4 each
+				//RANGE
+				temp_ptr = (float*)(&(LightingDataUBOData[7632 + 16 * i])); //Cameralight RANGE                 (4 floats (padded), 4 bytes per float)
+				memcpy(temp_ptr, &(m_range), 4); //copy 1 floats of size 4 each
+				//RANGE
+				temp_ptr = (float*)(&(LightingDataUBOData[7712 + 16 * i])); //Cameralight SHADOWS               (4 floats (padded), 4 bytes per float)
+				memcpy(temp_ptr, &(m_shadows), 4); //copy 1 floats of size 4 each
+				//MATRIX
+				temp_ptr = (float*)(&(LightingDataUBOData[16 * 5 * 2 + 5920 + 64 * i])); //Cameralight Matrix   (16 floats, 4 bytes per float)
+				memcpy(temp_ptr, &(m_matrix[0][0]), 64); //copy 16 floats of size 4 each
+				camLightsRegistered++;
+			}
+			
+			currindex++;
+		}
+		//glUniform1i(MainShaderUniforms[MAINSHADER_NUM_CAMLIGHTS], camLightsRegistered);
+		*((int*)(&(LightingDataUBOData[8396]))) = camLightsRegistered; //TODO fix this
+	} else {
+		//glUniform1i(MainShaderUniforms[MAINSHADER_NUM_CAMLIGHTS], 0);
+		*((int*)(&(LightingDataUBOData[8396]))) = 0;
+	}
+	glGetError();
+	
+	//Update the buffer
+	glBindBuffer(GL_UNIFORM_BUFFER, LightingDataUBO);//Work with this UBO
+	glBufferSubData(GL_UNIFORM_BUFFER, 0, 8450, LightingDataUBOData); //Nothing more to do
+	communism = glGetError(); //Ensure there are no errors listed before we start.
+	if (communism != GL_NO_ERROR) //communism is a mistake
+	{
+		std::cout<<"\n OpenGL reports an ERROR! (AFTER EVERYTHING)";
+		if (communism == GL_INVALID_ENUM)
+			std::cout<<"\n Invalid enum.";
+		if (communism == GL_INVALID_OPERATION)
+			std::cout<<"\n Invalid operation.";
+		if (communism == GL_INVALID_FRAMEBUFFER_OPERATION)
+			std::cout <<"\n Invalid Framebuffer Operation.";
+		if (communism == GL_OUT_OF_MEMORY)
+		{
+			std::cout <<"\n Out of memory. You've really done it now. I'm so angry, i'm going to close the program. ARE YOU HAPPY NOW, DAVE?!?!";
+			std::abort();
+		}
+	}
+}
 
 
 
@@ -1050,7 +1233,9 @@ GkScene::~GkScene()
 		delete ScreenquadCamera;
 	if (m_skybox_Mesh)
 		delete m_skybox_Mesh;
-	
+	//Handle deleting the lighting UBO
+	if(haveCreatedLightingUBO)
+		glDeleteBuffers(1, &LightingDataUBO);
 }
 
 }; //Eof Namespace

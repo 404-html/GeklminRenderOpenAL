@@ -79,6 +79,7 @@ class GkScene //Gk for Geklmin
 						);
 					}
 				}
+				haveFoundLocationOfLightingUBO = false;
 				//FBO setups
 					for (size_t i = 0; i<NUM_FORWARD_RENDERING_FBOS; i++)
 						FboArray.push_back(nullptr); //push on some null pointers!
@@ -233,6 +234,7 @@ class GkScene //Gk for Geklmin
 				if (inshader != nullptr)
 					MainShader = inshader;
 				HasntRunYet = true;
+				haveFoundLocationOfLightingUBO = false;
 			}
 			void SetSkyBoxCubemap(CubeMap* _SkyBoxCubeMap){
 				if (_SkyBoxCubeMap != nullptr) //if it is not nullptr
@@ -246,6 +248,7 @@ class GkScene //Gk for Geklmin
 					SkyboxShader = _SkyboxShader;
 				haveInitializedSkyboxUniforms = false;
 				HasntRunYet = true;
+				haveFoundLocationOfLightingUBO = false;
 			}
 			void setWBOITCompositionShader(Shader* _CompositionShader)
 			{
@@ -253,6 +256,7 @@ class GkScene //Gk for Geklmin
 					CompositionShader = _CompositionShader;
 				haveInitializedSkyboxUniforms = false;
 				HasntRunYet = true;
+				haveFoundLocationOfLightingUBO = false;
 				HasntRunYet_CompositionShader = true;
 			}
 			/*
@@ -287,6 +291,7 @@ class GkScene //Gk for Geklmin
 			TextureUnitLocations.erase(iteragain);
 			did_deregister = true;
 		}
+		haveFoundLocationOfLightingUBO = false;
 		return did_deregister;
 	}
 	
@@ -360,12 +365,12 @@ class GkScene //Gk for Geklmin
 				did_deregister = true;
 			}
 		//...Or an FBO
-			
+			haveFoundLocationOfLightingUBO = false;
 		return did_deregister;
 	}
 
 		//Public drawing code- needed for testing
-	void ScreenquadtoFBO(Shader* currentShader){ //Shaders ALWAYS need to be reinstantiated if they are going to be compiled again, since (at time of writing) there are only static shaders. Our static std::map should work, although it will build up redundant and outdated copies of GLuints if we decide to keep making new shaders or something. ALSO, if we ever delete shaders and then allocate new ones, we might allocate the same bit of memory meaning same pointer
+	void ScreenquadtoFBO(Shader* currentShader){
 		//For caching uniform locations.
 		// static std::map<Shader*, GLuint> World2CameraLocations;
 		// static std::map<Shader*, GLuint> TextureUnitLocations; //This will be added soon... or I will implement it manually
@@ -433,7 +438,7 @@ class GkScene //Gk for Geklmin
 	~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	*/
-	
+	void OrganizeUBOforUpload(); //Assumes that the mainshader is currently bound
 	std::map<Shader*, GLuint> World2CameraLocations;
 	std::map<Shader*, GLuint> TextureUnitLocations;
 	//Toggles and engine settings
@@ -556,6 +561,11 @@ class GkScene //Gk for Geklmin
 	//std::vector<GLuint> m_CameraLightUniformHandles; //See SceneAPI.cpp for details and format
 	std::vector<GLuint> m_LightClippingVolumeUniformHandles;//See SceneAPI.cpp for format or look below
 	std::vector<GLuint> m_LightClippingVolumeUniformHandles_SHADOWTEMP;//Used for transitioning to the shadow system for drawshadowpipeline function
+	char LightingDataUBOData[16000];//maximum of 16k in size to be compatible with old systems
+	GLuint LightingDataUBO = 0; //handle for the lighting data UBO BUFFER
+	GLuint LightingDataUBOLocation = 0; //handle for the UNIFORM BUFFER OBJECT in the shader
+	bool haveCreatedLightingUBO = false; //have we made it?
+	bool haveFoundLocationOfLightingUBO = false; // have we found the location?
 		//FORMAT OF m_LightClippingVolumeUniformHandles
 	//Per Light:
 	//0 - 3 AABBp1-4

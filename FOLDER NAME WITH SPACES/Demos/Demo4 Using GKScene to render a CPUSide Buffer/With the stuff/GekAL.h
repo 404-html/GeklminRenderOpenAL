@@ -87,7 +87,7 @@ char* loadWAV(const char* fn,int& chan,int& samplerate,int& bps,int& size)
 		size=convertToInt(buffer,4);
 		char* data=new char[size];
 		in.read(data,size);
-		std::cout << "\n USING DEFAULT LOADING METHOD";
+		//std::cout << "\n USING DEFAULT LOADING METHOD";
 		return data;	
 	} else {
 		char crawler = 'F';
@@ -141,10 +141,10 @@ char* loadWAV(const char* fn,int& chan,int& samplerate,int& bps,int& size)
 		}
 		if(foundDATA)
 		{
-			std::cout << "\nFOUND DATA!!!";
+			//std::cout << "\nFOUND DATA!!!";
 			in.read(buffer,4);
 			size=convertToInt(buffer,4);
-			std::cout << "\nSize is " << size;
+			//std::cout << "\nSize is " << size;
 			char* data = new char[size];
 			in.read(data,size);
 			return data;

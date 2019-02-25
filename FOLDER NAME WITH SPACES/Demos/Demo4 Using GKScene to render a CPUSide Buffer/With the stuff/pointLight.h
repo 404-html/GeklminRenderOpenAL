@@ -138,6 +138,26 @@ struct CameraLight {
 		//Bind texture
 		Tex2Project.Bind(textureunit);
 	}
+	
+	void BindtoUniformBufferCameraLight(glm::mat4* m_matrix, glm::vec3* m_camerapos, glm::vec3* m_color, GLfloat* m_SolidColorToggle, GLfloat* m_range, GLfloat* m_shadows, glm::vec2* m_radii, unsigned int textureunit) {
+		MatrixCache = myCamera.GetViewProjection();
+		*m_matrix = MatrixCache;
+		//Setup the far and near plane variables
+		
+		//Setup the position and color
+		if (range >= 0)
+		{*m_camerapos = glm::vec3(myCamera.pos.x, myCamera.pos.y, myCamera.pos.z);}
+		else
+		{*m_camerapos = glm::vec3(myCamera.forward.x, myCamera.forward.y, myCamera.forward.z);}
+		*m_color = myColor;
+		*m_radii = radii;
+		*m_SolidColorToggle = solidColor;
+		*m_range = range;
+		*m_shadows = isShadowed?1.0f:0.0f;
+		
+		//Bind texture
+		Tex2Project.Bind(textureunit);
+	}
 	float solidColor = 0.0f; //By default, use a solid color
 	glm::vec3 myColor; //the color to use in solid color mode
 	glm::vec2 radii = glm::vec2(0.5,0.5); //Inner and outer radii used
