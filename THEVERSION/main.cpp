@@ -232,6 +232,7 @@ void checkKeys(){
 					new PointLight(SceneRenderCamera->pos, glm::vec3(tempr,tempg,tempb))
 				);
 				PointLightsWithoutShadows[PointLightsWithoutShadows.size()-1]->range = rand()%100 + 100;
+				PointLightsWithoutShadows[PointLightsWithoutShadows.size()-1]->range *= PointLightsWithoutShadows[PointLightsWithoutShadows.size()-1]->range;
 				PointLightsWithoutShadows[PointLightsWithoutShadows.size()-1]->dropoff = 1;
 				PointLightsWithoutShadows[PointLightsWithoutShadows.size()-1]->setPos(SceneRenderCamera->pos);
 				theScene->registerPointLight(PointLightsWithoutShadows[PointLightsWithoutShadows.size()-1]);
@@ -507,8 +508,8 @@ void LoadResources()
 	using namespace GeklminRender;
 	//it puts .vs and .fs after the string. The EXE Is the starting folder, but I could probably change that if I tried.
 	MainShad = new Shader("shaders/FORWARD_MAINSHADER_UBO");
-	delete MainShad;MainShad = nullptr;
-	MainShad = new Shader("shaders/FORWARD_MAINSHADER");
+	//~ delete MainShad;MainShad = nullptr;
+	//~ MainShad = new Shader("shaders/FORWARD_MAINSHADER");
 	MainshaderShadows = new Shader("shaders/FORWARD_MAINSHADER_SHADOWS");
 	DisplayTexture = new Shader("shaders/SHOWTEX");
 	SkyboxShad = new Shader("shaders/Skybox");
@@ -625,7 +626,7 @@ void initObjects()
 		PointLightsWithoutShadows.push_back(
 			new PointLight(glm::vec3(10,20,10), glm::vec3(1,1,1))
 		); //0 LIGHT
-		PointLightsWithoutShadows[0]->range = 1000;
+		PointLightsWithoutShadows[0]->range = 1000 * 1000;
 		PointLightsWithoutShadows[0]->dropoff = 1;
 		theScene->registerPointLight(PointLightsWithoutShadows[0]);
 		

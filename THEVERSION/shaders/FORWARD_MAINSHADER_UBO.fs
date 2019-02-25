@@ -152,10 +152,12 @@ layout (std140) uniform light_data{
 	//dir lights
 	vec4 dir_direction[MAX_DIR_LIGHTS]; // 4 bytes per float * 4 floats per element * 2 elements = 32 bytes 1 (STARTS AT 0)
 	vec4 dir_color[MAX_DIR_LIGHTS]; // 4 bytes per float * 4 floats per element * 2 elements = 32 bytes 2 (STARTS AT 16 * 2 * 1 + 0)
+	
 	vec4 dir_sphere1[MAX_DIR_LIGHTS]; // 4 bytes per float * 4 floats per element * 2 elements = 32 bytes 3 (STARTS AT 16 * 2 * 2 + 0)
 	vec4 dir_sphere2[MAX_DIR_LIGHTS]; // 4 bytes per float * 4 floats per element * 2 elements = 32 bytes 4 (STARTS AT 16 * 2 * 3 + 0)
 	vec4 dir_sphere3[MAX_DIR_LIGHTS]; // 4 bytes per float * 4 floats per element * 2 elements = 32 bytes 5 (STARTS AT 16 * 2 * 4 + 0)
 	vec4 dir_sphere4[MAX_DIR_LIGHTS]; // 4 bytes per float * 4 floats per element * 2 elements = 32 bytes 6 (STARTS AT 16 * 2 * 5 + 0)
+	
 	vec4 dir_AABBp1[MAX_DIR_LIGHTS]; // 4 bytes per float * 4 floats per element * 2 elements = 32 bytes 7 (STARTS AT 16 * 2 * 6 + 0)
 	vec4 dir_AABBp2[MAX_DIR_LIGHTS]; // 4 bytes per float * 4 floats per element * 2 elements = 32 bytes 8 (STARTS AT 16 * 2 * 7 + 0)
 	vec4 dir_AABBp3[MAX_DIR_LIGHTS]; // 4 bytes per float * 4 floats per element * 2 elements = 32 bytes 9 (STARTS AT 16 * 2 * 8 + 0)
@@ -166,7 +168,7 @@ layout (std140) uniform light_data{
 	//point lights
 	vec4 point_position[MAX_POINT_LIGHTS]; // 4 bytes per float * 4 floats per element * 32 elements = 512 bytes 1 (STARTS AT 16 * 32 * 0 + 320)
 	vec4 point_color[MAX_POINT_LIGHTS]; // 4 bytes per float * 4 floats per element * 32 elements = 512 bytes 2 (STARTS AT 16 * 32 * 1 + 320)
-	
+	//These currently go unused
 	vec4 point_sphere1[MAX_POINT_LIGHTS]; // 4 bytes per float * 4 floats per element * 32 elements = 512 bytes 3 (STARTS AT 16 * 32 * 2 + 320)
 	vec4 point_sphere2[MAX_POINT_LIGHTS]; // 4 bytes per float * 4 floats per element * 32 elements = 512 bytes 4 (STARTS AT 16 * 32 * 3 + 320)
 	vec4 point_sphere3[MAX_POINT_LIGHTS]; // 4 bytes per float * 4 floats per element * 32 elements = 512 bytes 5 (STARTS AT 16 * 32 * 4 + 320)
@@ -288,21 +290,13 @@ void main()
 	
 	vec3 diffuseffect = vec3(0);
 	vec3 speceffect = vec3(0);
-	float shouldRenderSpecEffect = float(dot(UnitNormal, unit_frag_to_camera) > 0);
+	float shouldRenderSpecEffect = float(dot(UnitNormal, unit_frag_to_camera) > 0) * specreflectivity; //Important for transparent objects
 	
 	
 	//FOG CALCULATIONS
-	/*
-		uniform samplerCube SkyboxCubemap;
-		uniform vec4 backgroundColor; //.a is considered the same as boolean shouldUseBackgroundColor
-		uniform vec2 fogRange;
-	*/
 	vec4 fogColor = backgroundColor.w * backgroundColor + (1-backgroundColor.w) * texture(SkyboxCubemap,-unit_frag_to_camera);
-	float fogPercentage = clamp(max(length(frag_to_camera) - fogRange.x, 0) / (fogRange.y - fogRange.x), 0.0, 1.0);//Linear Fog Dropoff... I know
-	//NOTE: BREAK UP THESE FOR LOOPS, THEY LAG ON AMD
-		//AMD is smart enough to break them up now... at least on an RX-480
-	//Directional Lights
-	for (int i = 0; i < MAX_DIR_LIGHTS && i < numdirlights; i++)
+	float fogPercentage = clamp(max(length(frag_to_camera) - fogRange.x, 0) / (fogRange.y - fogRange.x), 0.0, 1.0);//Linear Fog Dropoff
+	for (int i = 0; i < MAX_DIR_LIGHTS && i < numdirlights; i++) //TODO: Replace the 1 with something better
 	{
 	
 		float inthelist = float( //Comment out everything in here and make it just "false" if you dont want sphere and AABB light volume culling
@@ -335,52 +329,50 @@ void main()
 			0.0 
 		);
 		float specDampFactor = pow(specFactor,specdamp);
-		speceffect += shouldRenderSpecEffect * renderthislight * specDampFactor * specreflectivity * vec3(dir_color[i]);
+		speceffect += shouldRenderSpecEffect * renderthislight * specDampFactor * vec3(dir_color[i]);
 	}
 	//Point Lights
-	for (int i = 0; i < MAX_POINT_LIGHTS && i < numpointlights; i++)
+	for (int i = 0; i < MAX_POINT_LIGHTS && i < numpointlights; i++) //Branching makes this FASTER believe it or not
 	{
 	
-		float inthelist = float( //Comment out everything in here and make it just "false" if you dont want sphere and AABB light volume culling
-								// (length2vec3(point_lightArray[i].sphere1.xyz - worldout) < point_lightArray[i].sphere1.w) || 
-								// (length2vec3(point_lightArray[i].sphere2.xyz - worldout) < point_lightArray[i].sphere2.w) || 
-								// (length2vec3(point_lightArray[i].sphere3.xyz - worldout) < point_lightArray[i].sphere3.w) || 
-								// (length2vec3(point_lightArray[i].sphere4.xyz - worldout) < point_lightArray[i].sphere4.w) ||
-								// ( //AABB 1&2
-									// worldout.x < point_lightArray[i].AABBp2.x && worldout.x > point_lightArray[i].AABBp1.x &&
-									// worldout.y < point_lightArray[i].AABBp2.y && worldout.y > point_lightArray[i].AABBp1.y &&
-									// worldout.z < point_lightArray[i].AABBp2.z && worldout.z > point_lightArray[i].AABBp1.z
-								// ) ||
-								// ( //AABB 1&2
-									// worldout.x < point_lightArray[i].AABBp3.x && worldout.x > point_lightArray[i].AABBp4.x &&
-									// worldout.y < point_lightArray[i].AABBp3.y && worldout.y > point_lightArray[i].AABBp4.y &&
-									// worldout.z < point_lightArray[i].AABBp3.z && worldout.z > point_lightArray[i].AABBp4.z
-								// ) ||
-								false
-							);
-		float renderthislight = float(inthelist == 1 && point_isblacklist[i] == uint(1) || inthelist == 0 && point_isblacklist[i] == uint(0));
+		//~ float inthelist = float( //Comment out everything in here and make it just "false" if you dont want sphere and AABB light volume culling
+								//~ // (length2vec3(point_lightArray[i].sphere1.xyz - worldout) < point_lightArray[i].sphere1.w) || 
+								//~ // (length2vec3(point_lightArray[i].sphere2.xyz - worldout) < point_lightArray[i].sphere2.w) || 
+								//~ // (length2vec3(point_lightArray[i].sphere3.xyz - worldout) < point_lightArray[i].sphere3.w) || 
+								//~ // (length2vec3(point_lightArray[i].sphere4.xyz - worldout) < point_lightArray[i].sphere4.w) ||
+								//~ // ( //AABB 1&2
+									//~ // worldout.x < point_lightArray[i].AABBp2.x && worldout.x > point_lightArray[i].AABBp1.x &&
+									//~ // worldout.y < point_lightArray[i].AABBp2.y && worldout.y > point_lightArray[i].AABBp1.y &&
+									//~ // worldout.z < point_lightArray[i].AABBp2.z && worldout.z > point_lightArray[i].AABBp1.z
+								//~ // ) ||
+								//~ // ( //AABB 1&2
+									//~ // worldout.x < point_lightArray[i].AABBp3.x && worldout.x > point_lightArray[i].AABBp4.x &&
+									//~ // worldout.y < point_lightArray[i].AABBp3.y && worldout.y > point_lightArray[i].AABBp4.y &&
+									//~ // worldout.z < point_lightArray[i].AABBp3.z && worldout.z > point_lightArray[i].AABBp4.z
+								//~ // ) ||
+								//~ false
+							//~ ); //UNUSED (too slow)
+		float renderthislight = 1;
 		
 		
-		vec3 frag_to_light = vec3(point_position[i]) - worldout;
+		vec3 frag_to_light = point_position[i].xyz - worldout;
 		vec3 unit_frag_to_light = normalize(frag_to_light);
 		vec3 lightDir = -unit_frag_to_light;
-		float lightdist = length2vec3(frag_to_light); //Can never be negative
+		float lightdist = dot(frag_to_light, frag_to_light); //replaced length2vec3 because this might be faster
 		float nDotl = dot(UnitNormal, unit_frag_to_light);
-		float rangevar = pow(max(1-(lightdist/(point_range[i] * point_range[i])),0.0), point_dropoff[i]);
+		float rangevar = clamp(1 - (lightdist/(point_range[i])),0,1);
 		nDotl = max(nDotl * rangevar,0.0);
 		diffuseffect += renderthislight * nDotl * vec3(point_color[i]) * diffusivity;
-		//diffuseffect += vec3(1);
-		//diffuseffect += vec3(1);
 		//specular
-		vec3 reflectedLightDir = reflect(lightDir , UnitNormal);
+		//~ vec3 reflectedLightDir = reflect(lightDir , UnitNormal);
 		
 		float specFactor = max(
-			dot(reflectedLightDir, unit_frag_to_camera),
+			dot(reflect(lightDir , UnitNormal), unit_frag_to_camera),
 			0.0 
 		);
-		float specDampFactor = pow(specFactor,specdamp);
-		
-		speceffect += shouldRenderSpecEffect * renderthislight * specDampFactor * specreflectivity * vec3(point_color[i]) * rangevar;
+		float specDampFactor = pow(specFactor,specdamp); //Unavoidable pow
+		//The number of mult ops can be reduced in the following line
+		speceffect += renderthislight * shouldRenderSpecEffect * specDampFactor * vec3(point_color[i]) * rangevar * float(i < numpointlights);
 	}
 	//Ambient Lights
 	for (int i = 0; i < MAX_AMB_LIGHTS && i < numamblights; i++){
@@ -529,6 +521,8 @@ void main()
 	// Blend Func: GL_ONE, GL_ONE for transparent objects
 		// Switch to premultiplied alpha and weight		
 	gl_FragData[0] = vec4(NewfragColor, 1) * (1-EnableTransparency) + transparent_color_0 * EnableTransparency;
+	//~ gl_FragData[0] = vec4(dir_color[0].xyz, 0.5);
+	
 	// Blend Func: GL_ZERO, GL_ONE_MINUS_SRC_ALPHA for transparaent objects
 	gl_FragData[1] = vec4(color.a, color.a, color.a, color.a);
 
