@@ -33,17 +33,17 @@ Thirdly, to run the main demo, run the Prog.bin with ./Prog.bin or Prog2.bin wit
 ## Why this?
 
 The primary advantages of using my code over other peoples is as follows
-1) it's pretty fast- Here's some benchmark figures on a GTX 960 SSC at 1080p
+### it's pretty fast- Here's some benchmark figures on a GTX 960 SSC at 1080p
 CONDITIONS:
 1) Only one mesh- 5000 triangles, some rendered transparent and some not, some with a very high resolution texture and some with a fairly low resolution one.
 2) Cubemap reflections randomly enabled/disabled for each one (no effect on performance)
-3) Only 1 "cameralight" which projects a particular color like a spotlight has shadows
+3) Only 1 "cameralight" which projects a particular color like a spotlight, has shadows
 4) shadows are enabled/disabled by manually commenting out shader code
 5) "shadows being rendered" refers to whether or not the shadowmap is being rendered- resolution is 640x480
 6) There is a 100,000 polygon mesh being neglected, which constitutes the terrain (Only part of it is in view at a time, so it is not factored into the benchmark) and a model of a deer with an unknown number of polygons that I made
 7) Number of point lights is number registered to the GkScene and not related to commenting things in the shader
 8) Transparency is disabled by failing to register a composition shader
-Number of 5000 poly meshes able to be rendered at around 60 fps when spawned randomly via 'E' in the demo:
+### Number of 5000 poly meshes able to be rendered in the view at approximately 60 fps when spawned randomly via 'E' in the demo:
 ### With Shadows being rendered, shadows enabled, and 32 point lights: ~600 - 800 (~3.5 mil tris)
 ### With Shadows being rendered, shadows disabled, and 32 point lights: ~1200 - 1400 (~6.5 mil tris)
 ### With Shadows being rendered, shadows disabled, and no point lights: ~1400 - 1600 (~7.5 mil tris)
@@ -51,7 +51,29 @@ Number of 5000 poly meshes able to be rendered at around 60 fps when spawned ran
 ### With Shadows not rendering, shadows disabled, and 32 point lights: ~1300 - 1600 (~7.25 mil tris)
 ### With Shadows not rendering, shadows disabled, and no point lights: ~1800 - 2000 (~9.5 mil tris)
 ### Super-optimized with no transparency and no point lights: ~2000 (~10 mil tris)
-The 5000 polygon mesh is a fairly decent analogue to a typical decently-high poly model in a modern video game. As an example, I found an extracted 3d player model of Michael De Santa from GTA V and its poly count was 27,456. According to my benchmarks, with shadows and the maximum number of point lights, at 1080p, allowing approximately half of the models to be transparent (transparent objects render slower) I could render ~120 of them at 60 frames per second. With the maximum potential rendering capacity while still having transparency, I could render ~350 of them. 
+The 5,000 polygon mesh is a fairly decent analogue to a typical decently-high poly model in a modern video game. As an example, I found an extracted 3d player model of Michael De Santa from GTA V and its triangle count was 27,456. According to my benchmarks, with shadows and the maximum number of point lights, at 1080p, allowing approximately half of the models to be transparent (transparent objects render slower) I could render ~120 of them at 60 frames per second. With the maximum potential rendering capacity while still having transparency, I could render ~350 of them. 
+### it's very easy to integrate your own OpenGL code with it
+There are callbacks in the main renderer that allow you to add your own rendering code and draw on any buffer in any stage of the pipeline. Helper classes make writing GL code a lot easier and more fun. If you want to draw menus/overlays then you can use the BMPFontRenderer or merely do all that AFTER the main renderPipeLine of GkScene.
+### It's multiplatform
+It's been tested on Intel, AMD, and NVidia graphics chips, Microsoft Windows and Linux. It has only been compiled as 64 bit, but it is presumed that it would work as a 32 bit program if the code were altered slightly to allow that.
+### Features?
+* 3D (duh!)
+* Phong lighting
+* Point lights, camera lights, directional lights, and ambient lights
+* static cubemap reflections (as well as cubemap diffusion, my own invention)
+* Weighted Blended Order Independent Transparency
+* 
+TODO: Finish README.MD
+## Is it ready for implementation?
+No. Previous versions were, however the implementation has changed as new features are required for my projects (This is the rendering library I use for my C++ hobby/game programming).
+Before I can declare this library finally ready for implementation:
+1) I have to finish the BMPFontRenderer
+2) I have to finish version 1 of the manual
+3) I have to re-test every single feature and rigorously test for memory leaks
+4) I have to re-test on AMD and Intel graphics chips
+5) I have to re-test on Windows
+6) Massive code cleanup- Consistency improvements by renaming things, removing old comments, adding in new comments, setters/getters need to be added, more stupid-proofing needs to be done.
+7) Code reorganization- Function declarations need to be moved out of header files into cpp files, some header files need to be renamed, some cpp files need to be renamed.
 
 
 ## Special Thanks
