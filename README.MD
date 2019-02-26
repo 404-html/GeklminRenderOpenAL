@@ -21,11 +21,13 @@ Requirements:
 * Microsoft Windows with MinGW 64 bit installed or Linux 64 bit with a fairly recent version of G++
 * OpenGL 3.3 supported graphics hardware
 * The dependencies listed in step 1
+
 First off, you must have the following dependencies installed:
 * OpenGL
 * GL3 headers in include (so that you can say #include<GL3/gl3.h>)
 * GLM (Math library) installed in Include
 * GLFW (Windowing library)
+
 Secondly, after you've unzipped/cloned the repo somewhere you must go into the THEVERSION folder and run the Compiler_Call bat or sh file, depending on your platform. IF YOU ARE ON WINDOWS, PLEASE REMOVE THE -I ARGUMENTS AS THEY POINT TO THE LOCATION OF THE INCLUDE FOLDER FOR MY MINGW INSTALLATION ON MY COMPUTER FROM THE BAT FILE. Thank you.
 
 Thirdly, to run the main demo, run the Prog.bin with ./Prog.bin or Prog2.bin with ./Prog2.bin. On windows, EXEs are generated instead of .bin files and there's even little icons on them.
