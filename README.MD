@@ -35,7 +35,7 @@ Thirdly, to run the main demo, run the Prog.bin with ./Prog.bin or Prog2.bin wit
 ## Why this?
 
 The primary advantages of using my code over other peoples is as follows
-### it's pretty fast- Here's some benchmark figures on a GTX 960 SSC at 1080p on Siduction with Nvidia drivers
+### it's pretty fast- Here's some benchmark figures on a GTX 960 SSC at 1080p on Siduction with Nvidia drivers (Performance is even better on windows)
 CONDITIONS:
 1) Only one mesh- 5000 triangles, some rendered transparent and some not, some with a very high resolution texture and some with a fairly low resolution one.
 2) Cubemap reflections randomly enabled/disabled for each one (no effect on performance)
