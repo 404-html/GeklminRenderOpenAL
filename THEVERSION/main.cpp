@@ -600,7 +600,7 @@ void LoadResources()
 	theScene->customRenderingAfterSkyboxBeforeMainShader = &CustomRenderingFunction; //Draw to your heart's content!
 	
 	//See GekAL.h and file resource manager for how this is done
-	audiobuffer1 = FileResourceManager->loadSound("SOUNDS/TONE.WAV");
+	audiobuffer1 = FileResourceManager->loadSound("SOUNDS/FM HOUSE.WAV");
 }
 
 
