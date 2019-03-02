@@ -114,12 +114,10 @@ void CustomRenderingFunction(int meshmask, GeklminRender::FBO* CurrentRenderTarg
 	// std::cout<<"The Custom Rendering Function works, replace the code here with your rendering code."<<std::endl;
 	//Put your custom rendering code in here. Make sure you reset the GL state settings (e.g. glEnable(GL_DEPTH_TEST)) if you change them at any point. You can bind shaders as you please. This function takes place between rendering the skybox and rendering the objects in the scene, before MainShader is bound.
 }
-//A stupid way to do key checking but it WORKS!!!
+//A stupid way to do key checking since there are a buttload of state calls but eh
 void checkKeys(){
 	using namespace GeklminRender;
 	static int state;
-
-	//Keyboard Keys
 		state = myDevice->getKey(0, GLFW_KEY_W);
 			if (state == GLFW_PRESS)
 			{
@@ -148,40 +146,41 @@ void checkKeys(){
 			oldkeystates[3] = state;
 		state = myDevice->getKey(0, GLFW_KEY_C);
 			if (state == GLFW_PRESS && oldkeystates[4] != GLFW_PRESS)
-			{cameralock = !cameralock;
-			std::cout << "\nKey works";
+			{
+				cameralock = !cameralock;
+				std::cout << "\nKey works";
 			}
 			oldkeystates[4] = state;
 		state = myDevice->getKey(0, GLFW_KEY_J); //Spawn a mesh
 			if (state == GLFW_PRESS && oldkeystates[5] != GLFW_PRESS)
-			for (int i = 0; i < 1000; i++)
-			{
-				//Test out the Meshinstance registration feature
-				ProgramMeshInstances.push_back(new MeshInstance(
-					(rand()%100 > 50) ? 1 : 0, //Texture, demo of inline if. It's either 1 or 0.
-					Transform(SceneRenderCamera->pos + glm::vec3(rand()%200-100 , rand()%200-100, rand()%200-100), glm::vec3(rand()%200-100 , rand()%200-100, rand()%200-100), glm::vec3(1,1,1))
-				));
-				//Randomly decide whether or not to use Cubemap Reflections
-				ProgramMeshInstances[ProgramMeshInstances.size()-1]->EnableCubemapReflections = (rand()%100 > 25) ? 1 : 0; //Note this does nothing because instancing is used...
-				// ProgramMeshInstances[ProgramMeshInstances.size()-1]->EnableCubemapReflections = 1;
-				//Randomly decide which cubemap to use.
-				ProgramMeshInstances[ProgramMeshInstances.size()-1]->cubeMap = 0;
-				
-				//Random Specular Dampening
-				ProgramMeshInstances[ProgramMeshInstances.size()-1]->myPhong.specdamp = rand()%128 + 1.0;
-				
-				
-				//Random Specular Reflectivity
-				ProgramMeshInstances[ProgramMeshInstances.size()-1]->myPhong.specreflectivity = rand()%100/100.0;
-				
-				//Use specr to determine diffusivity
-				ProgramMeshInstances[ProgramMeshInstances.size()-1]->myPhong.diffusivity = 1-ProgramMeshInstances[ProgramMeshInstances.size()-1]->myPhong.specreflectivity;
-				
-				
-				InstancedMesh->RegisterInstance(
-					ProgramMeshInstances[ProgramMeshInstances.size()-1]
-				);
-			}
+				for (int i = 0; i < 1000; i++)
+				{
+					//Test out the Meshinstance registration feature
+					ProgramMeshInstances.push_back(new MeshInstance(
+						(rand()%100 > 50) ? 1 : 0, //Texture, demo of inline if. It's either 1 or 0.
+						Transform(SceneRenderCamera->pos + glm::vec3(rand()%200-100 , rand()%200-100, rand()%200-100), glm::vec3(rand()%200-100 , rand()%200-100, rand()%200-100), glm::vec3(1,1,1))
+					));
+					//Randomly decide whether or not to use Cubemap Reflections
+					ProgramMeshInstances[ProgramMeshInstances.size()-1]->EnableCubemapReflections = (rand()%100 > 25) ? 1 : 0; //Note this does nothing because instancing is used...
+					// ProgramMeshInstances[ProgramMeshInstances.size()-1]->EnableCubemapReflections = 1;
+					//Randomly decide which cubemap to use.
+					ProgramMeshInstances[ProgramMeshInstances.size()-1]->cubeMap = 0;
+					
+					//Random Specular Dampening
+					ProgramMeshInstances[ProgramMeshInstances.size()-1]->myPhong.specdamp = rand()%128 + 1.0;
+					
+					
+					//Random Specular Reflectivity
+					ProgramMeshInstances[ProgramMeshInstances.size()-1]->myPhong.specreflectivity = rand()%100/100.0;
+					
+					//Use specr to determine diffusivity
+					ProgramMeshInstances[ProgramMeshInstances.size()-1]->myPhong.diffusivity = 1-ProgramMeshInstances[ProgramMeshInstances.size()-1]->myPhong.specreflectivity;
+					
+					//finally register
+					InstancedMesh->RegisterInstance(
+						ProgramMeshInstances[ProgramMeshInstances.size()-1]
+					);
+				}
 			oldkeystates[5] = state;
 		state = myDevice->getKey(0, GLFW_KEY_K);
 			if (state == GLFW_PRESS && oldkeystates[6] != GLFW_PRESS)
@@ -200,7 +199,7 @@ void checkKeys(){
 							ProgramMeshInstances.erase(ProgramMeshInstances.begin() + i);
 							haveDeRegistered++;
 						}
-						i--;
+						i--; //we're going through the vector backwards
 					}
 					if (haveDeRegistered < 1)
 						std::cout <<"\n ERROR! Unable to delete";
@@ -390,7 +389,8 @@ void checkKeys(){
 				myDevice->getCursorPosition(0, &mousepos[0], &mousepos[1]);
 				std::cout << "\n X: " << (mousepos[0]/WIDTH);
 				std::cout << "\n Y: " << (mousepos[1]/HEIGHT);
-				std::cout << "\nsizeof int pointer (proves this is 64 bit):" << sizeof(int*);
+				std::cout << "\nsizeof int pointer (proves this is 64 bit if its 8):" << sizeof(int*);
+				std::cout << "\nsizeof long long int: " << sizeof(long long int);
 				InstancedMesh->optimizeCacheMemoryUsage();
 				FileResourceManager->loadMesh("sphere_test.obj",false,true)->optimizeCacheMemoryUsage();
 				if(DeleteMeshTest)
@@ -433,7 +433,7 @@ void window_size_callback(GLFWwindow* window, int width, int height)
 	if (height == 0 || width == 0)
 		return;
 	if(theScene)
-		theScene->resizeSceneViewport(width,height,1);
+		theScene->resizeSceneViewport(width,height,1.0);
 	WIDTH = width;
 	HEIGHT = height;
 	if (SceneRenderCamera != nullptr)
@@ -451,13 +451,13 @@ void init()
 	using namespace GeklminRender;
 	//Creates the GLFW context. This pretty much has to be the first code we run
 	myDevice->initGLFW();
-	//GkScene has a function for handling resizing, but we will work on that later. We have to set a resizefunc if we enable resizing
+	//GLFW requires you to "push" properties of the next window to be created before making it
 	myDevice->pushWindowCreationHint(GLFW_RESIZABLE, GLFW_TRUE);
 	//Set Version to OpenGL 3.3
 	myDevice->pushWindowCreationHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	myDevice->pushWindowCreationHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-	
-	myDevice->addWindow(WIDTH, HEIGHT, "GkScene API on GeklminRender Alpha- Demo Program 1"); 
+	//FINALLY add the window
+	myDevice->addWindow(WIDTH, HEIGHT, "GkScene API on GeklminRender + OpenAL, Demo Program 1"); 
 	// myDevice->addFullScreenWindow(WIDTH, HEIGHT, "GkScene API Alpha- Demo Program 1");
 	
 	myDevice->setWindowSizeCallback(0,window_size_callback);//Self explanatory
@@ -465,12 +465,11 @@ void init()
 	myDevice->initGL3W(); //Initialize the OpenGL extension wrangler.
 	myDevice->setKeyCallBack(0, key_callback); //Set a callback function.
 
-	//Default Enabled OpenGL Options (NOTE: I'm going to add these sorts of things to the pipeline of GkScene and add toggles for the different steps. Maximize rendering options and whatnot.
-	//I don't actually think we need to execute these commands here... WHATEVS!!!
+	//Default Enabled OpenGL Options 
 		glEnable(GL_CULL_FACE); //Enable culling faces
 		glEnable(GL_DEPTH_TEST); //test fragment depth when rendering
 		glCullFace(GL_BACK); //cull faces with clockwise winding
-		//glEnable(GL_ARB_conservative_depth); //conservative depth.
+		//glEnable(GL_ARB_conservative_depth); //conservative depth. Might improve performance somewhat (?)
 		
 		//Standard error check code
 			// GLenum communism = glGetError();
@@ -499,6 +498,7 @@ void init()
 	for (int i = 0; i<2; i++)
 		currentmousexy[i] = 0;
 	theScene = new GkScene(WIDTH, HEIGHT, 1);
+	//Initialize OpenAL
 	myDevice->fastInitOpenAL();
 }
 
@@ -506,10 +506,8 @@ void init()
 void LoadResources()
 {
 	using namespace GeklminRender;
-	//it puts .vs and .fs after the string. The EXE Is the starting folder, but I could probably change that if I tried.
+	//it puts .vs and .fs after the string.
 	MainShad = new Shader("shaders/FORWARD_MAINSHADER_UBO");
-	//~ delete MainShad;MainShad = nullptr;
-	//~ MainShad = new Shader("shaders/FORWARD_MAINSHADER");
 	MainshaderShadows = new Shader("shaders/FORWARD_MAINSHADER_SHADOWS");
 	DisplayTexture = new Shader("shaders/SHOWTEX");
 	SkyboxShad = new Shader("shaders/Skybox");
@@ -601,7 +599,7 @@ void LoadResources()
 	theScene->customMainShaderBinds = &MainshaderUniformFunctionDemo;
 	theScene->customRenderingAfterSkyboxBeforeMainShader = &CustomRenderingFunction; //Draw to your heart's content!
 	
-	//See GekAL.h for how this is done
+	//See GekAL.h and file resource manager for how this is done
 	audiobuffer1 = FileResourceManager->loadSound("SOUNDS/TONE.WAV");
 }
 
@@ -610,14 +608,14 @@ void initObjects()
 { //Default existing objects
 		using namespace GeklminRender;// sue me
 
-		
+		//Notice: We are using a fixed instance to draw this
 		FileResourceManager->loadMesh("First_Terrain_With_Caves.obj",false,true)->RegisterInstance(&TerrainInstance);
 		FileResourceManager->loadMesh("First_Terrain_With_Caves.obj",false,true)->pushTexture(FileResourceManager->loadTexture("CLOUDS.JPG",false)); //Note: we are Loading a texture here... should probably move to LoadResources
 		
 		//                                      position          Euler Rotation       Scale
 		TerrainInstance.myTransform = Transform(glm::vec3(0,0,0), glm::vec3(0 , 0, 0), glm::vec3(20,20,20));
 		TerrainInstance.myPhong.specreflectivity = 0; //Not shiny at all. Chalk.
-		TerrainInstance.myPhong.diffusivity = 1; //If you want a more physical material, you should make sure diffusivity = 1 - specular reflectivity
+		TerrainInstance.myPhong.diffusivity = 1; //How much does diffuse light affect the drawing
 		TerrainInstance.mymeshmask = 4; //DIVISIBLE BY: 4, 2, 1 so if you call the rendering function with any other number it will not render this mesh (Negative numbers not withstanding)
 		
 		
@@ -649,19 +647,7 @@ void initObjects()
 		Amb_Lights.push_back(
 			new AmbientLight()
 		); // 0
-		// Amb_Lights.push_back(
-			// new AmbientLight()
-		// ); // 1
-		// Amb_Lights.push_back(
-			// new AmbientLight()
-		// ); // 2
-		// Amb_Lights.push_back(
-			// new AmbientLight()
-		// ); // 3
-		// Amb_Lights.push_back(
-			// new AmbientLight()
-		// ); // 4
-		if (Amb_Lights.size() > 0)
+		if (Amb_Lights.size() > 0) //if we successfully made one
 		{
 			Amb_Lights[0]->myColor = glm::vec3(0.2,0.2,0.2);
 			Amb_Lights[0]->myPos = glm::vec3(0,50,0);
@@ -669,42 +655,14 @@ void initObjects()
 			theScene->RegisterAmbLight(Amb_Lights[0]);
 			Amb_Lights[0]->sphere1 = glm::vec4(0, 0, 0, 300 * 300);
 		}
-		if (Amb_Lights.size() > 1)
-		{
-			Amb_Lights[1]->myColor = glm::vec3(0,0.2,0.3);
-			Amb_Lights[1]->myPos = glm::vec3(100,20,0);
-			Amb_Lights[1]->myRange = 100;
-			theScene->RegisterAmbLight(Amb_Lights[1]);
-		}
-		if (Amb_Lights.size() > 2)
-		{
-			Amb_Lights[2]->myColor = glm::vec3(0,0,0.2);
-			Amb_Lights[2]->myPos = glm::vec3(-100,20,0);
-			Amb_Lights[2]->myRange = 100;
-			theScene->RegisterAmbLight(Amb_Lights[2]);
-		}
-		if (Amb_Lights.size() > 3)
-		{
-			Amb_Lights[3]->myColor = glm::vec3(0.2,0.2,0);
-			Amb_Lights[3]->myPos = glm::vec3(0,20,100);
-			Amb_Lights[3]->myRange = 100;
-			theScene->RegisterAmbLight(Amb_Lights[3]);
-		}
-		if (Amb_Lights.size() > 4)
-		{
-			Amb_Lights[4]->myColor = glm::vec3(0.2,0.2,0.5);
-			Amb_Lights[4]->myPos = glm::vec3(0,20,-100);
-			Amb_Lights[4]->myRange = 100;
-			theScene->RegisterAmbLight(Amb_Lights[4]);
-		}
 		// the SceneRender camera
-		SceneRenderCamera = new Camera(glm::vec3(0,50,-10),            //World Pos
-								70.0f,                       //FOV
-								((float)WIDTH/(float)HEIGHT),		 //Aspect
-								1.0f,                       //Znear
-								1000.0f,                     //Zfar
-								glm::vec3(0.0f, 0.0f, 1.0f), //forward
-								glm::vec3(0.0f, 1.0f, 0.0f));//Up
+		SceneRenderCamera = new Camera(glm::vec3(0,50,-10),         //World Pos
+								70.0f,                       		//FOV
+								((float)WIDTH/(float)HEIGHT),		//Aspect
+								1.0f,                       		//Znear
+								1000.0f,                     		//Zfar
+								glm::vec3(0.0f, 0.0f, 1.0f), 		//forward
+								glm::vec3(0.0f, 1.0f, 0.0f));		//Up
 								
 		RenderTargetCameraShadowMapping = Camera(glm::vec3(0,50,-10),            //World Pos
 											70.0f,                       //FOV
@@ -727,8 +685,6 @@ void initObjects()
 		Cam_Lights[0]->radii = glm::vec2(0.3,0.5);
 		theScene->RegisterCamLight(Cam_Lights[0]);
 		Cam_Lights[0]->myCamera = RenderTargetCameraShadowMapping;
-		LetterTester.myTransform.SetPos(glm::vec3(0,100,0));
-		LetterTester.myTransform.SetScale(glm::vec3(10,10,10));
 		
 		//OpenAL Source Generation
 		alGenSources(1,&audiosource1);
@@ -763,7 +719,7 @@ int main()
 	MyVeryBadDeer.myPhong.diffusivity = 0.6;
 	MyVeryBadDeer.myPhong.specreflectivity = 0.4;
 	MyVeryBadDeer.myTransform.SetScale(glm::vec3(10,10,10));
-	BadDeer.RegisterInstance(&MyVeryBadDeer);
+	BadDeer.RegisterInstance(&MyVeryBadDeer); //demonstrating that you can use meshes on the stack
 	float ordinarycounter = 0.0f; // Used to achieve the trigonometry wave effects
 	
 	while (!myDevice->shouldClose(0) && !shouldQuit) //Main game loop.
@@ -857,8 +813,8 @@ int main()
 	theScene->deregisterMesh(&BadDeer);
 	//myFont->deRegisterFontFromScene(theScene);
 	delete theScene;
-	//if (myFont)
-	//	delete myFont;
+	if (myFont)
+		delete myFont;
 	
 	std::cout <<"\n DELETING MESHES...";
 	while (ProgramMeshInstances.size() > 0)
@@ -907,5 +863,5 @@ int main()
 	myDevice->removeWindow(0);
 	std::cout << "\n DELETED THE WINDOW";
 	delete myDevice;
-	std::cout << "\n Peace!";
+	std::cout << "\n Peace!" << std::endl;
 }

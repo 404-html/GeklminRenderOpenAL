@@ -45,7 +45,7 @@ class GkScene //Gk for Geklmin
 			GkScene(640,480,1.0f);
 		}
 		GkScene(const GkScene& other){
-			std::cout << "\n The copy constructor of GkScene was called. A new GkScene has been made for you which has config 640, 480, 1.0f";
+			std::cout << "\n The copy constructor of GkScene was called. A new GkScene has been made for you which has config 640, 480, 1.0f.\nDO NOT make this mistake again.";
 			GkScene(640,480,1.0f);
 		}
         virtual ~GkScene();
@@ -53,6 +53,7 @@ class GkScene //Gk for Geklmin
 		//Draw Functions (NEEDS CULLING)
 			void drawPipeline(int meshmask = -1, FBO* CurrentRenderTarget = nullptr, FBO* RenderTarget_Transparent = nullptr, Camera* CurrentRenderCamera = nullptr, bool doFrameBufferChecks = false, glm::vec4 backgroundColor = glm::vec4(0,0,0,0), glm::vec2 fogRangeDescriptor = glm::vec2(10000,15000));
 			void drawShadowPipeline(int meshmask = -1, FBO* CurrentRenderTarget = nullptr, Camera* CurrentRenderCamera = nullptr, bool doFrameBufferChecks = false);
+			//Custom rendering functions
 			void (*customRenderingAfterTransparentObjectRendering)(int meshmask, FBO* CurrentRenderTarget, FBO* RenderTarget_Transparent, Camera* CurrentRenderCamera, bool doFrameBufferChecks, glm::vec4 backgroundColor, glm::vec2 fogRangeDescriptor) =  nullptr;
 			void (*customMainShaderBinds)(int meshmask, FBO* CurrentRenderTarget, FBO* RenderTarget_Transparent, Camera* CurrentRenderCamera, bool doFrameBufferChecks, glm::vec4 backgroundColor, glm::vec2 fogRangeDescriptor) = nullptr; //For doing custom main shader binds
 			void (*customRenderingAfterSkyboxBeforeMainShader)(int meshmask, FBO* CurrentRenderTarget, FBO* RenderTarget_Transparent, Camera* CurrentRenderCamera, bool doFrameBufferChecks, glm::vec4 backgroundColor, glm::vec2 fogRangeDescriptor) =  nullptr;
@@ -438,6 +439,8 @@ class GkScene //Gk for Geklmin
 	~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	*/
+	//~ GkScene(const GkScene& other);
+	void operator=(const GkScene& other);
 	void OrganizeUBOforUpload(); //Assumes that the mainshader is currently bound
 	std::map<Shader*, GLuint> World2CameraLocations;
 	std::map<Shader*, GLuint> TextureUnitLocations;
@@ -556,11 +559,11 @@ class GkScene //Gk for Geklmin
 	
 	GLuint MainShaderShadowUniforms[MAINSHADER_SHADOWS_NUM_MAINSHADER_SHADOWS_UNIFORMS]; //Shadow uniforms
 	
-	std::vector<GLuint> m_LightUniformHandles;//See SceneAPI.cpp for format
-	std::vector<GLuint> m_LightUniformHandles_SHADOWTEMP;//See SceneAPI.cpp for format
-	//std::vector<GLuint> m_CameraLightUniformHandles; //See SceneAPI.cpp for details and format
-	std::vector<GLuint> m_LightClippingVolumeUniformHandles;//See SceneAPI.cpp for format or look below
-	std::vector<GLuint> m_LightClippingVolumeUniformHandles_SHADOWTEMP;//Used for transitioning to the shadow system for drawshadowpipeline function
+	//these are no longer used because we don't use uniforms anymore- we use a uniform buffer object
+	//~ std::vector<GLuint> m_LightUniformHandles;//See SceneAPI.cpp for format
+	//~ std::vector<GLuint> m_LightUniformHandles_SHADOWTEMP;//See SceneAPI.cpp for format
+	//~ std::vector<GLuint> m_LightClippingVolumeUniformHandles;//See SceneAPI.cpp for format or look below
+	//~ std::vector<GLuint> m_LightClippingVolumeUniformHandles_SHADOWTEMP;//Used for transitioning to the shadow system for drawshadowpipeline function
 	char LightingDataUBOData[16000];//maximum of 16k in size to be compatible with old systems
 	GLuint LightingDataUBO = 0; //handle for the lighting data UBO BUFFER
 	GLuint LightingDataUBOLocation = 0; //handle for the UNIFORM BUFFER OBJECT in the shader

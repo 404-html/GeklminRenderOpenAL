@@ -8,13 +8,13 @@ namespace GeklminRender {
 //Render shadows to rendertarget (Just a depth buffer render)
 void GkScene::drawShadowPipeline(int meshmask, FBO* CurrentRenderTarget, Camera* CurrentRenderCamera, bool doFrameBufferChecks){
 	//Used for error checking
-	GLenum communism;
+	GLenum communism; //communism is a mistake
 	if (!CurrentRenderTarget)
 		{
 			std::cout<<"\nMust have render target to render shadows";
 			return;
 		}
-	if (nextRenderPipelineCallWillBeAfterVsync) //Reset everything if this render call was immediately after the vsync
+	if (nextRenderPipelineCallWillBeAfterVsync) //What this does: Prevent the user from accidentally increasing lag exponentially by reshaping a mesh while it's rendering. Also, some other stuff maybe. TODO: Check it out later
 	{
 		nextRenderPipelineCallWillBeAfterVsync = false;
 	}
@@ -43,7 +43,7 @@ void GkScene::drawShadowPipeline(int meshmask, FBO* CurrentRenderTarget, Camera*
 	
 	
 	
-	if (!ShadowOpaqueMainShader || !ShowTextureShader /*|| !CompositionShader*/){ //if one is not present
+	if (!ShadowOpaqueMainShader || !ShowTextureShader /*|| !CompositionShader*/){ //if you don't have one of these, there's no chance we can render shadows
 		std::cout<<"\nYou got kicked out boi 3";
 		return; //gtfo
 	}
@@ -145,16 +145,13 @@ void GkScene::drawShadowPipeline(int meshmask, FBO* CurrentRenderTarget, Camera*
 void GkScene::drawPipeline(int meshmask, FBO* CurrentRenderTarget, FBO* RenderTarget_Transparent, Camera* CurrentRenderCamera, bool doFrameBufferChecks, glm::vec4 backgroundColor, glm::vec2 fogRangeDescriptor){ //Approaches spaghetti levels of unreadability
 	//Used for error checking
 	GLenum communism;
-	bool doTransparency = true;
-	if (CurrentRenderTarget && !RenderTarget_Transparent){
-		doTransparency = false;
-	}
-	//Dont render to target unless we have both FBOs
-	//~ if ((CurrentRenderTarget != nullptr && RenderTarget_Transparent == nullptr) || (CurrentRenderTarget == nullptr && RenderTarget_Transparent != nullptr))
-		//~ {
-			//~ std::cout<<"\nYou got kicked out boi 1";
-			//~ return;
-		//~ }
+	bool doTransparency = !(CurrentRenderTarget && !RenderTarget_Transparent); // new code
+	//old code
+	//bool doTransparency = true;
+	//if (CurrentRenderTarget && !RenderTarget_Transparent){ 
+	//	doTransparency = false;
+	//}
+	
 	if (nextRenderPipelineCallWillBeAfterVsync) //Reset everything if this render call was immediately after the vsync
 	{
 		// for (int iter = 0; iter < RendertargetCameras.size(); iter++)
@@ -187,13 +184,12 @@ void GkScene::drawPipeline(int meshmask, FBO* CurrentRenderTarget, FBO* RenderTa
 	
 	
 	
-	if (!SceneCamera || !MainShader || !MainShaderUniforms || !ShowTextureShader /*|| !CompositionShader*/){ //if one is not present
+	if (!SceneCamera || !MainShader || !MainShaderUniforms || !ShowTextureShader /*|| !CompositionShader*/){ //if one is not present, no chance
 		std::cout<<"\nYou got kicked out boi 3";
 		return; //gtfo
 	}
 	
 	//Setup Camera mat4s so that we can send in the addresses.
-	//In the future, we will append these to a vector.
 	if (CurrentRenderCamera == nullptr)
 	{
 		SceneRenderCameraMatrix = SceneCamera->GetViewProjection();
@@ -213,6 +209,7 @@ void GkScene::drawPipeline(int meshmask, FBO* CurrentRenderTarget, FBO* RenderTa
 	
 	
 	
+	//CONFIGURE BLENDING AND CULLING FOR SKYBOX RENDERING
 	glEnable(GL_CULL_FACE); //Enable culling faces
 	glCullFace(GL_BACK); //cull faces with clockwise winding
 	glDepthMask(GL_TRUE);
@@ -332,101 +329,92 @@ void GkScene::drawPipeline(int meshmask, FBO* CurrentRenderTarget, FBO* RenderTa
 		MainShaderUniforms[MAINSHADER_BACKGROUND_COLOR] = MainShader->GetUniformLocation("backgroundColor");
 		MainShaderUniforms[MAINSHADER_FOG_RANGE] = MainShader->GetUniformLocation("fogRange");
 		//Get the uniform locations for lights
-		//m_LightUniformHandles
-		if (m_LightUniformHandles.size() > 0)
-			m_LightUniformHandles.clear();
-		if (m_LightClippingVolumeUniformHandles.size() > 0)
-			m_LightClippingVolumeUniformHandles.clear();
-		for (int i = 0; i < 32; i++) //Point lights
-		{
-			//access by taking i, multiplying by 4 and adding an offset (0 for position, 1 for color...)
-			m_LightUniformHandles.push_back(MainShader->GetUniformLocation("point_lightArray[" + std::to_string(i) + "].position"));
-			m_LightUniformHandles.push_back(MainShader->GetUniformLocation("point_lightArray[" + std::to_string(i) + "].color"));
-			m_LightUniformHandles.push_back(MainShader->GetUniformLocation("point_lightArray[" + std::to_string(i) + "].range"));
-			m_LightUniformHandles.push_back(MainShader->GetUniformLocation("point_lightArray[" + std::to_string(i) + "].dropoff"));
-			//AABB info
-			m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("point_lightArray[" + std::to_string(i) + "].AABBp1"));
-			m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("point_lightArray[" + std::to_string(i) + "].AABBp2"));
-			m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("point_lightArray[" + std::to_string(i) + "].AABBp3"));
-			m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("point_lightArray[" + std::to_string(i) + "].AABBp4"));
-			//Sphere Info
-			m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("point_lightArray[" + std::to_string(i) + "].sphere1"));
-			m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("point_lightArray[" + std::to_string(i) + "].sphere2"));
-			m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("point_lightArray[" + std::to_string(i) + "].sphere3"));
-			m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("point_lightArray[" + std::to_string(i) + "].sphere4"));
-			//The whitelist uint
-			m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("point_lightArray[" + std::to_string(i) + "].iswhitelist"));
-			//std::cout << "point_lightArray[" + std::to_string(i) + "].dropoff";
-		}
-		for (int i = 0; i < 2; i++) //Dir Lights
-		{
-			//access by taking i, multiplying by 2, adding 4 * max point lights, and adding an offset (0 for direction, 1 for color...)
-			m_LightUniformHandles.push_back(MainShader->GetUniformLocation("dir_lightArray[" + std::to_string(i) + "].direction"));
-			m_LightUniformHandles.push_back(MainShader->GetUniformLocation("dir_lightArray[" + std::to_string(i) + "].color"));
-			
-			//AABB info
-			m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("dir_lightArray[" + std::to_string(i) + "].AABBp1"));
-			m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("dir_lightArray[" + std::to_string(i) + "].AABBp2"));
-			m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("dir_lightArray[" + std::to_string(i) + "].AABBp3"));
-			m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("dir_lightArray[" + std::to_string(i) + "].AABBp4"));
-			//Sphere Info
-			m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("dir_lightArray[" + std::to_string(i) + "].sphere1"));
-			m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("dir_lightArray[" + std::to_string(i) + "].sphere2"));
-			m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("dir_lightArray[" + std::to_string(i) + "].sphere3"));
-			m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("dir_lightArray[" + std::to_string(i) + "].sphere4"));
-			//The whitelist uint
-			m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("dir_lightArray[" + std::to_string(i) + "].iswhitelist"));
-		}
-		
-		for (int i = 0; i < 3; i++) //Ambient Lights
-		{
-			//access by taking i, multiplying by 3, adding 4 * max pointlights + 2 * max dir lights, and adding an offset (0 for position, 1 for color...)
-			m_LightUniformHandles.push_back(MainShader->GetUniformLocation("amb_lightArray[" + std::to_string(i) + "].position"));
-			m_LightUniformHandles.push_back(MainShader->GetUniformLocation("amb_lightArray[" + std::to_string(i) + "].color"));
-			m_LightUniformHandles.push_back(MainShader->GetUniformLocation("amb_lightArray[" + std::to_string(i) + "].range"));
-			
-			//AABB info
-			m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("amb_lightArray[" + std::to_string(i) + "].AABBp1"));
-			m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("amb_lightArray[" + std::to_string(i) + "].AABBp2"));
-			m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("amb_lightArray[" + std::to_string(i) + "].AABBp3"));
-			m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("amb_lightArray[" + std::to_string(i) + "].AABBp4"));
-			//Sphere Info
-			m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("amb_lightArray[" + std::to_string(i) + "].sphere1"));
-			m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("amb_lightArray[" + std::to_string(i) + "].sphere2"));
-			m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("amb_lightArray[" + std::to_string(i) + "].sphere3"));
-			m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("amb_lightArray[" + std::to_string(i) + "].sphere4"));
-			//The whitelist uint
-			m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("amb_lightArray[" + std::to_string(i) + "].iswhitelist"));
-		}
-		
-		for (int i = 0; i < 5; i++) //Cameralights
-		{
-			//access by taking i, multiplying by 3, adding 4 * maxpointlights + 2 * maxdirlights + 3 * maxambientlights, and adding an offset (0 for viewproj, 1 for color...)
-			m_LightUniformHandles.push_back(MainShader->GetUniformLocation("camera_lightArray[" + std::to_string(i) + "].viewproj"));//0
-			m_LightUniformHandles.push_back(MainShader->GetUniformLocation("camera_lightArray[" + std::to_string(i) + "].position"));//1
-			m_LightUniformHandles.push_back(MainShader->GetUniformLocation("camera_lightArray[" + std::to_string(i) + "].color"));//2
-			m_LightUniformHandles.push_back(MainShader->GetUniformLocation("camera_lightArray[" + std::to_string(i) + "].solidColor"));//3
-			m_LightUniformHandles.push_back(MainShader->GetUniformLocation("camera_lightArray[" + std::to_string(i) + "].range"));//4
-			m_LightUniformHandles.push_back(MainShader->GetUniformLocation("camera_lightArray[" + std::to_string(i) + "].shadows"));//5
-			m_LightUniformHandles.push_back(MainShader->GetUniformLocation("camera_lightArray[" + std::to_string(i) + "].radii"));//6
-			//AABB info
-			//~ m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("camera_lightArray[" + std::to_string(i) + "].AABBp1"));
-			//~ m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("camera_lightArray[" + std::to_string(i) + "].AABBp2"));
-			//~ m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("camera_lightArray[" + std::to_string(i) + "].AABBp3"));
-			//~ m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("camera_lightArray[" + std::to_string(i) + "].AABBp4"));
+		//m_LightUniformHandles no longer necessary because we use a UBO
+		//~ if (m_LightUniformHandles.size() > 0)
+			//~ m_LightUniformHandles.clear();
+		//~ if (m_LightClippingVolumeUniformHandles.size() > 0)
+			//~ m_LightClippingVolumeUniformHandles.clear();
+		//This code is no longer used since all lighting data except the CameraTex stuff is in the light_data UBO
+		//~ for (int i = 0; i < 32; i++) //Point lights
+		//~ {
+			//~ //access by taking i, multiplying by 4 and adding an offset (0 for position, 1 for color...)
+			//~ m_LightUniformHandles.push_back(MainShader->GetUniformLocation("point_lightArray[" + std::to_string(i) + "].position"));
+			//~ m_LightUniformHandles.push_back(MainShader->GetUniformLocation("point_lightArray[" + std::to_string(i) + "].color"));
+			//~ m_LightUniformHandles.push_back(MainShader->GetUniformLocation("point_lightArray[" + std::to_string(i) + "].range"));
+			//~ m_LightUniformHandles.push_back(MainShader->GetUniformLocation("point_lightArray[" + std::to_string(i) + "].dropoff"));
+			//~ //AABB info
+			//~ m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("point_lightArray[" + std::to_string(i) + "].AABBp1"));
+			//~ m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("point_lightArray[" + std::to_string(i) + "].AABBp2"));
+			//~ m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("point_lightArray[" + std::to_string(i) + "].AABBp3"));
+			//~ m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("point_lightArray[" + std::to_string(i) + "].AABBp4"));
 			//~ //Sphere Info
-			//~ m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("camera_lightArray[" + std::to_string(i) + "].sphere1"));
-			//~ m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("camera_lightArray[" + std::to_string(i) + "].sphere2"));
-			//~ m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("camera_lightArray[" + std::to_string(i) + "].sphere3"));
-			//~ m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("camera_lightArray[" + std::to_string(i) + "].sphere4"));
+			//~ m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("point_lightArray[" + std::to_string(i) + "].sphere1"));
+			//~ m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("point_lightArray[" + std::to_string(i) + "].sphere2"));
+			//~ m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("point_lightArray[" + std::to_string(i) + "].sphere3"));
+			//~ m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("point_lightArray[" + std::to_string(i) + "].sphere4"));
+			//~ //The whitelist uint
+			//~ m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("point_lightArray[" + std::to_string(i) + "].iswhitelist"));
+			//~ //std::cout << "point_lightArray[" + std::to_string(i) + "].dropoff";
+		//~ }
+		//~ for (int i = 0; i < 2; i++) //Dir Lights
+		//~ {
+			//~ //access by taking i, multiplying by 2, adding 4 * max point lights, and adding an offset (0 for direction, 1 for color...)
+			//~ m_LightUniformHandles.push_back(MainShader->GetUniformLocation("dir_lightArray[" + std::to_string(i) + "].direction"));
+			//~ m_LightUniformHandles.push_back(MainShader->GetUniformLocation("dir_lightArray[" + std::to_string(i) + "].color"));
+			
+			//~ //AABB info
+			//~ m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("dir_lightArray[" + std::to_string(i) + "].AABBp1"));
+			//~ m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("dir_lightArray[" + std::to_string(i) + "].AABBp2"));
+			//~ m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("dir_lightArray[" + std::to_string(i) + "].AABBp3"));
+			//~ m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("dir_lightArray[" + std::to_string(i) + "].AABBp4"));
+			//~ //Sphere Info
+			//~ m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("dir_lightArray[" + std::to_string(i) + "].sphere1"));
+			//~ m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("dir_lightArray[" + std::to_string(i) + "].sphere2"));
+			//~ m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("dir_lightArray[" + std::to_string(i) + "].sphere3"));
+			//~ m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("dir_lightArray[" + std::to_string(i) + "].sphere4"));
+			//~ //The whitelist uint
+			//~ m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("dir_lightArray[" + std::to_string(i) + "].iswhitelist"));
+		//~ }
+		
+		//~ for (int i = 0; i < 3; i++) //Ambient Lights
+		//~ {
+			//~ //access by taking i, multiplying by 3, adding 4 * max pointlights + 2 * max dir lights, and adding an offset (0 for position, 1 for color...)
+			//~ m_LightUniformHandles.push_back(MainShader->GetUniformLocation("amb_lightArray[" + std::to_string(i) + "].position"));
+			//~ m_LightUniformHandles.push_back(MainShader->GetUniformLocation("amb_lightArray[" + std::to_string(i) + "].color"));
+			//~ m_LightUniformHandles.push_back(MainShader->GetUniformLocation("amb_lightArray[" + std::to_string(i) + "].range"));
+			
+			//~ //AABB info
+			//~ m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("amb_lightArray[" + std::to_string(i) + "].AABBp1"));
+			//~ m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("amb_lightArray[" + std::to_string(i) + "].AABBp2"));
+			//~ m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("amb_lightArray[" + std::to_string(i) + "].AABBp3"));
+			//~ m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("amb_lightArray[" + std::to_string(i) + "].AABBp4"));
+			//~ //Sphere Info
+			//~ m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("amb_lightArray[" + std::to_string(i) + "].sphere1"));
+			//~ m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("amb_lightArray[" + std::to_string(i) + "].sphere2"));
+			//~ m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("amb_lightArray[" + std::to_string(i) + "].sphere3"));
+			//~ m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("amb_lightArray[" + std::to_string(i) + "].sphere4"));
+			//~ //The whitelist uint
+			//~ m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("amb_lightArray[" + std::to_string(i) + "].iswhitelist"));
+		//~ }
+		
+		//~ for (int i = 0; i < 5; i++) //Cameralights
+		//~ {
+			//~ //access by taking i, multiplying by 3, adding 4 * maxpointlights + 2 * maxdirlights + 3 * maxambientlights, and adding an offset (0 for viewproj, 1 for color...)
+			//~ m_LightUniformHandles.push_back(MainShader->GetUniformLocation("camera_lightArray[" + std::to_string(i) + "].viewproj"));//0
+			//~ m_LightUniformHandles.push_back(MainShader->GetUniformLocation("camera_lightArray[" + std::to_string(i) + "].position"));//1
+			//~ m_LightUniformHandles.push_back(MainShader->GetUniformLocation("camera_lightArray[" + std::to_string(i) + "].color"));//2
+			//~ m_LightUniformHandles.push_back(MainShader->GetUniformLocation("camera_lightArray[" + std::to_string(i) + "].solidColor"));//3
+			//~ m_LightUniformHandles.push_back(MainShader->GetUniformLocation("camera_lightArray[" + std::to_string(i) + "].range"));//4
+			//~ m_LightUniformHandles.push_back(MainShader->GetUniformLocation("camera_lightArray[" + std::to_string(i) + "].shadows"));//5
+			//~ m_LightUniformHandles.push_back(MainShader->GetUniformLocation("camera_lightArray[" + std::to_string(i) + "].radii"));//6
 			//~ //The whitelist uint
 			//~ m_LightClippingVolumeUniformHandles.push_back(MainShader->GetUniformLocation("camera_lightArray[" + std::to_string(i) + "].iswhitelist"));
-		}
-		//debug
-		// for (size_t i = 0; i < m_LightUniformHandles.size(); i++)
-		// {
-			// std::cout << "\n DEBUG LIGHTUNIFORM HANDLES: " + std::to_string(m_LightUniformHandles[i]);
-		// }
+		//~ }
+		//~ //debug
+		//~ // for (size_t i = 0; i < m_LightUniformHandles.size(); i++)
+		//~ // {
+			//~ // std::cout << "\n DEBUG LIGHTUNIFORM HANDLES: " + std::to_string(m_LightUniformHandles[i]);
+		//~ // }
 	}
 	//Custom Bindings
 	if (customMainShaderBinds != nullptr)
@@ -518,15 +506,9 @@ void GkScene::drawPipeline(int meshmask, FBO* CurrentRenderTarget, FBO* RenderTa
 			glDepthMask(GL_FALSE); // Transparent objects aren't depth tested against each other but are against opaque objects in the scene.
 			glDisable(GL_CULL_FACE); 
 			// glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-			//Swap these two lines along with vec3(0) and vec3(1) in FORWARD_MAINSHADER.FS to achieve either multiplicative or additive transparency. Both are wrong, but you might prefer one over another.
+			
 			if(TransparencyFBO != nullptr) // JUST TO MAKE SURE...
 				TransparencyFBO->BindRenderTarget();
-				//CLEAR IT BEFORE WE SET THE BLEND FUNCTIONS
-				/*
-					DrawBuffers[i] = GL_COLOR_ATTACHMENT0 + i;
-				}
-				glDrawBuffers(numcolorattachments, DrawBuffers);
-				*/
 				static GLenum DrawBuffers0[1] = {GL_COLOR_ATTACHMENT0};
 				static GLenum DrawBuffers1[1] = {GL_COLOR_ATTACHMENT1};
 				//GLenum DrawBuffers2[2] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
@@ -535,28 +517,11 @@ void GkScene::drawPipeline(int meshmask, FBO* CurrentRenderTarget, FBO* RenderTa
 				glDrawBuffers(1, DrawBuffers1);
 				FBO::clearTexture(1, 1, 1, 1);
 				TransparencyFBO->BindDrawBuffers(); //Do the right thing!
-			// communism = glGetError(); //Ensure there are no errors listed before we start.
 			
 			glEnable(GL_BLEND);
 			glBlendFunci(0, GL_ONE, GL_ONE); //Additive blending
 			glBlendFunci(1, GL_ZERO, GL_ONE_MINUS_SRC_ALPHA); //Uh... I don't know
 			
-			// communism = glGetError(); //Ensure there are no errors listed before we start.
-			// if (communism != GL_NO_ERROR) //if communism has made an error (which is pretty typical)
-			// {
-				// std::cout<<"\n OpenGL reports an ERROR!";
-				// if (communism == GL_INVALID_ENUM)
-					// std::cout<<"\n Invalid enum.";
-				// if (communism == GL_INVALID_OPERATION)
-					// std::cout<<"\n Invalid operation.";
-				// if (communism == GL_INVALID_FRAMEBUFFER_OPERATION)
-					// std::cout <<"\n Invalid Framebuffer Operation.";
-				// if (communism == GL_OUT_OF_MEMORY)
-				// {
-					// std::cout <<"\n Out of memory. You've really done it now. I'm so angry, i'm going to close the program. ARE YOU HAPPY NOW, DAVE?!?!";
-					// std::abort();
-				// }
-			// }
 			// glBlendFunc(GL_ZERO, GL_SRC_COLOR); //Multiplicative Blending
 		//Render Transparent Objects
 			if (Meshes.size() > 0) //if there are any
@@ -810,7 +775,7 @@ void GkScene::OrganizeUBOforUpload(){
 					size_t indexofFarthestLight = 0;
 					for (size_t j = 0; j < 32; j++)
 					{
-						if (glm::length2(FarthestLight->pos - SceneCamera->pos) < glm::length2(LightsThisFrame[j]->pos - SceneCamera->pos)) //FarthestLight is closer
+						if (glm::length2(FarthestLight->myPos - SceneCamera->pos) < glm::length2(LightsThisFrame[j]->myPos - SceneCamera->pos)) //FarthestLight is closer
 						{
 							FarthestLight = LightsThisFrame[j]; //Swap!
 							//break; //I'm hoping this breaks the inner for loop only. If it doesn't- set j to some massively huge value instead
@@ -818,7 +783,7 @@ void GkScene::OrganizeUBOforUpload(){
 						}
 					}
 					//FarthestLight
-					if (glm::length2(SimplePointLights[i]->pos - SceneCamera->pos) < glm::length2(FarthestLight->pos - SceneCamera->pos)) //FarthestLight is farther away than the light
+					if (glm::length2(SimplePointLights[i]->myPos - SceneCamera->pos) < glm::length2(FarthestLight->myPos - SceneCamera->pos)) //FarthestLight is farther away than the light
 					{
 						LightsThisFrame[indexofFarthestLight] = SimplePointLights[i];
 					}
@@ -834,7 +799,7 @@ void GkScene::OrganizeUBOforUpload(){
 				
 				//glUniform3f(m_LightUniformHandles[i*4], LightsThisFrame[i]->pos.x, LightsThisFrame[i]->pos.y, LightsThisFrame[i]->pos.z);//pos
 				temp_ptr = (float*)(&(LightingDataUBOData[320 + i*16])); //pointlight position
-				memcpy(temp_ptr, &(LightsThisFrame[i]->pos[0]), 12); //copy 3 floats of size 4 each 
+				memcpy(temp_ptr, &(LightsThisFrame[i]->myPos[0]), 12); //copy 3 floats of size 4 each 
 				//glUniform3f(m_LightUniformHandles[i*4+1], LightsThisFrame[i]->myColor.x, LightsThisFrame[i]->myColor.y, LightsThisFrame[i]->myColor.z);//color
 				temp_ptr = (float*)(&(LightingDataUBOData[16 * 32 * 1 + 320 + i*16])); //pointlight color
 				memcpy(temp_ptr, &(LightsThisFrame[i]->myColor[0]), 12); //copy 3 floats of size 4 each 
@@ -923,7 +888,7 @@ void GkScene::OrganizeUBOforUpload(){
 				 temp_ptr = (float*)(&(LightingDataUBOData[16 * 3 * 1 + 5440+ i*16])); //Ambient light color
 				 memcpy(temp_ptr, &(LightsThisFrame[i]->myColor[0]), 12); //copy 3 floats of size 4 each 
 				 
-				 glUniform1f(m_LightUniformHandles[4 * 32 + 2 * 2 + i*3 +2], LightsThisFrame[i]->myRange);//range
+				 //glUniform1f(m_LightUniformHandles[4 * 32 + 2 * 2 + i*3 +2], LightsThisFrame[i]->myRange);//range
 				 temp_ptr = (float*)(&(LightingDataUBOData[7504+ i*16])); //Ambient light color
 				 memcpy(temp_ptr, &(LightsThisFrame[i]->myRange), 4); //copy 1 floats of size 4 each 
 				//access by taking i, multiplying by 3, adding 4 * max pointlights + 2 * max dir lights, and adding an offset (0 for position, 1 for color...)
@@ -1110,7 +1075,7 @@ GkScene::GkScene(unsigned int newwidth, unsigned int newheight, float approxFact
 				screenquad_IndexedModel.indices.push_back(0);
 				screenquad_IndexedModel.indices.push_back(1);
 				screenquad_IndexedModel.indices.push_back(2);
-		//Put in some bullshit for the texcoords and normals, we don't need them and if this works we'll remove them later
+		//Put in some bullshit for the texcoords and normals
 			screenquad_IndexedModel.texCoords.push_back(glm::vec2(0,0));
 			screenquad_IndexedModel.texCoords.push_back(glm::vec2(0,0));
 			screenquad_IndexedModel.texCoords.push_back(glm::vec2(0,0));
@@ -1141,7 +1106,7 @@ GkScene::GkScene(unsigned int newwidth, unsigned int newheight, float approxFact
 	if (m_skybox_Mesh == nullptr)//if this has not been instantiated
 	{
 		//std::cout << "\n Making the skybox mesh";
-			const GLfloat canada[] = { //Team Canada 
+			const GLfloat canada[] = { //Team Canada: Etho, Pause, Beef
 				//0-5
 				-1,  1, -1,
 				-1, -1, -1,

@@ -1,37 +1,40 @@
 #ifndef PointLight_H
 #define PointLight_H
 
+//Not all the light types are points.
+
 #include <GL3/gl3w.h>
 #include <GL3/gl3.h>
 #define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
 #include "camera.h"
 #include "SafeTexture.h"
-//Cpu Representation of point light
+
 namespace GeklminRender {
+	//Cpu Representation of point light
 struct PointLight
 {
     public:
 		PointLight(){
-			pos = glm::vec3(0,0,0);
+			myPos = glm::vec3(0,0,0);
 			myColor = glm::vec3(1,1,1);
 		}
         PointLight(glm::vec3 newpos, glm::vec3 newcolor){
-			pos = newpos;
+			myPos = newpos;
 			myColor = newcolor;
 		}
         ~PointLight(){
 			//delet this
 		}
 		
-		void setPos(glm::vec3 pos){this->pos = pos;}
-		glm::vec3 getPos() {return pos;}
+		void setPos(glm::vec3 pos){myPos = pos;}
+		glm::vec3 getPos() {return myPos;}
 		
 		void bindToUniformLight(GLuint position, GLuint color, GLuint m_range, GLuint m_dropoff) const {
 			glUniform3f(position,
-				pos.x,
-				pos.y,
-				pos.z);
+				myPos.x,
+				myPos.y,
+				myPos.z);
 			glUniform3f(color,
 				myColor.x,
 				myColor.y,
@@ -42,10 +45,10 @@ struct PointLight
 		}
 		
 		void setRangeProperties(float newrange, float newdropoff){
-			range = newrange;
+			range = newrange * newrange;
 			dropoff = newdropoff;
 		}
-	glm::vec3 pos;
+	glm::vec3 myPos;
 	glm::vec3 myColor;
 	
 	glm::vec4 sphere1 = glm::vec4(0);
@@ -99,7 +102,7 @@ struct DirectionalLight {
 	bool shouldRender = true;
 	bool whitelist = false;
 };
-
+//Spotlight with shadows, spotlight that projects a texture, orthoganal repeating projected texture (e.g. for caustics) etc.
 struct CameraLight {
 	CameraLight(){
 		myColor = glm::vec3(0.2,0.2,0.2);
@@ -158,6 +161,7 @@ struct CameraLight {
 		//Bind texture
 		Tex2Project.Bind(textureunit);
 	}
+	void setRange(float _range){range = _range;} //square range
 	float solidColor = 0.0f; //By default, use a solid color
 	glm::vec3 myColor; //the color to use in solid color mode
 	glm::vec2 radii = glm::vec2(0.5,0.5); //Inner and outer radii used
@@ -198,26 +202,5 @@ struct AmbientLight {
 	bool whitelist = false;
 };
 
-// struct Spotlight {
-	// SpotLight(){
-		
-	// }
-	// void BindtoUniformSpotLight(GLuint _pos, GLuint _col, GLuint _range, GLuint _innerangle, GLuint _outerangle, GLuint _direction) const {
-		// glUniform3f(_pos, myPos.x, myPos.y, myPos.z);
-		// glUniform3f(_col, myColor.x, myColor.y, myColor.z);
-		// glUniform3f(_direction, myDirection.x, myDirection.y, myDirection.z);
-		
-		// glUniform1f(_innerangle, innerangle);
-		// glUniform1f(_outerangle, outerangle);
-		// glUniform1f(_range, myRange);
-	// }
-	// glm::vec3 myColor;
-	// glm::vec3 myPos;
-	// glm::vec3 myDirection;
-	// float innerangle;
-	// float outerangle;
-	// float myRange;
-	// SafeTexture* Shadows = nullptr;
-// };
 }; //Eof Namespace
 #endif // PointLight_H
