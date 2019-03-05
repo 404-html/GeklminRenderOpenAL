@@ -20,7 +20,7 @@ indent_mode=2
 [project]
 name=GeklminRenderOpenAL
 base_path=/home/gek/Programming/GeklminRenderOpenAL/THEVERSION
-description=
+description=Gamers rise up
 file_patterns=*.c;*.h;*.cpp;*.hpp;*.sh;*.vs;*.fs;
 
 [long line marker]
@@ -28,7 +28,8 @@ long_line_behaviour=1
 long_line_column=72
 
 [files]
-current_page=-1
+current_page=0
+FILE_NAME_0=1517;C++;0;EUTF-8;1;1;0;%2Fhome%2Fgek%2FProgramming%2FGeklminRenderOpenAL%2FTHEVERSION%2Fmain.cpp;0;4
 
 [VTE]
 last_dir=/home/gek

@@ -18,10 +18,12 @@ namespace GeklminRender{
 		unsigned char alpha = 1;
 		//Rectangle behind the textbox
 		bool doRenderBackground = false;
+		bool isEllipse = false; //if it's an ellipse...
 		unsigned char redBackground = 1;
 		unsigned char greenBackground = 1;
 		unsigned char blueBackground = 1;
 		unsigned char alphaBackground = 1;
+		//rectangle/ellipse width and height
 		unsigned int rect_Width = 0;
 		unsigned int rect_Height = 0;
 	};
