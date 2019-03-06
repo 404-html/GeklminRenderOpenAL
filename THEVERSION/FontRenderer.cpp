@@ -197,6 +197,7 @@ namespace GeklminRender{ //Makes things easier
 	//Related to constructing
 	void BMPFontRenderer::resize(unsigned int x_screen_width, unsigned int y_screen_height, float scaling_factor){
 		if (isNull){
+			std::cout << "\n CRITICAL FAIL!";
 			return;
 		}
 		my_scaling_factor = scaling_factor;
@@ -209,8 +210,12 @@ namespace GeklminRender{ //Makes things easier
 			//Temporary_Memory[i] = rand()%256; //RANDOM!!!
 			Temporary_Memory[i] = 0; //Black
 		}
-		//Declare the screen
-		Screen = new Texture(x_screen_width, y_screen_height, 4, Temporary_Memory, GL_NEAREST, GL_NEAREST, GL_REPEAT, 0.0);
+		//~ //Declare the screen
+		if(Screen){
+			delete Screen;
+			Screen = nullptr;
+		}
+		Screen = new Texture(screen_width, screen_height, 4, Temporary_Memory, GL_NEAREST, GL_NEAREST, GL_REPEAT, 1.0);
 		if(Temporary_Memory)
 			free(Temporary_Memory);
 	}
@@ -249,8 +254,9 @@ namespace GeklminRender{ //Makes things easier
 	//Other functions
 	
 	void BMPFontRenderer::Draw(bool  useBlending){
-		Screenquad_Shader->Bind();
+		GLenum communism = glGetError();
 		Screen->Bind(0);
+		Screenquad_Shader->Bind();
 		glUniformMatrix4fv(cam_loc, 1, GL_FALSE, &Screenquad_CameraMatrix[0][0]);
 		glUniform1i(diffuse_loc, 0);
 		GLuint m_handle = Screenquad_Mesh->getVAOHandle();
@@ -261,13 +267,53 @@ namespace GeklminRender{ //Makes things easier
 					glEnable(GL_BLEND);
 					glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 				}
-				glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+				glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0); //CHANGE BACK TO 6 AFTER WE HAVE THIS TEXTURE ISSUE SORTED OUT
 				if(useBlending){
 					glDisable(GL_BLEND);
 				}
 				glEnable(GL_DEPTH_TEST);
 			glBindVertexArray(0);
 		glDisableVertexAttribArray(0);
+		
+		communism = glGetError();
+			if (communism != GL_NO_ERROR)
+			{
+				std::cout<<"\n OpenGL reports an ERROR!";
+				if (communism == GL_INVALID_ENUM)
+					std::cout<<"\n Invalid enum.";
+				if (communism == GL_INVALID_OPERATION)
+					std::cout<<"\n Invalid operation.";
+				if (communism == GL_INVALID_FRAMEBUFFER_OPERATION)
+					std::cout <<"\n Invalid Framebuffer Operation.";
+				if (communism == GL_OUT_OF_MEMORY)
+				{
+					std::cout <<"\n Out of memory. You've really messed up. How could you do this?!?!";
+					std::abort();
+				}
+			}
+		//std::cout << "\nSuccessfully Rendering the Persistence layer!";
+	}
+	void BMPFontRenderer::writePixel(unsigned int x, unsigned int y, unsigned char red, unsigned char green, unsigned char blue, unsigned char alpha, bool useBlending) 
+	{
+		if(x >= Screen->getMyWidth() || x < 0 || y < 0 || y >= Screen->getMyHeight()) return; //Do not attempt to write a pixel if it's invalid
+		//[(x + width * y)*num_components + component index] gets you the byte
+		unsigned char* Target = &(Screen->getDataPointerNotConst()[(x + Screen->getMyWidth() * y)*4]);
+		//Get original RGBA
+		unsigned char orig_red = Target[0];
+		unsigned char orig_green = Target[1];
+		unsigned char orig_blue = Target[2];
+		unsigned char orig_alpha = Target[3];
+		unsigned char new_red, new_blue, new_green, new_alpha;
+		//Calculate blended RGBA if useBlending is set to true
+		new_red   = (unsigned char)(useBlending?(orig_red   * (255-(float)alpha)/255.0 + red   * (float)alpha/255.0):red  );
+		new_green = (unsigned char)(useBlending?(orig_green * (255-(float)alpha)/255.0 + green * (float)alpha/255.0):green);
+		new_blue  = (unsigned char)(useBlending?(orig_blue  * (255-(float)alpha)/255.0 + blue  * (float)alpha/255.0):blue );
+		new_alpha = alpha; //Only matters when it comes time to render in OpenGL
+		//Set target
+		Target[0] = new_red;
+		Target[1] = new_green;
+		Target[2] = new_blue;
+		Target[3] = new_alpha;
 	}
 	void BMPFontRenderer::pushChangestoTexture(){
 		Screen->reInitFromDataPointer(false, true);

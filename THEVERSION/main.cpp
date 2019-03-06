@@ -593,7 +593,7 @@ void LoadResources()
 	//More Cubemaps
 	//FileResourceManager->loadMesh("Cube_Test_Low_Poly.obj",false,true)->pushCubeMap(SkyboxTwo);//0
 	//FileResourceManager->loadMesh("Cube_Test_Low_Poly.obj",false,true)->pushCubeMap(SkyboxTex);//1
-	myFont = new BMPFontRenderer("AMIGA.PNG",WIDTH, HEIGHT, 1.0); //Load font for testing
+	myFont = new BMPFontRenderer("Geklmins Bitmap ASCII font 16x16.bmp",WIDTH, HEIGHT, 1.0, "shaders/SHOWTEX"); //Load font for testing
 	
 	//Custom rendering pipeline callbacks for your rendering needs
 	theScene->customMainShaderBinds = &MainshaderUniformFunctionDemo;
@@ -749,6 +749,9 @@ int main()
 					//~ NotPointedTextureTest.reInitFromDataPointer(true);
 				// */
 					// LetterTester.myTransform.SetRot(glm::vec3(sinf(ordinarycounter/10.0) * 5,sinf(ordinarycounter/10.0)*3,sinf(ordinarycounter/11.2)*2));
+				//UI Rendering Demo
+				for(int i = 0; i < 10000; i++)
+					myFont->writePixel(rand()%WIDTH, rand()%HEIGHT, rand()%256, rand()%256, rand()%256, rand()%256, true);
 				for (size_t communists_killed = 0; communists_killed < ProgramMeshInstances.size() && communists_killed < 100; communists_killed++)
 				{
 					//faceTowardPoint(glm::vec3 pos, glm::vec3 target, glm::vec3 up)
@@ -785,8 +788,8 @@ int main()
 		
 		theScene->drawShadowPipeline(1, FBOArray[0], &Cam_Lights[0]->myCamera, false);
 		theScene->drawPipeline(1, nullptr, nullptr,  nullptr, false, glm::vec4(0,0,0,0), glm::vec2(800,1000));
-		//myFont->pushChangestoTexture();
-		myFont->Draw();
+		myFont->pushChangestoTexture();
+		myFont->Draw(true);
 		myDevice->pollevents();
 		myDevice->swapBuffers(0);
 	} //EOF game loop
