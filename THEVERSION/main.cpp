@@ -750,8 +750,9 @@ int main()
 				// */
 					// LetterTester.myTransform.SetRot(glm::vec3(sinf(ordinarycounter/10.0) * 5,sinf(ordinarycounter/10.0)*3,sinf(ordinarycounter/11.2)*2));
 				//UI Rendering Demo
-				for(int i = 0; i < 10000; i++)
-					myFont->writePixel(rand()%WIDTH, rand()%HEIGHT, rand()%256, rand()%256, rand()%256, rand()%256, true);
+				myFont->clearScreen(0,0,0,0.5);
+				for(int i = 0; i < 100; i++)
+					myFont->writeCircle(rand()%WIDTH, rand()%HEIGHT, 10, rand()%255, rand()%255, rand()%255, 50, false);
 				for (size_t communists_killed = 0; communists_killed < ProgramMeshInstances.size() && communists_killed < 100; communists_killed++)
 				{
 					//faceTowardPoint(glm::vec3 pos, glm::vec3 target, glm::vec3 up)

@@ -295,7 +295,7 @@ namespace GeklminRender{ //Makes things easier
 	}
 	void BMPFontRenderer::writePixel(unsigned int x, unsigned int y, unsigned char red, unsigned char green, unsigned char blue, unsigned char alpha, bool useBlending) 
 	{
-		if(x >= Screen->getMyWidth() || x < 0 || y < 0 || y >= Screen->getMyHeight()) return; //Do not attempt to write a pixel if it's invalid
+		if(x >= Screen->getMyWidth() || y >= Screen->getMyHeight()) return; //Do not attempt to write a pixel if it's invalid NOTE: X and Y will never be less than 0 because they're unsigned
 		//[(x + width * y)*num_components + component index] gets you the byte
 		unsigned char* Target = &(Screen->getDataPointerNotConst()[(x + Screen->getMyWidth() * y)*4]);
 		//Get original RGBA
@@ -315,7 +315,92 @@ namespace GeklminRender{ //Makes things easier
 		Target[2] = new_blue;
 		Target[3] = new_alpha;
 	}
+	void BMPFontRenderer::writeRectangle(unsigned int x1, unsigned int y1, unsigned int x2, unsigned int y2, unsigned char red, unsigned char green, unsigned char blue, unsigned char alpha, bool useBlending){
+		if(x1 == x2 && y1 == y2) //A single pixel
+			{writePixel(x1, y1, red, green, blue, alpha, useBlending);return;}
+		unsigned int minX = (x1 < x2)?x1:x2;
+		unsigned int maxX = (x1 > x2)?x1:x2;
+		unsigned int minY = (y1 < y2)?y1:y2;
+		unsigned int maxY = (y1 > y2)?y1:y2; //Note to self: if both y1 and y2 are the same... then they're the same and it doesn't matter which one we pick... don't use >=
+		for(int w = minX; w < maxX; w++)
+			for(int h = minY; h < maxY; h++)
+				writePixel(w, h, red, green, blue, alpha, useBlending);
+	
+	}
+	void BMPFontRenderer::writeEllipse(unsigned int x, unsigned int y, float width, float height, float rotation, unsigned char red, unsigned char green, unsigned char blue, unsigned char alpha, bool useBlending) {
+		//if(x < width || y < height) return; //If x is less than width, then x - width will be less than 0 and loop around due to the effects of unsigned int math
+		unsigned int minX = x - width;
+		unsigned int maxX = x + width;
+		unsigned int minY = y - height;
+		unsigned int maxY = y + height;
+		float rx = width;
+		float ry = height;
+		for(unsigned int w = minX; w < maxX; w++)
+			for(unsigned int h = minY; h < maxY; h++)
+				if(
+				 ((float)w - (float)x) * ((float)w - (float)x) / (rx * rx) + ((float)h - (float)y) * ((float)h - (float)y) / (ry * ry) < 1
+				)
+					writePixel(w, h, red, green, blue, alpha, useBlending);
+	}
+	void BMPFontRenderer::writeCircle(unsigned int x, unsigned int y, float radius, unsigned char red, unsigned char green, unsigned char blue, unsigned char alpha, bool useBlending){
+		writeEllipse(x, y, radius, radius, 0, red, green, blue, alpha, useBlending);
+	}
+	
+	
+	
+	void BMPFontRenderer::writeImage(
+				unsigned int x, unsigned int y, //Where in the buffer shall the top left corner be
+				unsigned char* Source, unsigned int width, unsigned int height, unsigned int num_components, //Information about source image. if a component (such as alpha) is missing, then it is assumed to be 1
+				unsigned int subx1, unsigned int subx2, unsigned int suby1, unsigned int suby2, //Where in the source image?
+				float xscale, float yscale, //Scaling information
+				bool useBlending //Do we blend? Do we simply overwrite?
+	){ //NOTE: if you just want to do 1:1 scaling, you can write a version which will get the compiler to do vectorization and therefore generate much faster code, I may include this in a future version
+		unsigned int minSourceX = (subx1 < subx2)?subx1:subx2;
+		unsigned int maxSourceX = (subx1 > subx2)?subx1:subx2;
+		unsigned int minSourceY = (suby1 < suby2)?suby1:suby2;
+		unsigned int maxSourceY = (suby1 > suby2)?suby1:suby2;
+		unsigned int minTargetX = x;
+		unsigned int minTargetY = y;
+		unsigned int maxTargetX = x + (maxSourceX - minSourceX) * xscale;
+		unsigned int maxTargetY = y + (maxSourceY - minSourceY) * yscale;
+		//Avoid dividing by zero
+		if(maxTargetX - minTargetX == 0) return;
+		if(maxTargetY - minTargetY == 0) return;
+		
+		for(unsigned int w = minTargetX; w < maxTargetX; w++)
+			for(unsigned int h = minTargetY; h < maxTargetY; h++)
+			{
+				float PercentThroughWidth = (float)(w - minTargetX) / (float)(maxTargetX - minTargetX); //despite the name, it is not multiplied by 100
+				float PercentThroughHeight = (float)(h - minTargetY) / (float)(maxTargetY - minTargetY);
+				unsigned int Source_Width_Offset = ((float)(maxSourceX - minSourceX) * PercentThroughWidth + minSourceX); if(Source_Width_Offset >= width) {Source_Width_Offset = width - 1;}
+				unsigned int Source_Height_Offset = ((float)(maxSourceY - minSourceY) * PercentThroughHeight + minSourceY); if(Source_Height_Offset >= height) {Source_Height_Offset = height - 1;}
+				//we are now ready to find the exact pixel
+				unsigned char* sourcePixelStartByte = &(Source[(Source_Width_Offset + width * Source_Height_Offset)*num_components]);
+				//Extract R, G, B, and possibly A
+				unsigned char red_source = sourcePixelStartByte[0];
+				unsigned char green_source = red_source;
+				unsigned char blue_source = red_source;
+				unsigned char alpha_source = 1;
+				if(num_components > 1)
+					green_source = sourcePixelStartByte[1];
+				if(num_components > 2)
+					blue_source = sourcePixelStartByte[2];
+				if(num_components > 3)
+					alpha_source = sourcePixelStartByte[3];
+				writePixel(w, h, red_source, green_source, blue_source, alpha_source, useBlending);
+				
+			}
+	}
+	
+	
+	void BMPFontRenderer::clearScreen(unsigned char red, unsigned char green, unsigned char blue, unsigned char alpha){
+		for(unsigned int w = 0; w < Screen->getMyWidth(); w++)
+			for(unsigned int h = 0; h < Screen->getMyHeight(); h++)
+			{
+				writePixel(w, h, red, green, blue, alpha, false);
+			}
+	}
 	void BMPFontRenderer::pushChangestoTexture(){
 		Screen->reInitFromDataPointer(false, true);
 	}
-};
+}; //EOF namespace

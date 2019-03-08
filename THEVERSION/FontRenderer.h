@@ -37,8 +37,8 @@ namespace GeklminRender{
 			BMPFontRenderer(unsigned char* _BMPFont, unsigned int _BMPFont_Width, unsigned int _BMPFont_Height, unsigned int _num_components_BMPFont, unsigned int x_screen_width, unsigned int y_screen_height, float scaling_factor = 1.0, std::string Shader_location = "shaders/SHOWTEX_BMPFONT"); //Use data to init
 			virtual ~BMPFontRenderer();
 			void resize(unsigned int x_screen_width, unsigned int y_screen_height, float scaling_factor = 1.0);
-			void clearscreen(unsigned char red, unsigned char green, unsigned char blue, unsigned char alpha); //black with 0 alpha
-			void clearText(); //remove all text
+			void clearScreen(unsigned char red, unsigned char green, unsigned char blue, unsigned char alpha); //Clear to this
+			void clearText() {TextBoxes.clear();} //remove all text
 			void writeText(); //write all text in the list of textboxes
 			//OPENGL CALLS!!!
 			void pushChangestoTexture(); //reInitfromDataPointer
@@ -52,9 +52,14 @@ namespace GeklminRender{
 				unsigned int x, unsigned int y, //Where in the buffer shall the top left corner be
 				unsigned char* Source, unsigned int width, unsigned int height, unsigned int num_components, //Information about source image. if a component (such as alpha) is missing, then it is assumed to be 1
 				unsigned int subx1, unsigned int subx2, unsigned int suby1, unsigned int suby2, //Where in the source image?
-				int xscale, int yscale, //Scaling information
+				float xscale, float yscale, //Scaling information
 				bool useBlending = true //Do we blend? Do we simply overwrite?
 			);
+			void setCharDimensions(unsigned int _char_width, unsigned int _char_height, unsigned int _chars_per_row){
+				char_width = _char_width;
+				char_height = _char_height;
+				chars_per_row = _chars_per_row;
+			}
 			bool amINull(){return isNull;}
 			std::vector<BMPTextBox>* getTextBoxVector(){return &TextBoxes;}
 			
@@ -73,6 +78,10 @@ namespace GeklminRender{
 			unsigned int BMPFontHeight = 0;
 			unsigned int screen_width = 0;
 			unsigned int screen_height = 0;
+			//Imfo about the particular font in question
+			unsigned int char_width = 16;
+			unsigned int char_height = 16;
+			unsigned int chars_per_row = 8;
 			float my_scaling_factor = 1.0;
 			Texture* Screen = nullptr; //The screen. IMPORTANT: RGBA! 4 COMPONENTS!
 			Mesh* Screenquad_Mesh = nullptr;
