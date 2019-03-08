@@ -440,7 +440,7 @@ void window_size_callback(GLFWwindow* window, int width, int height)
 		SceneRenderCamera->buildPerspective(70, ((float)WIDTH)/((float)HEIGHT), 1, 1000);
 		
 	if(myFont != nullptr)
-		myFont->resize(width, height, 1.0f);
+		myFont->resize(width, height, 0.25f);
 }
 
 
@@ -750,9 +750,10 @@ int main()
 				// */
 					// LetterTester.myTransform.SetRot(glm::vec3(sinf(ordinarycounter/10.0) * 5,sinf(ordinarycounter/10.0)*3,sinf(ordinarycounter/11.2)*2));
 				//UI Rendering Demo
-				myFont->clearScreen(0,0,0,0.5);
-				for(int i = 0; i < 100; i++)
-					myFont->writeCircle(rand()%WIDTH, rand()%HEIGHT, 10, rand()%255, rand()%255, rand()%255, 50, false);
+				//~ myFont->clearScreen(0,0,0,0.5);
+				//~ for(int i = 0; i < 100; i++)
+					//~ myFont->writeRectangle(rand()%(WIDTH/4), rand()%(HEIGHT/4), rand()%(WIDTH/4), rand()%(HEIGHT/4), rand()%256, rand()%256, rand()%256, rand()%128, true);
+					//myFont->writeCircle(rand()%WIDTH, rand()%HEIGHT, 10, rand()%255, rand()%255, rand()%255, 50, false);
 				for (size_t communists_killed = 0; communists_killed < ProgramMeshInstances.size() && communists_killed < 100; communists_killed++)
 				{
 					//faceTowardPoint(glm::vec3 pos, glm::vec3 target, glm::vec3 up)
@@ -786,7 +787,8 @@ int main()
 		}
 		//Eof Game Code
 		syncCameraStateToALListener(SceneRenderCamera);
-		
+		//~ FBO::unBindRenderTarget(WIDTH, HEIGHT);
+		//~ FBO::clearTexture(0, 0, 0, 0);
 		theScene->drawShadowPipeline(1, FBOArray[0], &Cam_Lights[0]->myCamera, false);
 		theScene->drawPipeline(1, nullptr, nullptr,  nullptr, false, glm::vec4(0,0,0,0), glm::vec2(800,1000));
 		myFont->pushChangestoTexture();
