@@ -34,6 +34,7 @@ GkScene Demo Program 1 main.cpp
 
 unsigned int WIDTH = 1920;
 unsigned int HEIGHT = 1080;
+float UI_SCALE_FACTOR = 0.25f;
 bool useFBO = false; //Should the next object spawned use the test FBO texture?
 bool holdingShift = false; //used for sprinting
 double progtime = 0.0;
@@ -440,7 +441,7 @@ void window_size_callback(GLFWwindow* window, int width, int height)
 		SceneRenderCamera->buildPerspective(70, ((float)WIDTH)/((float)HEIGHT), 1, 1000);
 		
 	if(myFont != nullptr)
-		myFont->resize(width, height, 0.25f);
+		myFont->resize(width, height, UI_SCALE_FACTOR);
 }
 
 
@@ -593,7 +594,7 @@ void LoadResources()
 	//More Cubemaps
 	//FileResourceManager->loadMesh("Cube_Test_Low_Poly.obj",false,true)->pushCubeMap(SkyboxTwo);//0
 	//FileResourceManager->loadMesh("Cube_Test_Low_Poly.obj",false,true)->pushCubeMap(SkyboxTex);//1
-	myFont = new BMPFontRenderer("Geklmins Bitmap ASCII font 16x16.bmp",WIDTH, HEIGHT, 1.0, "shaders/SHOWTEX"); //Load font for testing
+	myFont = new BMPFontRenderer("Geklmins Bitmap ASCII font 16x16.bmp",WIDTH, HEIGHT, UI_SCALE_FACTOR, "shaders/SHOWTEX"); //Load font for testing
 	
 	//Custom rendering pipeline callbacks for your rendering needs
 	theScene->customMainShaderBinds = &MainshaderUniformFunctionDemo;
@@ -751,9 +752,11 @@ int main()
 					// LetterTester.myTransform.SetRot(glm::vec3(sinf(ordinarycounter/10.0) * 5,sinf(ordinarycounter/10.0)*3,sinf(ordinarycounter/11.2)*2));
 				//UI Rendering Demo
 				//~ myFont->clearScreen(0,0,0,0.5);
-				//~ for(int i = 0; i < 100; i++)
-					//~ myFont->writeRectangle(rand()%(WIDTH/4), rand()%(HEIGHT/4), rand()%(WIDTH/4), rand()%(HEIGHT/4), rand()%256, rand()%256, rand()%256, rand()%128, true);
-					//myFont->writeCircle(rand()%WIDTH, rand()%HEIGHT, 10, rand()%255, rand()%255, rand()%255, 50, false);
+				for(int i = 0; i < 100; i++)
+					myFont->writeRectangle(rand()%(int)(WIDTH * UI_SCALE_FACTOR), rand()%(int)(HEIGHT * UI_SCALE_FACTOR),
+					                       rand()%(int)(WIDTH * UI_SCALE_FACTOR), rand()%(int)(HEIGHT * UI_SCALE_FACTOR),
+					                       rand()%256, rand()%256, rand()%256, rand()%128);
+					//myFont->writeCircle(rand()%WIDTH, rand()%HEIGHT, 10, rand()%255, rand()%255, rand()%255, 50);
 				for (size_t communists_killed = 0; communists_killed < ProgramMeshInstances.size() && communists_killed < 100; communists_killed++)
 				{
 					//faceTowardPoint(glm::vec3 pos, glm::vec3 target, glm::vec3 up)

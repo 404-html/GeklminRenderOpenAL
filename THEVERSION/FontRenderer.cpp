@@ -293,41 +293,30 @@ namespace GeklminRender{ //Makes things easier
 			}
 		//std::cout << "\nSuccessfully Rendering the Persistence layer!";
 	}
-	void BMPFontRenderer::writePixel(unsigned int x, unsigned int y, unsigned char red, unsigned char green, unsigned char blue, unsigned char alpha, bool useBlending) 
+	void BMPFontRenderer::writePixel(unsigned int x, unsigned int y, unsigned char red, unsigned char green, unsigned char blue, unsigned char alpha) 
 	{
 		if(x >= Screen->getMyWidth() || y >= Screen->getMyHeight()) return; //Do not attempt to write a pixel if it's invalid NOTE: X and Y will never be less than 0 because they're unsigned
 		//[(x + width * y)*num_components + component index] gets you the byte
 		unsigned char* Target = &(Screen->getDataPointerNotConst()[(x + Screen->getMyWidth() * y)*4]);
-		//Get original RGBA
-		unsigned char orig_red = Target[0];
-		unsigned char orig_green = Target[1];
-		unsigned char orig_blue = Target[2];
-		unsigned char orig_alpha = Target[3];
-		unsigned char new_red, new_blue, new_green, new_alpha;
-		//Calculate blended RGBA if useBlending is set to true
-		new_red   = (unsigned char)(useBlending?(orig_red   * (255-(float)alpha)/255.0 + red   * (float)alpha/255.0):red  );
-		new_green = (unsigned char)(useBlending?(orig_green * (255-(float)alpha)/255.0 + green * (float)alpha/255.0):green);
-		new_blue  = (unsigned char)(useBlending?(orig_blue  * (255-(float)alpha)/255.0 + blue  * (float)alpha/255.0):blue );
-		new_alpha = alpha; //Only matters when it comes time to render in OpenGL
 		//Set target
-		Target[0] = new_red;
-		Target[1] = new_green;
-		Target[2] = new_blue;
-		Target[3] = new_alpha;
+		Target[0] = red;
+		Target[1] = green;
+		Target[2] = blue;
+		Target[3] = alpha;
 	}
-	void BMPFontRenderer::writeRectangle(unsigned int x1, unsigned int y1, unsigned int x2, unsigned int y2, unsigned char red, unsigned char green, unsigned char blue, unsigned char alpha, bool useBlending){
+	void BMPFontRenderer::writeRectangle(unsigned int x1, unsigned int y1, unsigned int x2, unsigned int y2, unsigned char red, unsigned char green, unsigned char blue, unsigned char alpha){
 		if(x1 == x2 && y1 == y2) //A single pixel
-			{writePixel(x1, y1, red, green, blue, alpha, useBlending);return;}
+			{writePixel(x1, y1, red, green, blue, alpha);return;}
 		unsigned int minX = (x1 < x2)?x1:x2;
 		unsigned int maxX = (x1 > x2)?x1:x2;
 		unsigned int minY = (y1 < y2)?y1:y2;
 		unsigned int maxY = (y1 > y2)?y1:y2; //Note to self: if both y1 and y2 are the same... then they're the same and it doesn't matter which one we pick... don't use >=
 		for(int w = minX; w < maxX; w++)
 			for(int h = minY; h < maxY; h++)
-				writePixel(w, h, red, green, blue, alpha, useBlending);
+				writePixel(w, h, red, green, blue, alpha);
 	
 	}
-	void BMPFontRenderer::writeEllipse(unsigned int x, unsigned int y, float width, float height, float rotation, unsigned char red, unsigned char green, unsigned char blue, unsigned char alpha, bool useBlending) {
+	void BMPFontRenderer::writeEllipse(unsigned int x, unsigned int y, float width, float height, float rotation, unsigned char red, unsigned char green, unsigned char blue, unsigned char alpha) {
 		//if(x < width || y < height) return; //If x is less than width, then x - width will be less than 0 and loop around due to the effects of unsigned int math
 		unsigned int minX = x - width;
 		unsigned int maxX = x + width;
@@ -340,10 +329,10 @@ namespace GeklminRender{ //Makes things easier
 				if(
 				 ((float)w - (float)x) * ((float)w - (float)x) / (rx * rx) + ((float)h - (float)y) * ((float)h - (float)y) / (ry * ry) < 1
 				)
-					writePixel(w, h, red, green, blue, alpha, useBlending);
+					writePixel(w, h, red, green, blue, alpha);
 	}
-	void BMPFontRenderer::writeCircle(unsigned int x, unsigned int y, float radius, unsigned char red, unsigned char green, unsigned char blue, unsigned char alpha, bool useBlending){
-		writeEllipse(x, y, radius, radius, 0, red, green, blue, alpha, useBlending);
+	void BMPFontRenderer::writeCircle(unsigned int x, unsigned int y, float radius, unsigned char red, unsigned char green, unsigned char blue, unsigned char alpha){
+		writeEllipse(x, y, radius, radius, 0, red, green, blue, alpha);
 	}
 	
 	
@@ -352,8 +341,7 @@ namespace GeklminRender{ //Makes things easier
 				unsigned int x, unsigned int y, //Where in the buffer shall the top left corner be
 				unsigned char* Source, unsigned int width, unsigned int height, unsigned int num_components, //Information about source image. if a component (such as alpha) is missing, then it is assumed to be 1
 				unsigned int subx1, unsigned int subx2, unsigned int suby1, unsigned int suby2, //Where in the source image?
-				float xscale, float yscale, //Scaling information
-				bool useBlending //Do we blend? Do we simply overwrite?
+				float xscale, float yscale //Scaling information
 	){ //NOTE: if you just want to do 1:1 scaling, you can write a version which will get the compiler to do vectorization and therefore generate much faster code, I may include this in a future version
 		unsigned int minSourceX = (subx1 < subx2)?subx1:subx2;
 		unsigned int maxSourceX = (subx1 > subx2)?subx1:subx2;
@@ -387,7 +375,7 @@ namespace GeklminRender{ //Makes things easier
 					blue_source = sourcePixelStartByte[2];
 				if(num_components > 3)
 					alpha_source = sourcePixelStartByte[3];
-				writePixel(w, h, red_source, green_source, blue_source, alpha_source, useBlending);
+				writePixel(w, h, red_source, green_source, blue_source, alpha_source);
 				
 			}
 	}
@@ -397,7 +385,7 @@ namespace GeklminRender{ //Makes things easier
 		for(unsigned int w = 0; w < Screen->getMyWidth(); w++)
 			for(unsigned int h = 0; h < Screen->getMyHeight(); h++)
 			{
-				writePixel(w, h, red, green, blue, alpha, false);
+				writePixel(w, h, red, green, blue, alpha);
 			}
 	}
 	void BMPFontRenderer::pushChangestoTexture(){
