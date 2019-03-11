@@ -2,8 +2,8 @@
 #define IODEVICE_H
 #include <iostream>
 #include <vector>
-#include <GL3/gl3.h>
-#include <GL3/gl3w.h>
+#include "GL3/gl3w.h"
+#include "GL3/gl3.h"
 #include <GLFW/glfw3.h>
 #include <AL/al.h>
 #include <AL/alc.h>

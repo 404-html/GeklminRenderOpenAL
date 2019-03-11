@@ -3,8 +3,8 @@
 #include <vector>
 #include <iostream>
 #include <string>
-#include <GL3/gl3w.h>
-#include <GL3/gl3.h>
+#include "GL3/gl3w.h"
+#include "GL3/gl3.h"
 #define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
 #include <cstdlib>

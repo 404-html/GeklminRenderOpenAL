@@ -4,8 +4,8 @@
 #include <iostream>
 #include <cassert>
 #include <string>
-#include <GL3/gl3w.h>
-#include <GL3/gl3.h>
+#include "GL3/gl3w.h"
+#include "GL3/gl3.h"
 #include <glm/glm.hpp>
 #include <cstdlib>
 

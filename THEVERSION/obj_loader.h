@@ -1,8 +1,8 @@
 #ifndef OBJ_LOADER_H_INCLUDED
 #define OBJ_LOADER_H_INCLUDED
 //(C) DMHSW 2018 All Rights Reserved
-#include <GL3/gl3.h>
-#include <GL3/gl3w.h>
+#include "GL3/gl3w.h"
+#include "GL3/gl3.h"
 #include <GLFW/glfw3.h>
 #define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>

@@ -2,8 +2,8 @@
 #define FBO_H
 #include "SafeTexture.h"
 #include <string>
-#include <GL3/gl3w.h>
-#include <GL3/gl3.h>
+#include "GL3/gl3w.h"
+#include "GL3/gl3.h"
 #include <cstdlib>
 //If you need more color attachments, change it.
 #define MAX_COLOR_ATTACHMENTS 16
