@@ -52,7 +52,7 @@ class GkScene //Gk for Geklmin
         virtual ~GkScene();
 
 		//Draw Functions (NEEDS CULLING)
-			void drawPipeline(int meshmask = -1, FBO* CurrentRenderTarget = nullptr, FBO* RenderTarget_Transparent = nullptr, Camera* CurrentRenderCamera = nullptr, bool doFrameBufferChecks = false, glm::vec4 backgroundColor = glm::vec4(0,0,0,0), glm::vec2 fogRangeDescriptor = glm::vec2(10000,15000));
+			void drawPipeline(int meshmask = -1, FBO* CurrentRenderTarget = nullptr, FBO* RenderTarget_Transparent = nullptr, Camera* CurrentRenderCamera = nullptr, bool doFrameBufferChecks = false, glm::vec4 backgroundColor = glm::vec4(0,0,0,0), glm::vec2 fogRangeDescriptor = glm::vec2(10000,15000), bool Render_Transparent = true);
 			void drawShadowPipeline(int meshmask = -1, FBO* CurrentRenderTarget = nullptr, Camera* CurrentRenderCamera = nullptr, bool doFrameBufferChecks = false);
 			//Custom rendering functions
 			void (*customRenderingAfterTransparentObjectRendering)(int meshmask, FBO* CurrentRenderTarget, FBO* RenderTarget_Transparent, Camera* CurrentRenderCamera, bool doFrameBufferChecks, glm::vec4 backgroundColor, glm::vec2 fogRangeDescriptor) =  nullptr;

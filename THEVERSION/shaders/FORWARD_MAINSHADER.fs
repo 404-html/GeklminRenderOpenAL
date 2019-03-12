@@ -406,12 +406,15 @@ void main()
 	// float UnitNormalBad = float(UnitNormal == vec3(0));
 	// UnitNormal = UnitNormalBad * vec3(0,0,1) + (1-UnitNormalBad) * UnitNormal;
 	vec4 cubemapData = texture(worldaroundme,reflect(-unit_frag_to_camera, UnitNormal));
-	vec4 cubemapData2 = texture(worldaroundme,UnitNormal);
-	diffuseffect += enableCubeMapDiffusivity * cubemapData2.xyz;//enableCubeMapDiffusivity
+	
+	//CUBEMAP DIFFUSIVITY
+	//Uncomment these 2 lines here to enable cubemap diffusivity
+	//~ vec4 cubemapData2 = texture(worldaroundme,UnitNormal);
+	//~ diffuseffect += enableCubeMapDiffusivity * cubemapData2.xyz;//enableCubeMapDiffusivity
 	//clamp
 	// speceffect = min(speceffect, vec3(1));
 	diffuseffect = min(diffuseffect, vec3(1));
-	diffuseffect = EnableTransparency * ((shouldRenderSpecEffect * diffuseffect) + ((1-shouldRenderSpecEffect) * diffuseffect * texture_value.a)) + (1-EnableTransparency) * diffuseffect; //Simulate light passing losing energy as it passes through transparent surfaces
+	//diffuseffect = EnableTransparency * ((shouldRenderSpecEffect * diffuseffect) + ((1-shouldRenderSpecEffect) * diffuseffect * texture_value.a)) + (1-EnableTransparency) * diffuseffect; //Simulate light passing losing energy as it passes through transparent surfaces
 	primary_color = clamp(diffuseffect * primary_color * diffusivity + emissivity * primary_color, vec3(0), primary_color);
 	
 	
@@ -422,31 +425,38 @@ void main()
 	vec3 NewfragColor = primary_color + specularcolorval;
 	NewfragColor = mix(clamp(NewfragColor, vec3(0), vec3(1)), fogColor.xyz, fogPercentage);
 	
-			// Output linear (not gamma encoded!), unmultiplied color from
-		// the rest of the shader.
-		vec4 color = vec4(NewfragColor, texture_value.a); // regular shading code
+	
+	//START COMMENTING HERE IF YOU WANT TO DISABLE WEIGHTED BLENDED ORDER INDEPENDENT TRANSPARENCY
+	//~~~~~~~~~~~~~~~~
+			//~ // Output linear (not gamma encoded!), unmultiplied color from
+		//~ // the rest of the shader.
+		//~ vec4 color = vec4(NewfragColor, texture_value.a); // regular shading code
 		 
 		 
 		 
-		// Insert your favorite weighting function here. The color-based factor
-		// avoids color pollution from the edges of wispy clouds. The z-based
-		// factor gives precedence to nearer surfaces.
-		float weight = 
-			  max(min(1.0, max(max(color.r, color.g), color.b) * color.a), color.a) *
-			  clamp(0.03 / (1e-5 + pow(gl_FragCoord.z / 200, 4.0)), 1e-2, 3e3);
+		//~ // Insert your favorite weighting function here. The color-based factor
+		//~ // avoids color pollution from the edges of wispy clouds. The z-based
+		//~ // factor gives precedence to nearer surfaces.
+		//~ float weight = 
+			  //~ max(min(1.0, max(max(color.r, color.g), color.b) * color.a), color.a) *
+			  //~ clamp(0.03 / (1e-5 + pow(gl_FragCoord.z / 200, 4.0)), 1e-2, 3e3);
 		 
-		// Blend Func: GL_ONE, GL_ONE
-		// Switch to premultiplied alpha and weight
-		vec4 transparent_color_0 = vec4(color.rgb * color.a, color.a) * weight;
+		//~ // Blend Func: GL_ONE, GL_ONE
+		//~ // Switch to premultiplied alpha and weight
+		//~ vec4 transparent_color_0 = vec4(color.rgb * color.a, color.a) * weight;
 		 
-		// Blend Func: GL_ZERO, GL_ONE_MINUS_SRC_ALPHA
-		//vec4 transparent_color_1.a = color.a;
+		//~ // Blend Func: GL_ZERO, GL_ONE_MINUS_SRC_ALPHA
+		//~ //vec4 transparent_color_1.a = color.a;
 			
 			
+	//STOP COMMENTING!
+	//~~~~~~~~~~~~~~~~
 	// Blend Func: GL_ONE, GL_ONE for transparent objects
 		// Switch to premultiplied alpha and weight		
-	gl_FragData[0] = vec4(NewfragColor, 1) * (1-EnableTransparency) + transparent_color_0 * EnableTransparency;
+	//~ gl_FragData[0] = vec4(NewfragColor, 1) * (1-EnableTransparency) + transparent_color_0 * EnableTransparency; //YOU ALSO HAVE TO CHANGE THIS LINE TO DISABLE WBOIT (SEE BELOW)
+	//If you just want additive transparency (Faster)
+	gl_FragData[0] = vec4(texture_value.xyz, texture_value.a);
 	// Blend Func: GL_ZERO, GL_ONE_MINUS_SRC_ALPHA for transparaent objects
-	gl_FragData[1] = vec4(color.a, color.a, color.a, color.a);
+	//~ gl_FragData[1] = vec4(color.a, color.a, color.a, color.a); //Comment this out too!
 
 }

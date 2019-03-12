@@ -481,12 +481,12 @@ void main()
 	// float UnitNormalBad = float(UnitNormal == vec3(0));
 	// UnitNormal = UnitNormalBad * vec3(0,0,1) + (1-UnitNormalBad) * UnitNormal;
 	vec4 cubemapData = texture(worldaroundme,reflect(-unit_frag_to_camera, UnitNormal));
-	vec4 cubemapData2 = texture(worldaroundme,UnitNormal);
-	diffuseffect += enableCubeMapDiffusivity * cubemapData2.xyz;//enableCubeMapDiffusivity
+	//~ vec4 cubemapData2 = texture(worldaroundme,UnitNormal);
+	//~ diffuseffect += enableCubeMapDiffusivity * cubemapData2.xyz;//enableCubeMapDiffusivity
 	//clamp
 	// speceffect = min(speceffect, vec3(1));
 	diffuseffect = min(diffuseffect, vec3(1));
-	diffuseffect = EnableTransparency * ((shouldRenderSpecEffect * diffuseffect) + ((1-shouldRenderSpecEffect) * diffuseffect * texture_value.a)) + (1-EnableTransparency) * diffuseffect; //Simulate light passing losing energy as it passes through transparent surfaces
+	//~ diffuseffect = EnableTransparency * ((shouldRenderSpecEffect * diffuseffect) + ((1-shouldRenderSpecEffect) * diffuseffect * texture_value.a)) + (1-EnableTransparency) * diffuseffect; //Simulate light passing losing energy as it passes through transparent surfaces
 	primary_color = clamp(diffuseffect * primary_color * diffusivity + emissivity * primary_color, vec3(0), primary_color);
 	
 	
@@ -499,6 +499,7 @@ void main()
 	
 			// Output linear (not gamma encoded!), unmultiplied color from
 		// the rest of the shader.
+	//TO DISABLE WBOIT, START COMMENTING HERE!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		vec4 color = vec4(NewfragColor, texture_value.a); // regular shading code
 		 
 		 
@@ -514,15 +515,14 @@ void main()
 		// Switch to premultiplied alpha and weight
 		vec4 transparent_color_0 = vec4(color.rgb * color.a, color.a) * weight;
 		 
-		// Blend Func: GL_ZERO, GL_ONE_MINUS_SRC_ALPHA
-		//vec4 transparent_color_1.a = color.a;
+		//~ // Blend Func: GL_ZERO, GL_ONE_MINUS_SRC_ALPHA
+		//~ //vec4 transparent_color_1.a = color.a;
 			
-			
+	//STOP COMMENTING!!! BUT... you have some more things to comment out~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Blend Func: GL_ONE, GL_ONE for transparent objects
 		// Switch to premultiplied alpha and weight		
-	gl_FragData[0] = vec4(NewfragColor, 1) * (1-EnableTransparency) + transparent_color_0 * EnableTransparency;
-	//~ gl_FragData[0] = vec4(dir_color[0].xyz, 0.5);
-	
+	gl_FragData[0] = vec4(NewfragColor, 1) * (1-EnableTransparency) + transparent_color_0 * EnableTransparency; //comment this out, use the below line
+	//~ gl_FragData[0] = vec4(NewfragColor, texture_value.a);
 	// Blend Func: GL_ZERO, GL_ONE_MINUS_SRC_ALPHA for transparaent objects
 	gl_FragData[1] = vec4(color.a, color.a, color.a, color.a);
 

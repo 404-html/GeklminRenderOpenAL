@@ -319,7 +319,7 @@ void checkKeys(){
 				ProgramMeshInstances[ProgramMeshInstances.size()-1]->myPhong.specdamp = rand()%127 + 1;
 				
 				//Random Emissivity
-				//ProgramMeshInstances[ProgramMeshInstances.size()-1]->myPhong.emissivity = false?(float(rand()%128)/128):0;
+				ProgramMeshInstances[ProgramMeshInstances.size()-1]->myPhong.emissivity = 0;
 				
 				//Random Specular Reflectivity
 				ProgramMeshInstances[ProgramMeshInstances.size()-1]->myPhong.specreflectivity = rand()%100/100.0;
@@ -545,7 +545,7 @@ void LoadResources()
 		"Cubemap/2desert_FRONT.bmp"
 	};
 	SkyboxTwo = new CubeMap(secondCubeMapFileNames[0],secondCubeMapFileNames[1],secondCubeMapFileNames[2],secondCubeMapFileNames[3],secondCubeMapFileNames[4],secondCubeMapFileNames[5]);
-	theScene->SetSkyBoxCubemap(SkyboxTex);
+	//theScene->SetSkyBoxCubemap(SkyboxTex);
 	
 	//myFont->pushCubeMapToAllMeshes(SkyboxTex);//Cubemap reflections for chrome letters!
 	/*
@@ -718,7 +718,8 @@ int main()
 	MyVeryBadDeer.tex = 0;
 	MyVeryBadDeer.EnableCubemapReflections = 1;
 	MyVeryBadDeer.myPhong.diffusivity = 0.6;
-	MyVeryBadDeer.myPhong.specreflectivity = 0.4;
+	MyVeryBadDeer.myPhong.specreflectivity = 0;
+	MyVeryBadDeer.myPhong.emissivity = 0;
 	MyVeryBadDeer.myTransform.SetScale(glm::vec3(10,10,10));
 	BadDeer.RegisterInstance(&MyVeryBadDeer); //demonstrating that you can use meshes on the stack
 	float ordinarycounter = 0.0f; // Used to achieve the trigonometry wave effects

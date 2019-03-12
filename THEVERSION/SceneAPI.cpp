@@ -142,7 +142,7 @@ void GkScene::drawShadowPipeline(int meshmask, FBO* CurrentRenderTarget, Camera*
 
 
 
-void GkScene::drawPipeline(int meshmask, FBO* CurrentRenderTarget, FBO* RenderTarget_Transparent, Camera* CurrentRenderCamera, bool doFrameBufferChecks, glm::vec4 backgroundColor, glm::vec2 fogRangeDescriptor){ //Approaches spaghetti levels of unreadability
+void GkScene::drawPipeline(int meshmask, FBO* CurrentRenderTarget, FBO* RenderTarget_Transparent, Camera* CurrentRenderCamera, bool doFrameBufferChecks, glm::vec4 backgroundColor, glm::vec2 fogRangeDescriptor, bool Render_Transparent){ //Approaches spaghetti levels of unreadability
 	//Used for error checking
 	GLenum communism;
 	bool doTransparency = !(CurrentRenderTarget && !RenderTarget_Transparent); // new code
@@ -500,8 +500,9 @@ void GkScene::drawPipeline(int meshmask, FBO* CurrentRenderTarget, FBO* RenderTa
 	//Prep for rendering Transparent Objects
 		
 	//IF TEST FOR IF WE HAVE THE COMPOSITION SHADER (DON'T ATTEMPT TO DO TRANSPARENCY UNLESS WE HAVE IT)
-	if (CompositionShader && doTransparency)
+	if (CompositionShader && doTransparency && Render_Transparent)
 	{
+		std::cout << "\nINCORRECT!";
 		
 			glDepthMask(GL_FALSE); // Transparent objects aren't depth tested against each other but are against opaque objects in the scene.
 			glDisable(GL_CULL_FACE); 
@@ -588,7 +589,47 @@ void GkScene::drawPipeline(int meshmask, FBO* CurrentRenderTarget, FBO* RenderTa
 		ScreenquadtoFBO(CompositionShader);
 	
 	}else{
-		glDisableVertexAttribArray(0); //Position. NOTE: don't disable if we want to do screenquads later.
+		//Do additive blending
+		if(Render_Transparent){
+			glDepthMask(GL_FALSE); // Transparent objects aren't depth tested against each other but are against opaque objects in the scene.
+			glEnable(GL_BLEND);
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE); //Additive
+			glDisable(GL_CULL_FACE); 
+			//~ glBlendFunc(GL_ZERO, GL_SRC_COLOR); //Multiplicative Blending
+			std::cout << "\n CORRECT!";
+			
+			//Render Transparent Objects
+				if (Meshes.size() > 0) //if there are any
+					for (size_t i = 0; i < Meshes.size(); i++) //for all of them
+						if (Meshes[i]) //don't call methods on nullptrs
+						{
+							unsigned int flagerinos = Meshes[i]->getFlags(); //Set flags
+							glUniform1ui(MainShaderUniforms[MAINSHADER_RENDERFLAGS], flagerinos); //Set flags on GPU
+							Meshes[i]->DrawInstancesPhong(
+								MainShaderUniforms[MAINSHADER_MODEL2WORLD], 		//Model->World transformation matrix
+								MainShaderUniforms[MAINSHADER_RENDERFLAGS],
+								MainShaderUniforms[MAINSHADER_SPECREFLECTIVITY], 	//Specular reflective material component
+								MainShaderUniforms[MAINSHADER_SPECDAMP], 		//Specular dampening material component
+								MainShaderUniforms[MAINSHADER_DIFFUSIVITY],   //Diffusivity. Reaction to diffuse light.
+								MainShaderUniforms[MAINSHADER_EMISSIVITY],
+								MainShaderUniforms[MAINSHADER_ENABLE_CUBEMAP_REFLECTIONS],
+								MainShaderUniforms[MAINSHADER_ENABLE_CUBEMAP_DIFFUSION],
+								MainShaderUniforms[MAINSHADER_ENABLE_TRANSPARENCY],
+								MainShaderUniforms[MAINSHADER_IS_INSTANCED],
+								true,		//Transparent.
+								(CurrentRenderTarget != nullptr)?true:false,		//is it to render target?
+								meshmask,
+								true,
+								true,
+								false
+							);
+						}
+		}
+		
+		if (customRenderingAfterTransparentObjectRendering)
+			customRenderingAfterTransparentObjectRendering(meshmask, CurrentRenderTarget, RenderTarget_Transparent, CurrentRenderCamera, doFrameBufferChecks, backgroundColor, fogRangeDescriptor);
+		
+		glDisableVertexAttribArray(0); //Position
 		glDisableVertexAttribArray(1); //Texture
 		glDisableVertexAttribArray(2); //Normal
 		glDisableVertexAttribArray(3); //Color
