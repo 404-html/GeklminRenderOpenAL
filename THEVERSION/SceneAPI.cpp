@@ -502,7 +502,6 @@ void GkScene::drawPipeline(int meshmask, FBO* CurrentRenderTarget, FBO* RenderTa
 	//IF TEST FOR IF WE HAVE THE COMPOSITION SHADER (DON'T ATTEMPT TO DO TRANSPARENCY UNLESS WE HAVE IT)
 	if (CompositionShader && doTransparency && Render_Transparent)
 	{
-		std::cout << "\nINCORRECT!";
 		
 			glDepthMask(GL_FALSE); // Transparent objects aren't depth tested against each other but are against opaque objects in the scene.
 			glDisable(GL_CULL_FACE); 
@@ -596,7 +595,6 @@ void GkScene::drawPipeline(int meshmask, FBO* CurrentRenderTarget, FBO* RenderTa
 			glBlendFunc(GL_SRC_ALPHA, GL_ONE); //Additive
 			glDisable(GL_CULL_FACE); 
 			//~ glBlendFunc(GL_ZERO, GL_SRC_COLOR); //Multiplicative Blending
-			std::cout << "\n CORRECT!";
 			
 			//Render Transparent Objects
 				if (Meshes.size() > 0) //if there are any

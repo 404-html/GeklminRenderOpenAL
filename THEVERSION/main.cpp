@@ -796,7 +796,7 @@ int main()
 		theScene->drawShadowPipeline(1, FBOArray[0], &Cam_Lights[0]->myCamera, false);
 		theScene->drawPipeline(1, nullptr, nullptr,  nullptr, false, glm::vec4(0,0,0,0), glm::vec2(800,1000));
 		myFont->pushChangestoTexture();
-		myFont->Draw(true);
+		//myFont->Draw(true);
 		myDevice->pollevents();
 		myDevice->swapBuffers(0);
 	} //EOF game loop
