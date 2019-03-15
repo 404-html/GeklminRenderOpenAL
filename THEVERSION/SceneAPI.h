@@ -25,6 +25,7 @@
 #include "resource_manager.h" //Mine
 #include "IODevice.h" //Mine
 #include "pointLight.h" //Mine
+#include "GLRenderObject.h"
 
 
 /*

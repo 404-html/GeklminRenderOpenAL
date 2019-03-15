@@ -281,6 +281,8 @@ void GkScene::drawPipeline(int meshmask, FBO* CurrentRenderTarget, FBO* RenderTa
 	//This is where we would render any objects which don't use the mainshader
 	if (customRenderingAfterSkyboxBeforeMainShader != nullptr)
 		customRenderingAfterSkyboxBeforeMainShader(meshmask, CurrentRenderTarget, RenderTarget_Transparent, CurrentRenderCamera, doFrameBufferChecks, backgroundColor, fogRangeDescriptor);
+	//NOTE TO SELF: Place GLRenderObject Rendering here
+	
 	/*
 		MAINSHADER RENDERING
 	*/

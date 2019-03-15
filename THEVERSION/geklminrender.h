@@ -122,6 +122,7 @@ THE SOFTWARE.
 //#include "resource_manager.h"
 #include "IODevice.h"
 #include "pointLight.h"
+#include "GLRenderObject.h"
 #include "SceneAPI.h"
 
 //Declaring it so it exists. I don't know why I do it.
