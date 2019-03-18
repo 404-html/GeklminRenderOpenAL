@@ -18,7 +18,10 @@ const uint GK_TEXTURE_ALPHA_REPLACE_PRIMARY_COLOR = uint(8192); //if the alpha f
 layout( location = 0 ) in vec3 vPosition;
 layout( location = 1 ) in vec2 intexcoord;
 layout( location = 2 ) in vec3 Normal;
-layout( location = 3 ) in vec3 VertexColor;
+layout( location = 3 ) in vec3 VertexColor; 
+//VertexColor can also be used to store Bone information...
+//<1 component is bone weight with 0.95 as maximum and 0.0 as minimum (remapping)
+//Integer component is Bone ID
 layout( location = 4 ) in mat4 instanced_model_matrix; //used for instancing! 4,5,6,7
 
 out vec2 texcoord;
@@ -51,6 +54,11 @@ uniform mat4 World2Camera; //the world to camera transform. I figure this is fas
 uniform mat4 Model2World; //Model->World
 uniform vec3 CameraPos; //Camera position in world space
 uniform float is_instanced; //used for determining whether or not we should use instanced_model_matrix or Model2World
+
+//Bone data
+layout (std140) uniform bone_data{ 
+	mat4 Bone_World_Transforms[256];
+};
 
 void
 main()

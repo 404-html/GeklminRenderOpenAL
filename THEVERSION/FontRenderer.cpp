@@ -336,33 +336,49 @@ namespace GeklminRender{ //Makes things easier
 	}
 	
 	
+	float clamp (float val, float min, float max){
+		if(!(val < max)) return max;
+		if(!(val > min)) return min;
+		return val;
+	}
 	
 	void BMPFontRenderer::writeImage(
-				unsigned int x, unsigned int y, //Where in the buffer shall the top left corner be
+				int x, int y, //Where in the buffer shall the bottom left corner be
 				unsigned char* Source, unsigned int width, unsigned int height, unsigned int num_components, //Information about source image. if a component (such as alpha) is missing, then it is assumed to be 1
 				unsigned int subx1, unsigned int subx2, unsigned int suby1, unsigned int suby2, //Where in the source image?
-				float xscale, float yscale //Scaling information
+				unsigned int targwidth, unsigned int targheight, //How wide and how tall in the target?
+				bool flip_x, bool flip_y //Flip?
 	){ //NOTE: if you just want to do 1:1 scaling, you can write a version which will get the compiler to do vectorization and therefore generate much faster code, I may include this in a future version
 		unsigned int minSourceX = (subx1 < subx2)?subx1:subx2;
 		unsigned int maxSourceX = (subx1 > subx2)?subx1:subx2;
 		unsigned int minSourceY = (suby1 < suby2)?suby1:suby2;
 		unsigned int maxSourceY = (suby1 > suby2)?suby1:suby2;
-		unsigned int minTargetX = x;
-		unsigned int minTargetY = y;
-		unsigned int maxTargetX = x + (maxSourceX - minSourceX) * xscale;
-		unsigned int maxTargetY = y + (maxSourceY - minSourceY) * yscale;
+		int minTargetX = x;
+		int minTargetY = y;
+		int maxTargetX = x + targwidth;
+		int maxTargetY = y + targheight;
 		//Avoid dividing by zero
-		if(maxTargetX - minTargetX == 0) return;
-		if(maxTargetY - minTargetY == 0) return;
+		if(targwidth  == 0) return;
+		if(targheight == 0) return;
 		
-		for(unsigned int w = minTargetX; w < maxTargetX; w++)
-			for(unsigned int h = minTargetY; h < maxTargetY; h++)
+		for(int w = minTargetX; w < maxTargetX; w++)
+			for(int h = minTargetY; h < maxTargetY; h++)
 			{
-				float PercentThroughWidth = (float)(w - minTargetX) / (float)(maxTargetX - minTargetX); //despite the name, it is not multiplied by 100
-				float PercentThroughHeight = (float)(h - minTargetY) / (float)(maxTargetY - minTargetY);
-				unsigned int Source_Width_Offset = ((float)(maxSourceX - minSourceX) * PercentThroughWidth + minSourceX); if(Source_Width_Offset >= width) {Source_Width_Offset = width - 1;}
-				unsigned int Source_Height_Offset = ((float)(maxSourceY - minSourceY) * PercentThroughHeight + minSourceY); if(Source_Height_Offset >= height) {Source_Height_Offset = height - 1;}
+				float PercentThroughWidth = (float)(w - minTargetX) / (float)(targwidth); //despite the name, it is not multiplied by 100
+				float PercentThroughHeight = (float)(h - minTargetY) / (float)(targheight);
+				PercentThroughWidth = clamp(PercentThroughWidth, 0, 1);
+				PercentThroughHeight = clamp(PercentThroughHeight, 0, 1);
+				if(flip_x)
+					PercentThroughWidth = 1.0 - PercentThroughWidth;
+				if(!flip_y)
+					PercentThroughHeight = 1.0 - PercentThroughHeight;
+				//Do flipping here
+				unsigned int Source_Width_Offset = maxSourceX * PercentThroughWidth + (1.0 - PercentThroughWidth) * minSourceX;
+				unsigned int Source_Height_Offset = maxSourceY * PercentThroughHeight + (1.0 - PercentThroughHeight) * minSourceY;
+				//~ if(Source_Width_Offset >= width || Source_Height_Offset >= height)
+					//~ {continue;}
 				//we are now ready to find the exact pixel
+				unsigned int sourceOffset = (Source_Width_Offset + width * Source_Height_Offset)*num_components;
 				unsigned char* sourcePixelStartByte = &(Source[(Source_Width_Offset + width * Source_Height_Offset)*num_components]);
 				//Extract R, G, B, and possibly A
 				unsigned char red_source = sourcePixelStartByte[0];

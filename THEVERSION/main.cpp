@@ -62,12 +62,60 @@ GeklminRender::Shader* MainshaderShadows = nullptr;
 GeklminRender::Camera* SceneRenderCamera = nullptr; //SceneRender camera
 GeklminRender::Camera RenderTargetCamera; //The render target camera
 GeklminRender::Camera RenderTargetCameraShadowMapping; //render target camera for shadowmapping
+GeklminRender::Camera RenderTargetCameraShadowMapping2; //render target camera for shadowmapping
 GeklminRender::CubeMap* SkyboxTex = nullptr; //Skybox texture
 GeklminRender::CubeMap* SkyboxTwo = nullptr; //Second skybox texture, for testing per-mesh cubemaps
 
 GeklminRender::BMPFontRenderer* myFont = nullptr; //my super special font!
 GeklminRender::Mesh* DeleteMeshTest = nullptr;
 
+//Struct used for image writing
+struct Image_Data{
+	unsigned char* data_ptr = nullptr;
+	int width = 0;
+	int height = 0;
+	int num_components = 0;
+	Image_Data(){
+		data_ptr = nullptr;
+	}
+	Image_Data(std::string filename){
+		loadImage(filename);
+	}
+	void Unload(){
+		if(data_ptr != nullptr)
+			free(data_ptr);
+	}
+	~Image_Data(){
+		//DO NOT DO ANYTHING!!! 
+	}
+	Image_Data(const Image_Data& other){
+		data_ptr = other.data_ptr;
+		width = other.width;
+		height = other.height;
+		num_components = other.num_components;
+	}
+	void loadImage(std::string filename){ //Attempt to load file
+		Unload();
+		data_ptr = nullptr;
+		int temp_width;
+		int temp_height;
+		int temp_components;
+		int temp_something = 4; //no idea
+		data_ptr = GeklminRender::Texture::stbi_load_passthrough((char*)filename.c_str(), &temp_width, &temp_height, &temp_components, temp_something);
+		if(data_ptr != nullptr)
+		{
+			width = temp_width;
+			height = temp_height;
+			num_components = temp_components;
+		}else{
+			std::cout << "\nERROR!!! PROBELM LOADING " << filename << " AS IMAGE" << std::endl;
+			std::abort();
+		}
+	}
+};
+
+//Array of these structs
+std::vector<Image_Data> Images;
 
 //OpenAL Variables
 //~ ALCdevice *OpenALDevice = 0;
@@ -261,7 +309,9 @@ void checkKeys(){
 				
 				
 				
-				
+				RenderTargetCamera = *SceneRenderCamera;
+				RenderTargetCamera.MoveRight((float)(rand()%1000 - 500.0f)/500.0f);
+				RenderTargetCamera.MoveForward((float)(rand()%1000 - 500.0f)/500.0f);
 				RenderTargetCameraShadowMapping = Camera(SceneRenderCamera->pos + glm::vec3(0,20,0),            //World Pos
 																							70.0f,                       //FOV
 																							1.0f,		 //Aspect
@@ -378,7 +428,14 @@ void checkKeys(){
 				alSourcePlay(audiosource1);
 			}
 		oldkeystates[17] = state;
-			
+		state = myDevice->getKey(0, GLFW_KEY_V);
+			if (state == GLFW_PRESS && oldkeystates[18] != GLFW_PRESS)
+			{
+				//Move the second cameralight to be the same as the camera
+				if (Cam_Lights.size() > 1)
+					Cam_Lights[1]->myCamera = *SceneRenderCamera;
+			}
+		oldkeystates[18] = state;
 			
 			
 			
@@ -454,12 +511,13 @@ void init()
 	myDevice->initGLFW();
 	//GLFW requires you to "push" properties of the next window to be created before making it
 	myDevice->pushWindowCreationHint(GLFW_RESIZABLE, GLFW_TRUE);
+	//myDevice->pushWindowCreationHint(GLFW_RESIZABLE, GLFW_FALSE);
 	//Set Version to OpenGL 3.3
 	myDevice->pushWindowCreationHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	myDevice->pushWindowCreationHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	//FINALLY add the window
 	myDevice->addWindow(WIDTH, HEIGHT, "GkScene API on GeklminRender + OpenAL, Demo Program 1"); 
-	// myDevice->addFullScreenWindow(WIDTH, HEIGHT, "GkScene API Alpha- Demo Program 1");
+	//myDevice->addFullScreenWindow(WIDTH, HEIGHT, "GkScene API Alpha- Demo Program 1");
 	
 	myDevice->setWindowSizeCallback(0,window_size_callback);//Self explanatory
 	myDevice->setContext(0); //Binds GL context of window 0 to current thread
@@ -498,7 +556,7 @@ void init()
 
 	for (int i = 0; i<2; i++)
 		currentmousexy[i] = 0;
-	theScene = new GkScene(WIDTH, HEIGHT, 1);
+	theScene = new GkScene(WIDTH, HEIGHT, 1.0);
 	//Initialize OpenAL
 	myDevice->fastInitOpenAL();
 }
@@ -518,9 +576,10 @@ void LoadResources()
 	theScene->ShadowOpaqueMainShader = MainshaderShadows;
 	theScene->ShowTextureShader = DisplayTexture; //Add a setter later
 	theScene->setWBOITCompositionShader(WBOITCompShader); //Has a setter, and it's been a long time, I should write a setter for the ShowTextureShader
-	FBOArray.push_back(new FBO(640,480, 1, GL_RGBA32F)); //0, the test FBO render target
-	FBOArray.push_back(new FBO(640,480, 2, GL_RGBA16F, FBOArray[0]->getDepthBufferHandle())); //1, the FBO necessary for Weighted Blended OIT
-	FBOArray.push_back(new FBO(640,480, 1, GL_RGBA32F)); //2, the FBO for rendering Shadowmaps //TODO: Actually use this one for the shadowmap instead of FBOArray[0]
+	FBOArray.push_back(new FBO(640,480, 1, GL_RGBA32F)); //0, FBO for rendering shadowmaps for Cameralight 0
+	FBOArray.push_back(new FBO(640,480, 1, GL_RGBA32F)); //1, FBO for rendering shadowmaps for Cameralight 1
+	FBOArray.push_back(new FBO(640,480, 1, GL_RGBA8)); //Honest Render-to-target
+	FBOArray.push_back(new FBO(640,480, 2, GL_RGBA16F, FBOArray[2]->getDepthBufferHandle())); //3, Honest render-to-target, transparent
 	theScene->registerCustomFBO(FBOArray[0]); //I was planning to use this to do reflections in the future, so I added a custom FBO registration feature.
 	
 	
@@ -545,7 +604,7 @@ void LoadResources()
 		"Cubemap/2desert_FRONT.bmp"
 	};
 	SkyboxTwo = new CubeMap(secondCubeMapFileNames[0],secondCubeMapFileNames[1],secondCubeMapFileNames[2],secondCubeMapFileNames[3],secondCubeMapFileNames[4],secondCubeMapFileNames[5]);
-	//theScene->SetSkyBoxCubemap(SkyboxTex);
+	theScene->SetSkyBoxCubemap(SkyboxTex);
 	
 	//myFont->pushCubeMapToAllMeshes(SkyboxTex);//Cubemap reflections for chrome letters!
 	/*
@@ -583,8 +642,8 @@ void LoadResources()
 	FileResourceManager->loadMesh("sphere_test.obj",false,true)->pushTexture(FileResourceManager->loadTexture("clouds.jpg",false)); //1
 	
 	
-	//Render the shadowmap as a texture on the instanced cube
-	InstancedMesh->pushTexture(FBOArray[0]->getTex(0));
+	//Render the RenderTarget as a texture on the instanced cube
+	InstancedMesh->pushTexture(FBOArray[2]->getTex(0));
 	InstancedMesh->pushCubeMap(SkyboxTex);
 	
 	//Sphere_test Cubemaps
@@ -595,6 +654,8 @@ void LoadResources()
 	//FileResourceManager->loadMesh("Cube_Test_Low_Poly.obj",false,true)->pushCubeMap(SkyboxTwo);//0
 	//FileResourceManager->loadMesh("Cube_Test_Low_Poly.obj",false,true)->pushCubeMap(SkyboxTex);//1
 	myFont = new BMPFontRenderer("Geklmins Bitmap ASCII font 16x16.bmp",WIDTH, HEIGHT, UI_SCALE_FACTOR, "shaders/SHOWTEX"); //Load font for testing
+	//Images for testing the font
+	Images.push_back(Image_Data("sprite.png"));
 	
 	//Custom rendering pipeline callbacks for your rendering needs
 	theScene->customMainShaderBinds = &MainshaderUniformFunctionDemo;
@@ -673,13 +734,14 @@ void initObjects()
 											glm::vec3(0.0f, -1.0f, 0.0f), //forward
 											glm::vec3(0.0f, 0.0f, 1.0f));//Up
 		RenderTargetCameraShadowMapping = *SceneRenderCamera;
+		RenderTargetCameraShadowMapping2 = *SceneRenderCamera;
+		RenderTargetCamera = *SceneRenderCamera;
 		//Set the main render camera for the scene. You MUST set the main camera otherwise the main rendering function will NOT run.
 		theScene->setSceneCamera(SceneRenderCamera);
 		Cam_Lights.push_back(new CameraLight());
 		//~ Cam_Lights[0]->Tex2Project = FileResourceManager->loadTexture("Art.jpg",false);
 		Cam_Lights[0]->Tex2Project = FBOArray[0]->getTex(0);
 		Cam_Lights[0]->isShadowed = true;
-		Cam_Lights[0]->myCamera = RenderTargetCameraShadowMapping;
 		Cam_Lights[0]->solidColor = 1.0;
 		Cam_Lights[0]->myColor = glm::vec3(1,0,0);
 		Cam_Lights[0]->range = 300;
@@ -687,6 +749,22 @@ void initObjects()
 		theScene->RegisterCamLight(Cam_Lights[0]);
 		Cam_Lights[0]->myCamera = RenderTargetCameraShadowMapping;
 		
+		//Testing a second one
+		Cam_Lights.push_back(new CameraLight());
+		Cam_Lights[1]->Tex2Project = FBOArray[1]->getTex(0);
+		Cam_Lights[1]->isShadowed = true;
+		Cam_Lights[1]->solidColor = 1.0;
+		Cam_Lights[1]->myColor = glm::vec3(0.5,0.5,1);
+		Cam_Lights[1]->range = 500;
+		Cam_Lights[1]->radii = glm::vec2(0.4,0.5);
+		theScene->RegisterCamLight(Cam_Lights[1]);
+		Cam_Lights[1]->myCamera = Camera(glm::vec3(100, 300, 200),         //World Pos
+								70.0f,                       		//FOV
+								1,									//Aspect
+								1.0f,                       		//Znear
+								510.0f,                     		//Zfar
+								glm::vec3(0.0f, -1.0f,0.0f), 		//forward
+								glm::vec3(1.0f, 0.0f, 0.0f));		//Up
 		//OpenAL Source Generation
 		alGenSources(1,&audiosource1);
 		alSourcef(audiosource1, AL_GAIN, 10);
@@ -724,6 +802,19 @@ int main()
 	BadDeer.RegisterInstance(&MyVeryBadDeer); //demonstrating that you can use meshes on the stack
 	float ordinarycounter = 0.0f; // Used to achieve the trigonometry wave effects
 	
+	int UI_WIDTH = UI_SCALE_FACTOR * WIDTH;
+	int UI_HEIGHT = UI_SCALE_FACTOR * HEIGHT;
+	std::vector<glm::vec4> Sprite_Draw_Pos; // posx, posy, scale, 1/speed
+	for(int i = 0; i < 10; i++)
+		Sprite_Draw_Pos.push_back(
+			glm::vec4(
+				rand()%UI_WIDTH,
+				rand()%UI_HEIGHT,
+				(float)(rand()%1000)/(float)500,
+				rand()%40 + 5
+			)
+		);
+	
 	while (!myDevice->shouldClose(0) && !shouldQuit) //Main game loop.
     {
 		//COLLECT INFORMATION ABOUT THE SYSTEM
@@ -752,25 +843,36 @@ int main()
 				// */
 					// LetterTester.myTransform.SetRot(glm::vec3(sinf(ordinarycounter/10.0) * 5,sinf(ordinarycounter/10.0)*3,sinf(ordinarycounter/11.2)*2));
 				//UI Rendering Demo
-				//~ myFont->clearScreen(0,0,0,0.5);
-				for(int i = 0; i < 100; i++)
-					myFont->writeRectangle(rand()%(int)(WIDTH * UI_SCALE_FACTOR), rand()%(int)(HEIGHT * UI_SCALE_FACTOR),
-					                       rand()%(int)(WIDTH * UI_SCALE_FACTOR), rand()%(int)(HEIGHT * UI_SCALE_FACTOR),
-					                       rand()%256, rand()%256, rand()%256, rand()%128);
+				myFont->clearScreen(0,0,0,0.5);
+				//~ for(int i = 0; i < 100; i++)
+					//~ myFont->writeRectangle(rand()%(int)(WIDTH * UI_SCALE_FACTOR), rand()%(int)(HEIGHT * UI_SCALE_FACTOR),
+					                       //~ rand()%(int)(WIDTH * UI_SCALE_FACTOR), rand()%(int)(HEIGHT * UI_SCALE_FACTOR),
+					                       //~ rand()%256, rand()%256, rand()%256, rand()%128);
+				
 					//myFont->writeCircle(rand()%WIDTH, rand()%HEIGHT, 10, rand()%255, rand()%255, rand()%255, 50);
-				for (size_t communists_killed = 0; communists_killed < ProgramMeshInstances.size() && communists_killed < 100; communists_killed++)
+				
+				for(size_t i= 0; i < Sprite_Draw_Pos.size(); i++)
+					{
+						myFont->writeImage(
+							Sprite_Draw_Pos[i].x + Sprite_Draw_Pos[i].z * 64 * sinf(ordinarycounter/Sprite_Draw_Pos[i].w),
+						    Sprite_Draw_Pos[i].y + Sprite_Draw_Pos[i].z * 64 * cosf(ordinarycounter/Sprite_Draw_Pos[i].w),
+						    Images[0].data_ptr, Images[0].width, Images[0].height, Images[0].num_components, 0, 255, 0, 255,
+						    Sprite_Draw_Pos[i].z * 64 * abs(sinf(ordinarycounter/(Sprite_Draw_Pos[i].w + 21.0))), 
+						    Sprite_Draw_Pos[i].z * 64 * abs(sinf(ordinarycounter/(Sprite_Draw_Pos[i].w + 30.0))), false, false);
+					}
+				for (size_t communists_killed = 0; communists_killed < ProgramMeshInstances.size() && communists_killed < 1000; communists_killed++)
 				{
 					//faceTowardPoint(glm::vec3 pos, glm::vec3 target, glm::vec3 up)
-					if (!creepilyfacetowardthecamera)
+					//~ if (!creepilyfacetowardthecamera)
 						ProgramMeshInstances[communists_killed]->myTransform.SetRot(glm::vec3(sinf(ordinarycounter/10.0) * 5,sinf(ordinarycounter/10.0)*3,sinf(ordinarycounter/11.2)*2));
-					if (creepilyfacetowardthecamera)
-						ProgramMeshInstances[communists_killed]->myTransform.SetRotQuat(
-							GeklminRender::faceTowardPoint(
-								ProgramMeshInstances[communists_killed]->myTransform.GetPos(), 
-								SceneRenderCamera->pos, 
-								glm::vec3(0,1,0)
-							)
-						);
+					//~ if (creepilyfacetowardthecamera)
+						//~ ProgramMeshInstances[communists_killed]->myTransform.SetRotQuat(
+							//~ GeklminRender::faceTowardPoint(
+								//~ ProgramMeshInstances[communists_killed]->myTransform.GetPos(), 
+								//~ SceneRenderCamera->pos, 
+								//~ glm::vec3(0,1,0)
+							//~ )
+						//~ );
 					
 					//*/
 					// ProgramMeshInstances[communists_killed]->myPhong.specreflectivity = (1+sinf(ordinarycounter/100.0f))/2.0;
@@ -794,9 +896,11 @@ int main()
 		//~ FBO::unBindRenderTarget(WIDTH, HEIGHT);
 		//~ FBO::clearTexture(0, 0, 0, 0);
 		theScene->drawShadowPipeline(1, FBOArray[0], &Cam_Lights[0]->myCamera, false);
+		theScene->drawShadowPipeline(1, FBOArray[1], &Cam_Lights[1]->myCamera, false);
+		theScene->drawPipeline(1, FBOArray[2], FBOArray[3],  &RenderTargetCamera, false, glm::vec4(0,0,0,0), glm::vec2(800,1000));
 		theScene->drawPipeline(1, nullptr, nullptr,  nullptr, false, glm::vec4(0,0,0,0), glm::vec2(800,1000));
 		myFont->pushChangestoTexture();
-		//myFont->Draw(true);
+		myFont->Draw(true);
 		myDevice->pollevents();
 		myDevice->swapBuffers(0);
 	} //EOF game loop
@@ -805,6 +909,9 @@ int main()
 								
 	//We should delete stuff... if we want to be good programmers :<
 	std::cout << "\n BEGINNING DELETION...";
+	for(size_t i = 0; i < Images.size(); i++){
+		Images[i].Unload();
+	}
 	delete InstancedMesh; //TODO: Push this to 147 //Later: what the fuck???
 	delete FileResourceManager;
 	if (MainShad)

@@ -50,10 +50,11 @@ namespace GeklminRender{
 			void writeCircle(unsigned int x, unsigned int y, float radius, unsigned char red, unsigned char green, unsigned char blue, unsigned char alpha); //Draws a circle
 			void writeEllipse(unsigned int x, unsigned int y, float width, float height, float rotation, unsigned char red, unsigned char green, unsigned char blue, unsigned char alpha); //Draws an ellipse
 			void writeImage(
-				unsigned int x, unsigned int y, //Where in the buffer shall the top left corner be
+				int x, int y, //Where in the buffer shall the bottom left corner be
 				unsigned char* Source, unsigned int width, unsigned int height, unsigned int num_components, //Information about source image. if a component (such as alpha) is missing, then it is assumed to be 1
 				unsigned int subx1, unsigned int subx2, unsigned int suby1, unsigned int suby2, //Where in the source image?
-				float xscale, float yscale //Scaling information
+				unsigned int targwidth, unsigned int targheight, //How wide and how tall in the target?
+				bool flip_x = false, bool flip_y = false //Flip?
 			);
 			void setCharDimensions(unsigned int _char_width, unsigned int _char_height, unsigned int _chars_per_row){
 				char_width = _char_width;

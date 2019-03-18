@@ -97,7 +97,7 @@ uniform sampler2D CameraTex7; //9
 uniform sampler2D CameraTex8; //10
 uniform sampler2D CameraTex9; //11
 uniform sampler2D CameraTex10; //12
-vec4 CameraTexSamples[10]; //Grab the samples from the Sampler2Ds
+vec4 CameraTexSamples[20]; //Grab the samples from the Sampler2Ds
 uniform samplerCube worldaroundme; //1
 uniform samplerCube SkyboxCubemap; //2
 uniform vec4 backgroundColor;
@@ -244,6 +244,13 @@ vec3 color_value;
 vec3 primary_color;
 vec3 secondary_color;
 uniform uint renderflags;
+
+vec2 poissonDisk[4] = vec2[](
+  vec2( -0.94201624, -0.39906216 ),
+  vec2( 0.94558609, -0.76890725 ),
+  vec2( -0.094184101, -0.92938870 ),
+  vec2( 0.34495938, 0.29387760 )
+);
 
 float length2vec3(vec3 getmylength){
 	return dot(getmylength, getmylength);
@@ -410,35 +417,40 @@ void main()
 	vec4 samplecoord1 = (cam_viewproj[0] * vec4(worldout,1.0));
 	samplecoord1 = samplecoord1/samplecoord1.w; //NDC
 	samplecoord1.xy = (samplecoord1.xy/2.0) + 0.5;
-	CameraTexSamples[0] = texture2D(CameraTex1, vec2(samplecoord1.x, float(cam_shadows[0] <= 0.0) * -samplecoord1.y + float(cam_shadows[0] > 0.0) * samplecoord1.y));
+	for(int i = 0; i < 4; i++)
+		CameraTexSamples[4 * 0 + i] = texture2D(CameraTex1, vec2(samplecoord1.x, float(cam_shadows[0] <= 0.0) * -samplecoord1.y + float(cam_shadows[0] > 0.0) * samplecoord1.y) + float(cam_shadows[0] > 0.0) * (poissonDisk[i]/700.0));
 	//CameraTex2
 	samplecoord1 = (cam_viewproj[1] * vec4(worldout,1.0));
 	samplecoord1 = samplecoord1/samplecoord1.w; //NDC
 	samplecoord1.xy = (samplecoord1.xy/2.0) + 0.5;
-	CameraTexSamples[1] = texture2D(CameraTex2, vec2(samplecoord1.x, float(cam_shadows[1] <= 0.0) * -samplecoord1.y + float(cam_shadows[1] > 0.0) * samplecoord1.y));
+	for(int i = 0; i < 4; i++)
+		CameraTexSamples[4 * 1 + i] = texture2D(CameraTex2, vec2(samplecoord1.x, float(cam_shadows[1] <= 0.0) * -samplecoord1.y + float(cam_shadows[1] > 0.0) * samplecoord1.y) + float(cam_shadows[1] > 0.0) * (poissonDisk[i]/1200.0));
 	//CameraTex3
 	samplecoord1 = (cam_viewproj[2] * vec4(worldout,1.0));
 	samplecoord1 = samplecoord1/samplecoord1.w; //NDC
 	samplecoord1.xy = (samplecoord1.xy/2.0) + 0.5;
-	CameraTexSamples[2] = texture2D(CameraTex3, vec2(samplecoord1.x, float(cam_shadows[2] <= 0.0) * -samplecoord1.y + float(cam_shadows[2] > 0.0) * samplecoord1.y));
+	for(int i = 0; i < 4; i++)
+		CameraTexSamples[4 * 2 + i] = texture2D(CameraTex3, vec2(samplecoord1.x, float(cam_shadows[2] <= 0.0) * -samplecoord1.y + float(cam_shadows[2] > 0.0) * samplecoord1.y) + float(cam_shadows[2] > 0.0) * (poissonDisk[i]/1200.0));
 	//CameraTex4
 	samplecoord1 = (cam_viewproj[3] * vec4(worldout,1.0));
 	samplecoord1 = samplecoord1/samplecoord1.w; //NDC
 	samplecoord1.xy = (samplecoord1.xy/2.0) + 0.5;
-	CameraTexSamples[3] = texture2D(CameraTex4, vec2(samplecoord1.x, float(cam_shadows[3] <= 0.0) * -samplecoord1.y + float(cam_shadows[3] > 0.0) * samplecoord1.y));
+	for(int i = 0; i < 4; i++)
+		CameraTexSamples[4 * 3 + i] = texture2D(CameraTex4, vec2(samplecoord1.x, float(cam_shadows[3] <= 0.0) * -samplecoord1.y + float(cam_shadows[3] > 0.0) * samplecoord1.y) + float(cam_shadows[3] > 0.0) * (poissonDisk[i]/1200.0));
 	//CameraTex5
 	samplecoord1 = (cam_viewproj[4] * vec4(worldout,1.0));
 	samplecoord1 = samplecoord1/samplecoord1.w; //NDC
 	samplecoord1.xy = (samplecoord1.xy/2.0) + 0.5;
-	CameraTexSamples[4] = texture2D(CameraTex5, vec2(samplecoord1.x, float(cam_shadows[4] <= 0.0) * -samplecoord1.y + float(cam_shadows[4] > 0.0) * samplecoord1.y));
+	for(int i = 0; i < 4; i++)
+		CameraTexSamples[4 * 4 + i] = texture2D(CameraTex5, vec2(samplecoord1.x, float(cam_shadows[4] <= 0.0) * -samplecoord1.y + float(cam_shadows[4] > 0.0) * samplecoord1.y) + float(cam_shadows[4] > 0.0) * (poissonDisk[i]/1200.0));
 	//Camera Lights
-	for (int i = 0; i < MAX_CAM_LIGHTS; i++)
+	for (int i = 0; i < MAX_CAM_LIGHTS && i < numcamlights; i++)
 	{
 		//mat4 viewproj = camera_lightArray[i].viewproj;
 		vec3 lightpos = vec3(cam_position[i]);
 		
 		float shouldUseFlatColor = cam_solidColor[i];
-		vec3 lightcolor = shouldUseFlatColor * vec3(cam_color[i]) + CameraTexSamples[i].xyz * (1-shouldUseFlatColor);
+		vec3 lightcolor = shouldUseFlatColor * vec3(cam_color[i]) + CameraTexSamples[i*4].xyz * (1-shouldUseFlatColor);
 		vec4 samplecoord = (cam_viewproj[i] * vec4(worldout,1.0));
 		vec3 screenspace_light = (samplecoord.xyz/samplecoord.w * 0.5) + vec3(0.5);
 		float shouldRenderAtAll = float(((screenspace_light.x >= 0 && screenspace_light.x <= 1 && screenspace_light.y >= 0 && screenspace_light.y <= 1 && screenspace_light.z >= 0 && screenspace_light.z <= 1) || (cam_range[i] < 0 && screenspace_light.z >= 0 && screenspace_light.z <= 1)) && (i < numcamlights)); // add the shadowed test here
@@ -450,8 +462,14 @@ void main()
 		vec3 unit_frag_to_light = normalize(frag_to_light);
 		vec3 lightDir = -unit_frag_to_light;
 		
-		//handling shadows
-		float shouldRenderCaseShadow = float((cam_shadows[i] == 0) || (cam_shadows[i] == 1) && (CameraTexSamples[i].x + 0.001 > screenspace_light.z)); //Avoid shadow banding 
+		//handling shadows, old code
+		//float shouldRenderCaseShadow = float((cam_shadows[i] == 0) || (cam_shadows[i] == 1) && (CameraTexSamples[i].x + 0.001 > screenspace_light.z)); //Avoid shadow banding 
+		//handling shadows, new code
+		float shouldRenderCaseShadow = 1;
+		for (int j=0;j < 4; j++){
+			shouldRenderCaseShadow -= 0.25 * float (CameraTexSamples[i * 4 + j].x  + 0.001 < screenspace_light.z && cam_shadows[i] > 0.0);
+		}
+		
 		float radial_distance = length(vec2(0.5,0.5) - screenspace_light.xy);
 		float shouldRenderCaseRadii = 1.0-smoothstep(cam_radii[i].x, cam_radii[i].y, radial_distance);//float(camera_lightArray[i].radii.y > radial_distance);
 		//float shouldRenderCaseShadow = float(CameraTexSamples[i].x > screenspace_light.z); //Avoid shadow banding 
