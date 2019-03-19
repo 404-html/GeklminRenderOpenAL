@@ -339,7 +339,7 @@ void main()
 		speceffect += shouldRenderSpecEffect * renderthislight * specDampFactor * vec3(dir_color[i]);
 	}
 	//Point Lights
-	for (int i = 0; i < MAX_POINT_LIGHTS && i < numpointlights; i++) //Branching makes this FASTER believe it or not
+	for (int i = 0; i < 16 && i < numpointlights; i++) //Branching makes this FASTER believe it or not
 	{
 	
 		//~ float inthelist = float( //Comment out everything in here and make it just "false" if you dont want sphere and AABB light volume culling

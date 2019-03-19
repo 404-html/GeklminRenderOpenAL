@@ -791,11 +791,12 @@ void GkScene::OrganizeUBOforUpload(){
 	
 	//Do point lights
 	if (SimplePointLights.size() > 0){
-		PointLight* LightsThisFrame[32]; //Array of pointers
+		const int MAX_PL = 16; //If you set it higher than 32, you break the program. Don't break the program.
+		PointLight* LightsThisFrame[MAX_PL]; //Array of pointers
 		//Grab the first 32
 		size_t howmanypointlightshavewedone = 0;
 		long long maxindex = -1;
-		for (size_t i = 0; i < SimplePointLights.size() && howmanypointlightshavewedone < 32; i++)
+		for (size_t i = 0; i < SimplePointLights.size() && howmanypointlightshavewedone < MAX_PL; i++)
 		{
 			if(SimplePointLights[i]->shouldRender)
 			{
@@ -814,7 +815,7 @@ void GkScene::OrganizeUBOforUpload(){
 					//Will never be a nullptr
 					PointLight* FarthestLight = LightsThisFrame[0];
 					size_t indexofFarthestLight = 0;
-					for (size_t j = 0; j < 32; j++)
+					for (size_t j = 0; j < MAX_PL; j++)
 					{
 						if (glm::length2(FarthestLight->myPos - SceneCamera->pos) < glm::length2(LightsThisFrame[j]->myPos - SceneCamera->pos)) //FarthestLight is closer
 						{
@@ -836,7 +837,7 @@ void GkScene::OrganizeUBOforUpload(){
 		//glUniform1i(MainShaderUniforms[MAINSHADER_NUM_POINTLIGHTS], howmanypointlightshavewedone);
 		*((int*)(&(LightingDataUBOData[8384]))) = howmanypointlightshavewedone;
 		//if(maxindex > -1)
-			for (size_t i = 0; i < 32 && i < howmanypointlightshavewedone; i++){
+			for (size_t i = 0; i < MAX_PL && i < howmanypointlightshavewedone; i++){
 				
 				//glUniform3f(m_LightUniformHandles[i*4], LightsThisFrame[i]->pos.x, LightsThisFrame[i]->pos.y, LightsThisFrame[i]->pos.z);//pos
 				temp_ptr = (float*)(&(LightingDataUBOData[320 + i*16])); //pointlight position
