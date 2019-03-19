@@ -83,7 +83,7 @@ void Mesh::DrawInstancesPhong(GLuint Model, GLuint rflags, GLuint specr, GLuint 
 							Batches_cubemap_texture[Instances[i]->cubeMap][Instances[i]->tex].push_back(Instances[i]);
 						else
 							Batches_cubemap_texture[0][Instances[i]->tex].push_back(Instances[i]);
-					} else if (Instances[i] && MyTextures.size() > Instances[i]->tex && MyTextures[Instances[i]->tex].amITransparent() != Transparency) {
+					} else if ( (Instances[i] && MyTextures.size() > Instances[i]->tex && MyTextures[Instances[i]->tex].amITransparent() != Transparency) || (MyTextures.size() <= 0 && Transparency)) {
 						continue;
 					} else if (Instances[i] && MyTextures.size() > 0 && MyTextures[0].amITransparent() == Transparency){
 						if (Instances[i]->cubeMap < myCubeMaps.size())
@@ -156,7 +156,7 @@ void Mesh::DrawInstancesPhong(GLuint Model, GLuint rflags, GLuint specr, GLuint 
 					if (Instances[i]->cubeMap < myCubeMaps.size() && Instances[i]->cubeMap >= 0 && myCubeMaps[Instances[i]->cubeMap])
 						myCubeMaps[Instances[i]->cubeMap]->Bind(1);
 					
-					if (Instances[i] && MyTextures.size() > Instances[i]->tex && MyTextures[Instances[i]->tex].amITransparent() != Transparency)
+					if ( (Instances[i] && MyTextures.size() > Instances[i]->tex && MyTextures[Instances[i]->tex].amITransparent() != Transparency) || (MyTextures.size() == 0 && Transparency) )
 						continue;
 					else if (Instances[i] && MyTextures.size() > Instances[i]->tex && MyTextures[Instances[i]->tex].amITransparent() == Transparency)
 						MyTextures[Instances[i]->tex].Bind(0);
@@ -211,7 +211,7 @@ void Mesh::DrawInstancesPhong(GLuint Model, GLuint rflags, GLuint specr, GLuint 
 	//INSTANCING ELSE
 			}else { //Is instanced	
 				//Perform testing to ensure that there is a texture to render with, and that its transparency flag matches the transparency state.
-				if ((MyTextures.size() > 0 && MyTextures[0].amITransparent() == Transparency) || (MyTextures.size() == 0))
+				if ((MyTextures.size() > 0 && MyTextures[0].amITransparent() == Transparency) || (MyTextures.size() == 0 && !Transparency))
 				{
 					
 					//glGetError(); //Clear out errors. Error checking demands it!

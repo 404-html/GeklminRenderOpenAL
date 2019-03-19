@@ -34,7 +34,7 @@ class Texture
 			Permanent_Data_Pointer = nullptr;
 			isnull = true;
 		}
-		Texture(int size_w, int size_h, int size_components, unsigned char* data_ptr, GLenum min_filter, GLenum mag_filter, GLenum wrap_mode, float anisotropic_level){
+		Texture(int size_w, int size_h, int size_components, unsigned char* data_ptr, GLenum min_filter = GL_LINEAR, GLenum mag_filter = GL_LINEAR, GLenum wrap_mode = GL_REPEAT, float anisotropic_level = 4.0f){
 			if(!isnull)
 			{
 				if (Permanent_Data_Pointer)
@@ -133,6 +133,7 @@ class Texture
 		virtual ~Texture();
 		GLuint getHandle() {return m_texture;} //This was added so that shader.update could be removed
 		bool amITransparent(){return transparency_enabled;}
+		void setTransparency(bool input){transparency_enabled = input;}
 		bool amINull() const {return isnull;}
 		static unsigned char* stbi_load_passthrough(char* filename, int* width, int* height, int* numComponents, int something);
 		std::string MyName;

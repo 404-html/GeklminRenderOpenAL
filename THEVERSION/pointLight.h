@@ -156,6 +156,8 @@ struct CameraLight {
 		*m_radii = radii;
 		*m_SolidColorToggle = solidColor;
 		*m_range = range * range;
+		if(range < 0)
+			*m_range = *m_range * -1;
 		*m_shadows = isShadowed?1.0f:0.0f;
 		
 		//Bind texture

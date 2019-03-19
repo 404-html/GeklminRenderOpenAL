@@ -34,6 +34,52 @@ GkScene Demo Program 1 main.cpp
 
 unsigned int WIDTH = 1920;
 unsigned int HEIGHT = 1080;
+//Constants for the water demo
+const unsigned int FLUID_WIDTH = 512;
+const unsigned int FLUID_HEIGHT = 512;
+unsigned char* Fluid_Target = nullptr;
+unsigned char* Caustic_Target = nullptr;
+//Fluid Demo Stuff
+float u[FLUID_WIDTH][FLUID_HEIGHT];
+float v[FLUID_WIDTH][FLUID_HEIGHT];
+float u_new[FLUID_WIDTH][FLUID_HEIGHT];
+unsigned char d_map[FLUID_WIDTH * FLUID_HEIGHT * 4];
+
+unsigned char get_d(int _x, int _y, int component){
+  int x = _x;
+  int y = _y;
+  if(x >= (int)FLUID_WIDTH)
+	{x = FLUID_WIDTH - 1;}
+  if(x < 0) 
+	{x = 0;}
+  if(y >= (int)FLUID_HEIGHT) 
+	{y = FLUID_HEIGHT - 1;}
+  if(y < 0) 
+	{y = 0;}
+  return d_map[(x + y * FLUID_HEIGHT) * 4 + component];
+}
+
+float get_u(int _x, int _y){
+  int x = _x;
+  int y = _y;
+  if(x >= (int)FLUID_WIDTH)
+	{x = FLUID_WIDTH - 1;}
+  if(x < 0) 
+	{x = 0;}
+  if(y >= (int)FLUID_HEIGHT) 
+	{y = FLUID_HEIGHT - 1;}
+  if(y < 0) 
+	{y = 0;}
+  return u[x][y];
+}
+unsigned char float_to_char(float input){
+	float x = input;
+	if(input > 1) {x = 1;}
+	else if(input < 0) {x = 0;}
+	return 255 * x;
+}
+
+//UI relative scale to monitor size
 float UI_SCALE_FACTOR = 0.25f;
 bool useFBO = false; //Should the next object spawned use the test FBO texture?
 bool holdingShift = false; //used for sprinting
@@ -68,6 +114,12 @@ GeklminRender::CubeMap* SkyboxTwo = nullptr; //Second skybox texture, for testin
 
 GeklminRender::BMPFontRenderer* myFont = nullptr; //my super special font!
 GeklminRender::Mesh* DeleteMeshTest = nullptr;
+
+//Necessary for water surface rendering
+GeklminRender::Mesh* WaterSurfaceMesh = nullptr;
+	GeklminRender::MeshInstance WaterSurfaceInstance;
+GeklminRender::Texture* WaterSurfaceTexture = nullptr;
+GeklminRender::Texture* WaterCausticsTexture = nullptr;
 
 //Struct used for image writing
 struct Image_Data{
@@ -447,6 +499,8 @@ void checkKeys(){
 				myDevice->getCursorPosition(0, &mousepos[0], &mousepos[1]);
 				std::cout << "\n X: " << (mousepos[0]/WIDTH);
 				std::cout << "\n Y: " << (mousepos[1]/HEIGHT);
+				
+				
 				std::cout << "\nsizeof int pointer (proves this is 64 bit if its 8):" << sizeof(int*);
 				std::cout << "\nsizeof long long int: " << sizeof(long long int);
 				InstancedMesh->optimizeCacheMemoryUsage();
@@ -657,6 +711,87 @@ void LoadResources()
 	//Images for testing the font
 	Images.push_back(Image_Data("sprite.png"));
 	
+	//Water Rendering~ Making the mesh
+	IndexedModel WaterModel;
+	//We want a single quad with X dimension 100 and Z dimension 100, normals facing into positive Y and visible only from the top.
+	//The positions are as follows, x,z
+	//-50,50 TOP LEFT
+	//-50,-50 BOTTOM LEFT
+	//50, -50 BOTTOM RIGHT
+	//50, 50 TOP RIGHT
+	
+	WaterModel.positions.push_back(glm::vec3(50, 0, 50));//TRIANGLE 1, TOP RIGHT CORNER
+	WaterModel.positions.push_back(glm::vec3(-50, 0, -50));//TRIANGLE 1, BOTTOM LEFT CORNER
+	WaterModel.positions.push_back(glm::vec3(-50, 0, 50));//TRIANGLE 1, TOP LEFT CORNER
+	
+	WaterModel.positions.push_back(glm::vec3(50, 0, 50));//TRIANGLE 2, TOP RIGHT CORNER
+	WaterModel.positions.push_back(glm::vec3(50, 0, -50));//TRIANGLE 2, BOTTOM RIGHT CORNER
+	WaterModel.positions.push_back(glm::vec3(-50, 0, -50));//TRIANGLE 2, BOTTOM LEFT CORNER
+	
+	//Push on normals, pointing straight up
+	WaterModel.normals.push_back(glm::vec3(0,1,0));
+	WaterModel.normals.push_back(glm::vec3(0,1,0));
+	WaterModel.normals.push_back(glm::vec3(0,1,0));
+	
+	WaterModel.normals.push_back(glm::vec3(0,1,0));
+	WaterModel.normals.push_back(glm::vec3(0,1,0));
+	WaterModel.normals.push_back(glm::vec3(0,1,0));
+	//Texture coordinates
+	WaterModel.texCoords.push_back(glm::vec2(1, 1));//TRIANGLE 1, TOP RIGHT CORNER
+	WaterModel.texCoords.push_back(glm::vec2(0, 0));//TRIANGLE 1, BOTTOM LEFT CORNER
+	WaterModel.texCoords.push_back(glm::vec2(0, 1));//TRIANGLE 1, TOP LEFT CORNER
+
+	WaterModel.texCoords.push_back(glm::vec2(1, 1));//TRIANGLE 2, TOP RIGHT CORNER
+	WaterModel.texCoords.push_back(glm::vec2(1, 0));//TRIANGLE 2, BOTTOM RIGHT CORNER
+	WaterModel.texCoords.push_back(glm::vec2(0, 0));//TRIANGLE 2, BOTTOM LEFT CORNER
+
+	
+	//Colors, we don't need to use it, but I make it blue for good measure
+	WaterModel.colors.push_back(glm::vec3(0.3,0.3,1));
+	WaterModel.colors.push_back(glm::vec3(0.3,0.3,1));
+	WaterModel.colors.push_back(glm::vec3(0.3,0.3,1));
+	
+	WaterModel.colors.push_back(glm::vec3(0.3,0.3,1));
+	WaterModel.colors.push_back(glm::vec3(0.3,0.3,1));
+	WaterModel.colors.push_back(glm::vec3(0.3,0.3,1));
+	
+	//Indices. We need 6, and in order. We could have been more efficient by not repeating vertex info but eh what can ya do
+	for(unsigned int i = 0; i < 6; i++)
+		WaterModel.indices.push_back(i);
+		
+	//Make the mesh
+	WaterSurfaceMesh = new Mesh(WaterModel, true, true, true);
+	theScene->registerMesh(WaterSurfaceMesh);
+	WaterSurfaceMesh->RegisterInstance(&WaterSurfaceInstance);
+	WaterSurfaceInstance.myTransform = Transform(
+		glm::vec3(0, -5, 0),
+		glm::vec3(0,0,0),
+		glm::vec3(10,10,10)
+	);
+	WaterSurfaceMesh->setFlags(GK_RENDER | GK_TEXTURED);
+	//Make the water surface texture
+	unsigned char* Temp_Datum = (unsigned char*)malloc(sizeof(unsigned char) * FLUID_WIDTH * FLUID_HEIGHT * 4); //There are 4 components, i.e. 4 bytes per pixel
+	//Color it faint blue, half visible
+		for(int i = 0; i < FLUID_WIDTH * FLUID_HEIGHT; i++)
+			{Temp_Datum[i * 4] = 0;Temp_Datum[i * 4 + 1] = 0; Temp_Datum[i * 4 + 2] = 128; Temp_Datum[i * 4 + 3] = 128;}
+		WaterSurfaceTexture = new Texture(FLUID_WIDTH, FLUID_HEIGHT, 4, Temp_Datum);
+		WaterCausticsTexture = new Texture(FLUID_WIDTH, FLUID_HEIGHT, 4, Temp_Datum);
+		WaterSurfaceTexture->setTransparency(true);
+	free(Temp_Datum);
+	WaterSurfaceMesh->pushTexture(SafeTexture(WaterSurfaceTexture));
+	Fluid_Target = WaterSurfaceTexture->getDataPointerNotConst();
+	Caustic_Target = WaterCausticsTexture->getDataPointerNotConst();
+	//Prep the fluid simulation
+	for(int i = 0; i < FLUID_WIDTH; i++)
+	{
+		for(int j = 0; j < FLUID_HEIGHT; j++)
+		{
+		  
+		  u[i][j] = 0.0;
+		  u_new[i][j] = u[i][j];
+		  v[i][j] = 0.0;
+		}
+    }
 	//Custom rendering pipeline callbacks for your rendering needs
 	theScene->customMainShaderBinds = &MainshaderUniformFunctionDemo;
 	theScene->customRenderingAfterSkyboxBeforeMainShader = &CustomRenderingFunction; //Draw to your heart's content!
@@ -686,7 +821,7 @@ void initObjects()
 		PointLightsWithoutShadows.push_back(
 			new PointLight(glm::vec3(10,20,10), glm::vec3(1,1,1))
 		); //0 LIGHT
-		PointLightsWithoutShadows[0]->range = 1000 * 1000;
+		PointLightsWithoutShadows[0]->range = 500 * 500;
 		PointLightsWithoutShadows[0]->dropoff = 1;
 		theScene->registerPointLight(PointLightsWithoutShadows[0]);
 		
@@ -765,6 +900,25 @@ void initObjects()
 								510.0f,                     		//Zfar
 								glm::vec3(0.0f, -1.0f,0.0f), 		//forward
 								glm::vec3(1.0f, 0.0f, 0.0f));		//Up
+		Cam_Lights.push_back(new CameraLight());
+		Cam_Lights[2]->Tex2Project = SafeTexture(WaterCausticsTexture);
+		Cam_Lights[2]->isShadowed = false;
+		Cam_Lights[2]->solidColor = 0.0;
+		Cam_Lights[2]->myColor = glm::vec3(1.0,0.5,0);
+		Cam_Lights[2]->range = 100;
+		Cam_Lights[2]->radii = glm::vec2(1.9,2);
+		theScene->RegisterCamLight(Cam_Lights[2]);
+		Cam_Lights[2]->myCamera = Camera(glm::vec3(0, -5, 0),         //World Pos
+								70.0f,                       		//FOV
+								1,									//Aspect
+								1.0f,                       		//Znear
+								510.0f,                     		//Zfar
+								glm::vec3(0.0f, -1.0f,0.0f), 		//forward
+								glm::vec3(1.0f, 0.0f, 0.0f));		//Up
+		Cam_Lights[2]->myCamera.buildOrthogonal(-500, 500, -500, 500, 1, 300);
+		//Caustics Projector
+		Cam_Lights.push_back(new CameraLight());
+		
 		//OpenAL Source Generation
 		alGenSources(1,&audiosource1);
 		alSourcef(audiosource1, AL_GAIN, 10);
@@ -801,7 +955,8 @@ int main()
 	MyVeryBadDeer.myTransform.SetScale(glm::vec3(10,10,10));
 	BadDeer.RegisterInstance(&MyVeryBadDeer); //demonstrating that you can use meshes on the stack
 	float ordinarycounter = 0.0f; // Used to achieve the trigonometry wave effects
-	
+	float dropcounter = 0.0f;
+	int numdrops = 0;
 	int UI_WIDTH = UI_SCALE_FACTOR * WIDTH;
 	int UI_HEIGHT = UI_SCALE_FACTOR * HEIGHT;
 	std::vector<glm::vec4> Sprite_Draw_Pos; // posx, posy, scale, 1/speed
@@ -823,6 +978,9 @@ int main()
 			if (ordinarycounter > 1000.0f){
 				ordinarycounter = 0.0f;
 			}
+		dropcounter += 0.0166666666f;
+			if(dropcounter > 1000)
+				{dropcounter = 0.0;numdrops = 0;}
 
 
 		//INPUT DETECTION
@@ -851,15 +1009,73 @@ int main()
 				
 					//myFont->writeCircle(rand()%WIDTH, rand()%HEIGHT, 10, rand()%255, rand()%255, rand()%255, 50);
 				
-				for(size_t i= 0; i < Sprite_Draw_Pos.size(); i++)
+				//~ for(size_t i= 0; i < Sprite_Draw_Pos.size(); i++)
+					//~ {
+						//~ myFont->writeImage(
+							//~ Sprite_Draw_Pos[i].x + Sprite_Draw_Pos[i].z * 64 * sinf(ordinarycounter/Sprite_Draw_Pos[i].w),
+						    //~ Sprite_Draw_Pos[i].y + Sprite_Draw_Pos[i].z * 64 * cosf(ordinarycounter/Sprite_Draw_Pos[i].w),
+						    //~ Images[0].data_ptr, Images[0].width, Images[0].height, Images[0].num_components, 0, 255, 0, 255,
+						    //~ Sprite_Draw_Pos[i].z * 64 * abs(sinf(ordinarycounter/(Sprite_Draw_Pos[i].w + 21.0))), 
+						    //~ Sprite_Draw_Pos[i].z * 64 * abs(sinf(ordinarycounter/(Sprite_Draw_Pos[i].w + 30.0))), false, false);
+					//~ }
+				//Do and Draw Fluid Simulation
+				//But first, randomly create drops
+				if(numdrops < (int)dropcounter)
+					{u[rand()%FLUID_WIDTH][rand()%FLUID_HEIGHT] += 10.0;numdrops++;}
+				for(int i = 0; i < FLUID_WIDTH; i++)
+					for(int j = 0; j < FLUID_HEIGHT; j++)
 					{
-						myFont->writeImage(
-							Sprite_Draw_Pos[i].x + Sprite_Draw_Pos[i].z * 64 * sinf(ordinarycounter/Sprite_Draw_Pos[i].w),
-						    Sprite_Draw_Pos[i].y + Sprite_Draw_Pos[i].z * 64 * cosf(ordinarycounter/Sprite_Draw_Pos[i].w),
-						    Images[0].data_ptr, Images[0].width, Images[0].height, Images[0].num_components, 0, 255, 0, 255,
-						    Sprite_Draw_Pos[i].z * 64 * abs(sinf(ordinarycounter/(Sprite_Draw_Pos[i].w + 21.0))), 
-						    Sprite_Draw_Pos[i].z * 64 * abs(sinf(ordinarycounter/(Sprite_Draw_Pos[i].w + 30.0))), false, false);
+						v[i][j] += (get_u(i-1,j) + get_u(i+1,j) + get_u(i,j-1) + get_u(i,j+1)) * 0.25 - get_u(i,j);
+						v[i][j] *= 0.999;
+						u_new[i][j] += v[i][j];
+						//myFont->writePixel(i, j, float_to_char((5 + u_new[i][j])/10.0), float_to_char((5 + u_new[i][j])/10.0), 255, 128);
+						unsigned char r = float_to_char((5 + u_new[i][j])/10.0);
+						unsigned char g = float_to_char((5 + u_new[i][j])/10.0);
+						Fluid_Target[(i + j * FLUID_WIDTH) * 4 + 0] = float_to_char((5 + u_new[i][j])/10.0);
+						Fluid_Target[(i + j * FLUID_WIDTH) * 4 + 1] = float_to_char((5 + u_new[i][j])/10.0);
+						Fluid_Target[(i + j * FLUID_WIDTH) * 4 + 2] = float_to_char((float)(255 + float_to_char((5 + u_new[i][j])/10.0)) / 2.0f);
+						Fluid_Target[(i + j * FLUID_WIDTH) * 4 + 3] = 128;
+						//Caustics are generated by taking the derivative of the heightmap, aka sobel filter. It's a crude estimation.
+						float dx = get_u(i-1, j) - u[i][j];
+						float dy = get_u(i, j-1) - u[i][j];
+						//~ float dx_1 = get_u(i+1, j) - u[i][j];
+						//~ float dy_1 = get_u(i, j+1) - u[i][j];
+						//~ dx += dx_1;
+						//~ dy += dy_1;
+						//~ dx /= 2.0;
+						//~ dy /= 2.0;
+						float steepness = sqrtf(dx * dx + dy * dy);
+						
+						//Write Caustics
+						d_map[(i + j * FLUID_WIDTH) * 4 + 0] = float_to_char(steepness * 2);
+						d_map[(i + j * FLUID_WIDTH) * 4 + 1] = float_to_char(steepness * 2);
+						d_map[(i + j * FLUID_WIDTH) * 4 + 2] = float_to_char(steepness * 2);
+						d_map[(i + j * FLUID_WIDTH) * 4 + 3] = 0;
 					}
+				//Update U
+				for(int i = 0; i < FLUID_WIDTH; i++)
+					for(int j = 0; j < FLUID_HEIGHT; j++)
+						{
+							u[i][j] = u_new[i][j];
+							//blur the caustic target
+							unsigned char r_u, r_l, r_d, r_r, r_o;
+							float r, g, b;
+							r_u = get_d(i, j - 1, 0);
+							r_d = get_d(i, j + 1, 0);
+							r_l = get_d(i - 1, j, 0);
+							r_r = get_d(i + 1, j, 0);
+							//average all 5 together
+							r = (float)r_o + (float)r_u + (float)r_d + (float)r_l + (float)r_r; r /= 5.0;
+							//write caustics
+							Caustic_Target[(i + j * FLUID_WIDTH) * 4] = r;
+							Caustic_Target[(i + j * FLUID_WIDTH) * 4 + 1] = r;
+							Caustic_Target[(i + j * FLUID_WIDTH) * 4 + 2] = r;
+							Caustic_Target[(i + j * FLUID_WIDTH) * 4 + 3] = 128;
+						}
+				//Reinit the fluid surface texture
+				WaterSurfaceTexture->reInitFromDataPointer(false, true);
+				WaterCausticsTexture->reInitFromDataPointer(false, true);
+				
 				for (size_t communists_killed = 0; communists_killed < ProgramMeshInstances.size() && communists_killed < 1000; communists_killed++)
 				{
 					//faceTowardPoint(glm::vec3 pos, glm::vec3 target, glm::vec3 up)
@@ -909,6 +1125,10 @@ int main()
 								
 	//We should delete stuff... if we want to be good programmers :<
 	std::cout << "\n BEGINNING DELETION...";
+	if(WaterSurfaceMesh != nullptr) delete WaterSurfaceMesh;
+	if(WaterSurfaceTexture != nullptr) delete WaterSurfaceTexture;
+	if(WaterCausticsTexture != nullptr) delete WaterCausticsTexture;
+	
 	for(size_t i = 0; i < Images.size(); i++){
 		Images[i].Unload();
 	}
