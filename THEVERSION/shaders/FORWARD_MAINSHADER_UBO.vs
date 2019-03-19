@@ -56,7 +56,7 @@ uniform vec3 CameraPos; //Camera position in world space
 uniform float is_instanced; //used for determining whether or not we should use instanced_model_matrix or Model2World
 
 //Bone data
-layout (std140) uniform bone_data{ 
+layout (std140) uniform bone_data { 
 	mat4 Bone_World_Transforms[256];
 };
 

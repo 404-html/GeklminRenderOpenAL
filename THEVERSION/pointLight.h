@@ -135,7 +135,7 @@ struct CameraLight {
 		glUniform3f(m_color, myColor.x, myColor.y, myColor.z);
 		glUniform2f(m_radii, radii.x, radii.y);
 		glUniform1f(m_SolidColorToggle, solidColor);
-		glUniform1f(m_range, range);
+		glUniform1f(m_range, range * range);
 		glUniform1f(m_shadows, isShadowed?1.0f:0.0f);
 		
 		//Bind texture
@@ -155,7 +155,7 @@ struct CameraLight {
 		*m_color = myColor;
 		*m_radii = radii;
 		*m_SolidColorToggle = solidColor;
-		*m_range = range;
+		*m_range = range * range;
 		*m_shadows = isShadowed?1.0f:0.0f;
 		
 		//Bind texture
