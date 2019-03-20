@@ -129,9 +129,9 @@ in vec3 worldout;
 
 
 // uniform float ambient;
-uniform float specreflectivity;
+uniform float specreflectivity; //IF THIS IS NEGATIVE, FRESNEL IS USED
 uniform float specdamp;
-uniform float emissivity;
+uniform float emissivity; //IF FRESNEL IS USED, EMISSIVITY IS DISABLED
 uniform float enableCubeMapReflections;
 uniform float enableCubeMapDiffusivity;
 uniform float diffusivity;
@@ -258,6 +258,13 @@ float length2vec3(vec3 getmylength){
 
 void main()
 {
+	
+	//Configure Fresnel
+	float useShallowShiny = float(specreflectivity < 0); //max(this, ShallowShiny);
+	float Rspecreflectivity = abs(specreflectivity);
+	float Remissivity = (1.0 - useShallowShiny) * emissivity;
+	
+	
 	bettertexcoord = vec2(texcoord.x, -texcoord.y); //Looks like blender
 	vec3 UnitNormal;
 	
@@ -294,10 +301,15 @@ void main()
 	
 	vec3 frag_to_camera = CameraPos - worldout;
 	vec3 unit_frag_to_camera = normalize(frag_to_camera);
+	//Shallow Shiny Effect Calculation
+	float ShallowShiny = float(dot(UnitNormal, unit_frag_to_camera) > 0) * (1.0 - clamp(dot(UnitNormal, unit_frag_to_camera), 0, 1)); //We want the exact opposite of a dot product effect
+	ShallowShiny = pow(ShallowShiny, max(emissivity, 1)); //ShallowShiny becomes most powerful when at extremely shallow angles
+	//Apply ShallowShiny to texture_value.w (opacity)
+	texture_value.w = (1.0 - useShallowShiny) * texture_value.w + useShallowShiny * clamp(ShallowShiny + texture_value.w , texture_value.w, 1); //When looking straight at a surface, it is as transparent as it will ever be, but if you look at a shallow angle it may be completely blocking
 	
 	vec3 diffuseffect = vec3(0);
 	vec3 speceffect = vec3(0);
-	float shouldRenderSpecEffect = float(dot(UnitNormal, unit_frag_to_camera) > 0) * specreflectivity; //Important for transparent objects
+	float shouldRenderSpecEffect = float(dot(UnitNormal, unit_frag_to_camera) > 0) * Rspecreflectivity; //Important for transparent objects
 	
 	
 	//FOG CALCULATIONS
@@ -493,7 +505,7 @@ void main()
 		);
 		float specDampFactor = pow(specFactor,specdamp);
 		
-		speceffect += shouldRenderAtAll * shouldRenderCaseShadow * shouldRenderCaseRadii * shouldRenderSpecEffect * specDampFactor * specreflectivity * lightcolor * rangevar;
+		speceffect += shouldRenderAtAll * shouldRenderCaseShadow * shouldRenderCaseRadii * shouldRenderSpecEffect * specDampFactor * lightcolor * rangevar;
 		
 	}
 	
@@ -510,12 +522,12 @@ void main()
 	// speceffect = min(speceffect, vec3(1));
 	diffuseffect = min(diffuseffect, vec3(1));
 	//~ diffuseffect = EnableTransparency * ((shouldRenderSpecEffect * diffuseffect) + ((1-shouldRenderSpecEffect) * diffuseffect * texture_value.a)) + (1-EnableTransparency) * diffuseffect; //Simulate light passing losing energy as it passes through transparent surfaces
-	primary_color = clamp(diffuseffect * primary_color * diffusivity + emissivity * primary_color, vec3(0), primary_color);
+	primary_color = clamp(diffuseffect * primary_color * diffusivity + Remissivity * primary_color, vec3(0), primary_color);
 	
 	
 	
 	//vec3 diffusecolorval;
-	vec3 specularcolorval = speceffect + shouldRenderSpecEffect * cubemapData.xyz * enableCubeMapReflections * specreflectivity * specdamp/128.0;
+	vec3 specularcolorval = speceffect + (shouldRenderSpecEffect * cubemapData.xyz * enableCubeMapReflections) * (1.0 - useShallowShiny) + (clamp(shouldRenderSpecEffect * enableCubeMapReflections + ShallowShiny * enableCubeMapReflections, 0, 1) * cubemapData.xyz) * (useShallowShiny);
 	specularcolorval = min(specularcolorval, vec3(1));
 	vec3 NewfragColor = primary_color + specularcolorval;
 	NewfragColor = mix(clamp(NewfragColor, vec3(0), vec3(1)), fogColor.xyz, fogPercentage);
@@ -547,6 +559,6 @@ void main()
 	gl_FragData[0] = vec4(NewfragColor, 1) * (1-EnableTransparency) + transparent_color_0 * EnableTransparency; //comment this out, use the below line
 	//~ gl_FragData[0] = vec4(NewfragColor, texture_value.a);
 	// Blend Func: GL_ZERO, GL_ONE_MINUS_SRC_ALPHA for transparaent objects
-	gl_FragData[1] = vec4(color.a, color.a, color.a, color.a);
+	gl_FragData[1] = vec4(color.a, color.a, color.a, color.a); //Comment this out to disable wboit too
 
 }
