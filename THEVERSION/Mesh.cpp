@@ -46,12 +46,7 @@ Mesh::Mesh(std::string filename, bool instanced, bool isstatic, bool assetjaoder
 		InitMesh(mmphmodel, instanced, isstatic); //make the OpenGL Object
 	else
 		reShapeMesh(mmphmodel);
-	is_asset = assetjaodernein; //is the resource manager responsible for deleting this
-	
-	
-	/* 
-	Yes, Germany was back then a democracy, before us and we’ve been plundered and squeezed dry. No.. What does Democracy or authoritarian state mean for those international hyenas? They don’t care at all! They are only interested in one thing. Are you willing to be plundered? Yes or No?. Are you stupid enough to keep quite in the process? Yes or No ? And when democracy is stupid enough Not to stand up, Then it’s good! But when an  authoritarian state declares “ You do not plunder our people any longer” Neither from the inside or outside that is bad… In reality money rules in this countries.. They talk about press freedom when in fact all these newspapers have one owner and the owner is in any case, the sponsor.. This press then shapes public opinion. These political parties don’t have any differences at all like before with us. You already know the old political parties. They were all the same. Then people must think that especially in these countries of freedom and wealth.. There should exist a very comfortable life for it’s people but the opposite is the case. In these countries in the so-called “democracies” The people is by no means the main focus of attention. What really matters is the existence of this group of “democracy makers”. That is the existence of a few hundred giant capitalists who own all the factories and shares and who, ultimately, lead the people. They are not interested at all in the great mass of people. J****! they are the only ones who can be addressed as international elements because they conduct their business everywhere. It is a small, rootless, International clique that is turning the people against each other, that does want them to have peace. They can suppress us!, They can kill us, if you like! But we will not capitulate!
-	*/
+	is_asset = assetjaodernein; //is the resource manager responsible for deleting this, external use only
 	//std::cout<<"\n My name is " + MyName + "\n";
 }
 

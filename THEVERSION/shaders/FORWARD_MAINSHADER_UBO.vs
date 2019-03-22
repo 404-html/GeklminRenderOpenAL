@@ -26,24 +26,24 @@ layout( location = 4 ) in mat4 instanced_model_matrix; //used for instancing! 4,
 
 out vec2 texcoord;
 out vec3 normout;
-flat out float whichVertColor;
-flat out float alphareplace;
-flat out float colorbase;
+out float whichVertColor;
+out float alphareplace;
+out float colorbase;
 out vec3 Smooth_Vert_Color;
-flat out vec3 Flat_Vert_Color;
+//out vec3 Flat_Vert_Color; //TODO: make this flat
 // out vec3 vert_to_camera;
 out vec3 worldout;
 
-out float isFlatNormal;
-out float isTextured;
+//out float isFlatNormal;
+//out float isTextured;
 out float isColored;
-out float isFlatColor;
-out float ColorisBase;
-out float AlphaReplaces;
-out float isTinted;
-out float isDarkened;
-out float isAveraged;
-out float isNotAnyofThose;
+//out float isFlatColor;
+//out float ColorisBase;
+//out float AlphaReplaces;
+//out float isTinted;
+//out float isDarkened;
+//out float isAveraged;
+//out float isNotAnyofThose;
 vec3 worldpos; //Position of the fragment in the world!
 
 
@@ -71,11 +71,11 @@ main()
 	
 	normout = (worldtrans * vec4(Normal, 0.0)).xyz;
 	Smooth_Vert_Color = VertexColor;
-	Flat_Vert_Color = VertexColor;
+	//Flat_Vert_Color = VertexColor;
 	
 	
 	//whichNormal = float((renderflags & GK_FLAT_NORMAL) > uint(0));
-	whichVertColor = float((renderflags & GK_FLAT_COLOR) > uint(0));
+	//whichVertColor = float((renderflags & GK_FLAT_COLOR) > uint(0));
 	alphareplace = float((renderflags & GK_TEXTURE_ALPHA_REPLACE_PRIMARY_COLOR) > uint(0));
 	colorbase = float((renderflags & GK_COLOR_IS_BASE) > uint(0));
 	alphareplace = float((renderflags & GK_TEXTURE_ALPHA_REPLACE_PRIMARY_COLOR) > uint(0));

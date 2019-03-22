@@ -39,6 +39,7 @@ namespace GeklminRender{
 			virtual ~BMPFontRenderer();
 			void resize(unsigned int x_screen_width, unsigned int y_screen_height, float scaling_factor = 1.0);
 			void clearScreen(unsigned char red, unsigned char green, unsigned char blue, unsigned char alpha); //Clear to this
+			void addText(BMPTextBox _texbox){TextBoxes.push_back(_texbox);}
 			void clearText() {TextBoxes.clear();} //remove all text
 			void writeText(); //write all text in the list of textboxes
 			//OPENGL CALLS!!!

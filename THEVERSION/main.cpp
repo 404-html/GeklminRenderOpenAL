@@ -80,7 +80,7 @@ unsigned char float_to_char(float input){
 }
 
 //UI relative scale to monitor size
-float UI_SCALE_FACTOR = 0.25f;
+float UI_SCALE_FACTOR = 0.5f;
 bool useFBO = false; //Should the next object spawned use the test FBO texture?
 bool holdingShift = false; //used for sprinting
 double progtime = 0.0;
@@ -332,7 +332,6 @@ void checkKeys(){
 					new PointLight(SceneRenderCamera->pos, glm::vec3(tempr,tempg,tempb))
 				);
 				PointLightsWithoutShadows[PointLightsWithoutShadows.size()-1]->range = rand()%100 + 100;
-				PointLightsWithoutShadows[PointLightsWithoutShadows.size()-1]->range *= PointLightsWithoutShadows[PointLightsWithoutShadows.size()-1]->range;
 				PointLightsWithoutShadows[PointLightsWithoutShadows.size()-1]->dropoff = 1;
 				PointLightsWithoutShadows[PointLightsWithoutShadows.size()-1]->setPos(SceneRenderCamera->pos);
 				theScene->registerPointLight(PointLightsWithoutShadows[PointLightsWithoutShadows.size()-1]);
@@ -827,7 +826,7 @@ void initObjects()
 		PointLightsWithoutShadows.push_back(
 			new PointLight(glm::vec3(10,20,10), glm::vec3(1,1,1))
 		); //0 LIGHT
-		PointLightsWithoutShadows[0]->range = 500 * 500;
+		PointLightsWithoutShadows[0]->range = 500; //range is NOT squared
 		PointLightsWithoutShadows[0]->dropoff = 1;
 		theScene->registerPointLight(PointLightsWithoutShadows[0]);
 		
@@ -854,7 +853,7 @@ void initObjects()
 		{
 			Amb_Lights[0]->myColor = glm::vec3(0.2,0.2,0.2);
 			Amb_Lights[0]->myPos = glm::vec3(0,50,0);
-			Amb_Lights[0]->myRange = 5000; //Note: This creates a harsh cutoff. Fix later?
+			Amb_Lights[0]->myRange = 1000; //Note: This creates a harsh cutoff. Fix later?
 			theScene->RegisterAmbLight(Amb_Lights[0]);
 			Amb_Lights[0]->sphere1 = glm::vec4(0, 0, 0, 300 * 300);
 		}
@@ -1007,13 +1006,13 @@ int main()
 				// */
 					// LetterTester.myTransform.SetRot(glm::vec3(sinf(ordinarycounter/10.0) * 5,sinf(ordinarycounter/10.0)*3,sinf(ordinarycounter/11.2)*2));
 				//UI Rendering Demo
-				myFont->clearScreen(0,0,0,0.5);
+				//~ myFont->clearScreen(0,0,0,0.5);
 				//~ for(int i = 0; i < 100; i++)
 					//~ myFont->writeRectangle(rand()%(int)(WIDTH * UI_SCALE_FACTOR), rand()%(int)(HEIGHT * UI_SCALE_FACTOR),
 					                       //~ rand()%(int)(WIDTH * UI_SCALE_FACTOR), rand()%(int)(HEIGHT * UI_SCALE_FACTOR),
 					                       //~ rand()%256, rand()%256, rand()%256, rand()%128);
 				
-					//myFont->writeCircle(rand()%WIDTH, rand()%HEIGHT, 10, rand()%255, rand()%255, rand()%255, 50);
+					myFont->writeCircle(rand()%WIDTH, rand()%HEIGHT, 10, rand()%255, rand()%255, rand()%255, 50);
 				
 				//~ for(size_t i= 0; i < Sprite_Draw_Pos.size(); i++)
 					//~ {

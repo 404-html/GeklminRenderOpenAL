@@ -10,14 +10,14 @@
 // layout (depth_greater) out float gl_FragDepth;
 // ^ should probably re-enable that later
 
-//List of flags. Some of these are no longer implemented, they caused too much of a performance problem. I do not recommend you enable them.
+//List of flags. Some of these are no longer implemented in the default shader configuration, but it is easy to figure out how to make them work
 const uint GK_RENDER = uint(1); // Do we render it? This is perhaps the most important flag.
 const uint GK_TEXTURED = uint(2); // Do we texture it? if disabled, only the texture will be used. if both this and colored are disabled, the object will be black.
 const uint GK_COLORED = uint(4);// Do we color it? if disabled, only the texture will be used. if both this and textured are disabled, the object will be black.
 const uint GK_FLAT_NORMAL = uint(8); // Do we use flat normals? If this is set, then the normals output to the fragment shader in the initial opaque pass will use the flat layout qualifier. 
 const uint GK_FLAT_COLOR = uint(16); // Do we render flat colors? the final, provoking vertex will be used as the color for the entire triangle.
 const uint GK_COLOR_IS_BASE = uint(32); //Use the color as the primary. Uses texture as primary if disabled.
-const uint GK_TINT = uint(64); //Does secondary add to primary?
+const uint GK_TINT = uint(64); //Does secondary add to primary? Makes a nice glowing effect
 const uint GK_DARKEN = uint(128);//Does secondary subtract from primary?
 const uint GK_AVERAGE = uint(256);//Do secondary and primary just get averaged?
 const uint GK_COLOR_INVERSE = uint(512);//Do we use the inverse of the color?
@@ -107,24 +107,22 @@ in vec2 texcoord;
 in vec3 normout;
 //flat in vec3 flatnormout;
 
-in float isFlatNormal;
-in float isTextured;
+//in float isFlatNormal;
+//in float isTextured;
 in float isColored;
-in float isFlatColor;
-in float ColorisBase;
-in float AlphaReplaces;
-in float isTinted;
-in float isDarkened;
-in float isAveraged;
-in float isNotAnyofThose;
+//in float isFlatColor;
+//in float ColorisBase;
+//in float AlphaReplaces;
+//in float isTinted;
+//in float isDarkened;
+//in float isAveraged;
+//in float isNotAnyofThose;
 
-flat in vec3 Flat_Vert_Color;
-flat in float whichVertColor;
-flat in float alphareplace;
-flat in float colorbase;
+//in vec3 Flat_Vert_Color;
+//in float whichVertColor;
+in float alphareplace;
+in float colorbase;
 in vec3 Smooth_Vert_Color;
-// in vec3 vert_to_camera;
-//Logic from the vertex level
 in vec3 worldout;
 
 
@@ -286,7 +284,7 @@ void main()
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	 
 	
-	color_value = whichVertColor * Flat_Vert_Color + (1-whichVertColor) * Smooth_Vert_Color;
+	color_value = Smooth_Vert_Color; //Change: Removed Flat Color
 	
 
 	
@@ -295,18 +293,11 @@ void main()
 	
 	
 	
-	 primary_color = primary_color * (1-alphareplace) + ((primary_color * (1-texture_value.w)) + (texture_value.xyz * texture_value.w)) * alphareplace;
-	//primary_color = texture_value.xyz;
+	 primary_color = primary_color * (1-alphareplace) + ((primary_color * (1-texture_value.w)) + (secondary_color.xyz * texture_value.w)) * alphareplace;
 	
 	
 	vec3 frag_to_camera = CameraPos - worldout;
 	vec3 unit_frag_to_camera = normalize(frag_to_camera);
-	//Shallow Shiny Effect Calculation
-	//float ShallowShiny = float(dot(UnitNormal, unit_frag_to_camera) > 0) * (1.0 - clamp(dot(UnitNormal, unit_frag_to_camera), 0, 1)); //We want the exact opposite of a dot product effect
-	//ShallowShiny = pow(ShallowShiny, max(emissivity, 1)); //ShallowShiny becomes most powerful when at extremely shallow angles
-	//Apply ShallowShiny to texture_value.w (opacity)
-	//texture_value.w = (1.0 - useShallowShiny) * texture_value.w + useShallowShiny * clamp(ShallowShiny + texture_value.w , texture_value.w, 1); //When looking straight at a surface, it is as transparent as it will ever be, but if you look at a shallow angle it may be completely blocking
-	
 	vec3 diffuseffect = vec3(0);
 	vec3 speceffect = vec3(0);
 	float shouldRenderSpecEffect = float(dot(UnitNormal, unit_frag_to_camera) > 0) * specreflectivity; //Important for transparent objects
@@ -314,11 +305,11 @@ void main()
 	
 	//FOG CALCULATIONS
 	vec4 fogColor = backgroundColor.w * backgroundColor + (1-backgroundColor.w) * texture(SkyboxCubemap,-unit_frag_to_camera);
-	float fogPercentage = clamp(max(length(frag_to_camera) - fogRange.x, 0) / (fogRange.y - fogRange.x), 0.0, 1.0);//Linear Fog Dropoff
+	float fogPercentage = clamp(max(dot(frag_to_camera, unit_frag_to_camera) - fogRange.x, 0) / (fogRange.y - fogRange.x), 0.0, 1.0);//Linear Fog Dropoff
 	for (int i = 0; i < MAX_DIR_LIGHTS && i < numdirlights; i++) //TODO: Replace the 1 with something better
 	{
 	
-		float inthelist = float( //Comment out everything in here and make it just "false" if you dont want sphere and AABB light volume culling
+		bool inthelist =( //Comment out everything in here and make it just "false" if you dont want sphere and AABB light volume culling
 								// (length2vec3(dir_lightArray[i].sphere1.xyz - worldout) < dir_lightArray[i].sphere1.w) || 
 								// (length2vec3(dir_lightArray[i].sphere2.xyz - worldout) < dir_lightArray[i].sphere2.w) || 
 								// (length2vec3(dir_lightArray[i].sphere3.xyz - worldout) < dir_lightArray[i].sphere3.w) || 
@@ -335,7 +326,7 @@ void main()
 								) //||
 								// false //Uncomment
 							);
-		float renderthislight = float(inthelist == 1 && dir_isblacklist[i] == uint(1) || inthelist == 0 && dir_isblacklist[i] == uint(0));
+		float renderthislight = float(inthelist && dir_isblacklist[i] == uint(1) || !inthelist && dir_isblacklist[i] == uint(0));
 		float nDotl = dot(UnitNormal, -vec3(dir_direction[i]));
 		nDotl = max(nDotl, 0.0);
 
@@ -371,17 +362,17 @@ void main()
 								//~ // ) ||
 								//~ false
 							//~ ); //UNUSED (too slow)
-		float renderthislight = 1;
+		//float renderthislight = 1;
 		
 		
 		vec3 frag_to_light = point_position[i].xyz - worldout;
 		vec3 unit_frag_to_light = normalize(frag_to_light);
 		vec3 lightDir = -unit_frag_to_light;
-		float lightdist = dot(frag_to_light, frag_to_light); //replaced length2vec3 because this might be faster
+		float lightdist = dot(frag_to_light, unit_frag_to_light); //NOT squared
 		float nDotl = dot(UnitNormal, unit_frag_to_light);
 		float rangevar = clamp(1 - (lightdist/(point_range[i])),0,1);
 		nDotl = max(nDotl * rangevar,0.0);
-		diffuseffect += renderthislight * nDotl * vec3(point_color[i]) * diffusivity;
+		diffuseffect += nDotl * vec3(point_color[i]) * diffusivity;
 		//specular
 		//~ vec3 reflectedLightDir = reflect(lightDir , UnitNormal);
 		
@@ -391,7 +382,7 @@ void main()
 		);
 		float specDampFactor = pow(specFactor,specdamp); //Unavoidable pow
 		//The number of mult ops can be reduced in the following line
-		speceffect += renderthislight * shouldRenderSpecEffect * specDampFactor * vec3(point_color[i]) * rangevar * float(i < numpointlights);
+		speceffect += shouldRenderSpecEffect * specDampFactor * vec3(point_color[i]) * rangevar * float(i < numpointlights);
 	}
 	//Ambient Lights
 	for (int i = 0; i < MAX_AMB_LIGHTS && i < numamblights; i++){
@@ -416,7 +407,7 @@ void main()
 	
 		//add the diffuseeffect
 		vec3 fragtolight = vec3(amb_position[i]) - worldout;
-		float inrange = float(length2vec3(fragtolight) < amb_range[i] * amb_range[i]);
+		float inrange = float(dot(fragtolight, fragtolight) < amb_range[i]);
 		diffuseffect += renderthislight * vec3(amb_color[i]) * inrange;
 	}
 	
@@ -488,12 +479,12 @@ void main()
 		//~ }
 		
 		float radial_distance = length(vec2(0.5,0.5) - screenspace_light.xy);
-		float shouldRenderCaseRadii = 1.0-smoothstep(cam_radii[i].x, cam_radii[i].y, radial_distance);//float(camera_lightArray[i].radii.y > radial_distance);
+		float shouldRenderCaseRadii = 1.0-smoothstep(cam_radii[i].x, cam_radii[i].y, radial_distance);
 		//float shouldRenderCaseShadow = float(CameraTexSamples[i].x > screenspace_light.z); //Avoid shadow banding 
 		//float lightdist = length2vec3(frag_to_light); //Can never be negative
 		float nDotl = dot(UnitNormal, unit_frag_to_light);
 		float rangevar = 1.0 - clamp(dot(unit_frag_to_light,frag_to_light)/abs(cam_range[i]), 0.0 , 1);
-		rangevar = rangevar * float(cam_range[i] >= 0) + 1.0 * float(cam_range[i] < 0);
+		rangevar = rangevar * float(cam_range[i] >= 0) + float(cam_range[i] < 0);
 		nDotl = max(nDotl,0.0);
 		diffuseffect += shouldRenderAtAll * shouldRenderCaseShadow * shouldRenderCaseRadii * nDotl * lightcolor * diffusivity * rangevar;
 		//specular
