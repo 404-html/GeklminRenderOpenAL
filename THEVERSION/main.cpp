@@ -853,7 +853,7 @@ void initObjects()
 		{
 			Amb_Lights[0]->myColor = glm::vec3(0.2,0.2,0.2);
 			Amb_Lights[0]->myPos = glm::vec3(0,50,0);
-			Amb_Lights[0]->myRange = 1000; //Note: This creates a harsh cutoff. Fix later?
+			Amb_Lights[0]->myRange = 5000 * 5000; //Note: This creates a harsh cutoff. Fix later?
 			theScene->RegisterAmbLight(Amb_Lights[0]);
 			Amb_Lights[0]->sphere1 = glm::vec4(0, 0, 0, 300 * 300);
 		}

@@ -309,7 +309,7 @@ void main()
 	for (int i = 0; i < MAX_DIR_LIGHTS && i < numdirlights; i++) //TODO: Replace the 1 with something better
 	{
 	
-		bool inthelist =( //Comment out everything in here and make it just "false" if you dont want sphere and AABB light volume culling
+		int inthelist = int( //Comment out everything in here and make it just "false" if you dont want sphere and AABB light volume culling
 								// (length2vec3(dir_lightArray[i].sphere1.xyz - worldout) < dir_lightArray[i].sphere1.w) || 
 								// (length2vec3(dir_lightArray[i].sphere2.xyz - worldout) < dir_lightArray[i].sphere2.w) || 
 								// (length2vec3(dir_lightArray[i].sphere3.xyz - worldout) < dir_lightArray[i].sphere3.w) || 
@@ -326,7 +326,7 @@ void main()
 								) //||
 								// false //Uncomment
 							);
-		float renderthislight = float(inthelist && dir_isblacklist[i] == uint(1) || !inthelist && dir_isblacklist[i] == uint(0));
+		float renderthislight = float(inthelist == 1 && dir_isblacklist[i] == uint(1) || inthelist == 0 && dir_isblacklist[i] == uint(0));
 		float nDotl = dot(UnitNormal, -vec3(dir_direction[i]));
 		nDotl = max(nDotl, 0.0);
 
