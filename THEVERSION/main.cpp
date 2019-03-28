@@ -955,7 +955,8 @@ int main()
 	MyVeryBadDeer.tex = 0;
 	MyVeryBadDeer.EnableCubemapReflections = 1;
 	MyVeryBadDeer.myPhong.diffusivity = 0.6;
-	MyVeryBadDeer.myPhong.specreflectivity = 0;
+	MyVeryBadDeer.myPhong.specreflectivity = 0.2;
+	MyVeryBadDeer.myPhong.specdamp = 128;
 	MyVeryBadDeer.myPhong.emissivity = 0;
 	MyVeryBadDeer.myTransform.SetScale(glm::vec3(10,10,10));
 	BadDeer.RegisterInstance(&MyVeryBadDeer); //demonstrating that you can use meshes on the stack
