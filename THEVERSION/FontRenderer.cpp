@@ -30,11 +30,12 @@ namespace GeklminRender{ //Makes things easier
 		int temp_width;
 		int temp_height;
 		int temp_components;
-		int temp_something = 4; //no idea
+		int temp_something = 0; //no idea
 		BMPFont = Texture::stbi_load_passthrough((char*)filepath.c_str(), &temp_width, &temp_height, &temp_components, temp_something);
 		if(BMPFont != nullptr){
 			BMPFontWidth = temp_width;
 			BMPFontHeight = temp_height;
+			std::cout << "\nBMPFONT INFO\nWidth: " << BMPFontWidth << " \nHeight: " << BMPFontHeight;
 			num_components_BMPFont = temp_components;
 		} else {
 			std::cout << "\nERROR!!! PROBLEM LOADING FILE!!!" << std::endl;
@@ -361,9 +362,11 @@ namespace GeklminRender{ //Makes things easier
 		if(targwidth  == 0) return;
 		if(targheight == 0) return;
 		
-		for(int w = minTargetX; w < maxTargetX; w++)
-			for(int h = minTargetY; h < maxTargetY; h++)
+		for(int w = minTargetX; w <= maxTargetX; w++)
+			for(int h = minTargetY; h <= maxTargetY; h++)
 			{
+				if(w < 0 || h < 0)
+					continue;
 				float PercentThroughWidth = (float)(w - minTargetX) / (float)(targwidth); //despite the name, it is not multiplied by 100
 				float PercentThroughHeight = (float)(h - minTargetY) / (float)(targheight);
 				PercentThroughWidth = clamp(PercentThroughWidth, 0, 1);
@@ -384,7 +387,7 @@ namespace GeklminRender{ //Makes things easier
 				unsigned char red_source = sourcePixelStartByte[0];
 				unsigned char green_source = red_source;
 				unsigned char blue_source = red_source;
-				unsigned char alpha_source = 1;
+				unsigned char alpha_source = 0;
 				if(num_components > 1)
 					green_source = sourcePixelStartByte[1];
 				if(num_components > 2)
@@ -394,6 +397,42 @@ namespace GeklminRender{ //Makes things easier
 				writePixel(w, h, red_source, green_source, blue_source, alpha_source);
 				
 			}
+	}
+	
+	void BMPFontRenderer::writeCharacter(
+				char Letter, int x, int y, //Where in the buffer shall the bottom left corner be
+				unsigned int targwidth, unsigned int targheight, //Width and Height in the target
+				glm::vec3 color_0_255
+	){
+		float Percent_Through_Width = 0.0; //TODO: Fix _ convention to non_
+		float Percent_Through_Height = 0.0;
+		int minTargetX = x;
+		int minTargetY = y;
+		int maxTargetX = x + targwidth;
+		int maxTargetY = y + targheight;
+		int charX = Letter%8;
+		int charY = Letter/8;
+		unsigned int charXOff = charX * char_width;
+		unsigned int charYOff = charY * char_height;
+		for(int w = minTargetX; w <= maxTargetX; w++)
+			for(int h = minTargetY; h <= maxTargetY; h++)
+			{
+				if (w < 0 || h < 0)
+					continue;
+				Percent_Through_Width = ((float)(w - minTargetX))/((float)targwidth);
+				Percent_Through_Height = ((float)(h - minTargetY))/((float)targheight);
+				Percent_Through_Width = clamp(Percent_Through_Width, 0, 1);
+				Percent_Through_Height = clamp(Percent_Through_Height, 0, 1); Percent_Through_Height = 1.0 - Percent_Through_Height;
+				unsigned int Src_Value_Char = (unsigned int)getRedChar(clamp(Percent_Through_Width * (char_width - 0.5), 0, char_width - 1) + charXOff, clamp(Percent_Through_Height * (char_height - 0.5), 0, char_height - 1) + charYOff);
+				float Src_Value = ((float)Src_Value_Char)/255.0f; //Get it between 0 and 1
+				unsigned char alpha = Src_Value_Char;
+				unsigned char red = Src_Value * color_0_255.x;
+				unsigned char green = Src_Value * color_0_255.y;
+				unsigned char blue = Src_Value * color_0_255.z;
+				writePixel(w, h, red, green, blue, alpha);
+			}
+		//std::cout << "\nBMPFONT INFO\nWidth: " << BMPFontWidth << " \nHeight: " << BMPFontHeight;
+		//std::cout << "\nComponents: " << num_components_BMPFont << std::endl;
 	}
 	
 	

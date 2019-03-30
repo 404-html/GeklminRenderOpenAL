@@ -57,16 +57,29 @@ namespace GeklminRender{
 				unsigned int targwidth, unsigned int targheight, //How wide and how tall in the target?
 				bool flip_x = false, bool flip_y = false //Flip?
 			);
+			
+			void writeCharacter(
+				char Letter, int x, int y, //Where in the buffer shall the bottom left corner be
+				unsigned int targwidth, unsigned int targheight, //Width and Height in the target
+				glm::vec3 color_0_255 = glm::vec3(1)
+			);
 			void setCharDimensions(unsigned int _char_width, unsigned int _char_height, unsigned int _chars_per_row){
 				char_width = _char_width;
 				char_height = _char_height;
 				chars_per_row = _chars_per_row;
 			}
 			bool amINull(){return isNull;}
+			unsigned char* getBMPFont(){return BMPFont;}
+			unsigned int getBMPFontWidth(){return BMPFontWidth;}
+			unsigned int getBMPFontHeight(){return BMPFontHeight;}
+			unsigned int getBMPFontNumComponents(){return num_components_BMPFont;}
 			std::vector<BMPTextBox>* getTextBoxVector(){return &TextBoxes;}
 			
 		protected:
 		private:
+			unsigned char getRedChar(unsigned int xoff, unsigned int yoff){
+				return BMPFont[(xoff + yoff * BMPFontWidth) * num_components_BMPFont];
+			}
 			std::vector<BMPTextBox> TextBoxes; //All text boxes. Public so you can access it.
 			//You must use new to allocate this
 			BMPFontRenderer(const BMPFontRenderer& Other);
@@ -75,7 +88,7 @@ namespace GeklminRender{
 			//Member variables
 			bool isNull = true;
 			unsigned char* BMPFont = nullptr; //Loaded with stb_image_passhthrough
-			unsigned int num_components_BMPFont = 3; //Default Guess
+			unsigned int num_components_BMPFont = 4; //Default Guess
 			unsigned int BMPFontWidth = 0;
 			unsigned int BMPFontHeight = 0;
 			unsigned int screen_width = 0;

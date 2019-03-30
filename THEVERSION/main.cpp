@@ -1014,7 +1014,13 @@ int main()
 					                       //~ rand()%256, rand()%256, rand()%256, rand()%128);
 				
 					myFont->writeCircle(rand()%WIDTH, rand()%HEIGHT, 10, rand()%255, rand()%255, rand()%255, 50);
-				
+					myFont->writeCharacter('#', rand()%WIDTH, rand()%HEIGHT, 32, 32, glm::vec3(128,128,255));
+					myFont->writeImage(
+							0, 0,
+						    myFont->getBMPFont(), myFont->getBMPFontWidth(), myFont->getBMPFontHeight(), myFont->getBMPFontNumComponents(),
+						    0, 127, 0, 271,
+						    128, 272,
+						    false, false);
 				//~ for(size_t i= 0; i < Sprite_Draw_Pos.size(); i++)
 					//~ {
 						//~ myFont->writeImage(

@@ -88,7 +88,7 @@ Texture::Texture(const std::string& fileName, bool _enableTransparency, GLenum m
 	transparency_enabled = _enableTransparency;
 	isnull = false; //It is not null
 	int width, height, numComponents; //DO NOT TOUCH!.
-    temp_image_data = stbi_load(fileName.c_str(), &width, &height, &numComponents, 4);
+    temp_image_data = stbi_load(fileName.c_str(), &width, &height, &numComponents, 4); //NOTE: THis was 4
 	Permanent_Data_Pointer = temp_image_data;
 	myWidth = width;
 	myHeight = height;
