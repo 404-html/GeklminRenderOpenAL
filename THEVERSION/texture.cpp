@@ -104,7 +104,7 @@ Texture::Texture(const std::string& fileName, bool _enableTransparency, GLenum m
 	// }
 	MyName = fileName;
     //initTexture(width, height, numComponents, temp_image_data, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR_MIPMAP_LINEAR, GL_REPEAT, 4.0f);
-	initTexture(width, height, numComponents, temp_image_data, minfilter, magfilter, wrap_mode, anisotropic_level);
+	initTexture(width, height, 4, temp_image_data, minfilter, magfilter, wrap_mode, anisotropic_level); //NOTE TO SELF: num_components used to be used here.
 	if (Permanent_Data_Pointer == nullptr)
 		free(temp_image_data); //How 2 make memory leak go away?!?!	
 	temp_image_data = nullptr; 
