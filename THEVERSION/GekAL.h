@@ -1,5 +1,5 @@
-#ifndef GEKAL_H
-#define GEKAL_H
+#ifndef GEKAL
+#define GEKAL
 
 
 #include "geklminrender.h"
@@ -7,7 +7,7 @@
 #include <AL/al.h>
 #include <AL/alc.h>
 
-std::string ErrorCheck(ALenum error)
+inline std::string ErrorCheck(ALenum error)
 {
     if(error == AL_INVALID_NAME)
     {
@@ -37,13 +37,13 @@ std::string ErrorCheck(ALenum error)
 
 
 //START GekAL.h
-bool isBigEndian()
+inline bool isBigEndian()
 {
 	int a=1;
 	return !((char*)&a)[0];
 }
 
-int convertToInt(char* buffer,int len)
+inline int convertToInt(char* buffer,int len)
 {
 	int a=0;
 	if(!isBigEndian())
@@ -56,7 +56,7 @@ int convertToInt(char* buffer,int len)
 }
 
 //WAV File Loader
-char* loadWAV(const char* fn,int& chan,int& samplerate,int& bps,int& size)
+inline char* loadWAV(const char* fn,int& chan,int& samplerate,int& bps,int& size)
 {
 	char buffer[4];
 	int incrementer = 0; //for the crawler
@@ -155,7 +155,7 @@ char* loadWAV(const char* fn,int& chan,int& samplerate,int& bps,int& size)
 	}
 }
 
-ALuint loadWAVintoALBuffer(const char* fn)
+inline ALuint loadWAVintoALBuffer(const char* fn)
 {
 	ALuint return_val = 0;
 	
@@ -195,7 +195,7 @@ ALuint loadWAVintoALBuffer(const char* fn)
 	return return_val;
 }
 
-void syncCameraStateToALListener(GeklminRender::Camera* mycam){
+inline void syncCameraStateToALListener(GeklminRender::Camera* mycam){
 	ALfloat listenerOri[] = { 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f };
 	alListener3f(AL_POSITION, mycam->pos.x, mycam->pos.y, mycam->pos.z);
 		alListener3f(AL_VELOCITY, 0, 0, 0); //Later we will use the derivative
