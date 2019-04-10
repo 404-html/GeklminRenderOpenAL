@@ -48,8 +48,8 @@ namespace GeklminRender{
 			
 			void writePixel(unsigned int x, unsigned int y, unsigned char red, unsigned char green, unsigned char blue, unsigned char alpha); //[(x + width * y)*num_components + component index]
 			void writeRectangle(unsigned int x1, unsigned int y1, unsigned int x2, unsigned int y2, unsigned char red, unsigned char green, unsigned char blue, unsigned char alpha); //Draw a rectangle
-			void writeCircle(unsigned int x, unsigned int y, float radius, unsigned char red, unsigned char green, unsigned char blue, unsigned char alpha); //Draws a circle
-			void writeEllipse(unsigned int x, unsigned int y, float width, float height, float rotation, unsigned char red, unsigned char green, unsigned char blue, unsigned char alpha); //Draws an ellipse
+			void writeCircle(int x, int y, float radius, unsigned char red, unsigned char green, unsigned char blue, unsigned char alpha); //Draws a circle
+			void writeEllipse(int x, int y, float width, float height, float rotation, unsigned char red, unsigned char green, unsigned char blue, unsigned char alpha); //Draws an ellipse
 			void writeImage(
 				int x, int y, //Where in the buffer shall the bottom left corner be
 				unsigned char* Source, unsigned int width, unsigned int height, unsigned int num_components, //Information about source image. if a component (such as alpha) is missing, then it is assumed to be 1

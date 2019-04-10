@@ -317,22 +317,24 @@ namespace GeklminRender{ //Makes things easier
 				writePixel(w, h, red, green, blue, alpha);
 	
 	}
-	void BMPFontRenderer::writeEllipse(unsigned int x, unsigned int y, float width, float height, float rotation, unsigned char red, unsigned char green, unsigned char blue, unsigned char alpha) {
+	void BMPFontRenderer::writeEllipse(int x, int y, float width, float height, float rotation, unsigned char red, unsigned char green, unsigned char blue, unsigned char alpha) {
 		//if(x < width || y < height) return; //If x is less than width, then x - width will be less than 0 and loop around due to the effects of unsigned int math
-		unsigned int minX = x - width;
-		unsigned int maxX = x + width;
-		unsigned int minY = y - height;
-		unsigned int maxY = y + height;
+		if(width == 0 || height == 0) 
+			return;
+		int minX = x - width;
+		int maxX = x + width;
+		int minY = y - height;
+		int maxY = y + height;
 		float rx = width;
 		float ry = height;
-		for(unsigned int w = minX; w < maxX; w++)
-			for(unsigned int h = minY; h < maxY; h++)
+		for(int w = minX; w < maxX; w++)
+			for(int h = minY; h < maxY; h++)
 				if(
 				 ((float)w - (float)x) * ((float)w - (float)x) / (rx * rx) + ((float)h - (float)y) * ((float)h - (float)y) / (ry * ry) < 1
 				)
 					writePixel(w, h, red, green, blue, alpha);
 	}
-	void BMPFontRenderer::writeCircle(unsigned int x, unsigned int y, float radius, unsigned char red, unsigned char green, unsigned char blue, unsigned char alpha){
+	void BMPFontRenderer::writeCircle(int x, int y, float radius, unsigned char red, unsigned char green, unsigned char blue, unsigned char alpha){
 		writeEllipse(x, y, radius, radius, 0, red, green, blue, alpha);
 	}
 	
