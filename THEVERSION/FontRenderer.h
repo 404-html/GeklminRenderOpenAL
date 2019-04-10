@@ -9,6 +9,12 @@
 
 namespace GeklminRender{
 	struct BMPTextBox{
+		BMPTextBox(std::string _text, float _x, float _y, float _scale, glm::vec4 color = {1, 1, 1, 1}, bool _background = false, glm::vec4 back_color = {0, 0, 0, 0}){
+			text = _text;
+			x = _x;
+			y = _y;
+			scale = _scale;
+		}
 		std::string text = "Sample Text";
 		float x = 0;
 		float y = 0;
@@ -19,7 +25,6 @@ namespace GeklminRender{
 		unsigned char alpha = 1;
 		//Rectangle behind the textbox
 		bool doRenderBackground = false;
-		bool isEllipse = false; //if it's an ellipse...
 		unsigned char redBackground = 1;
 		unsigned char greenBackground = 1;
 		unsigned char blueBackground = 1;
@@ -61,7 +66,9 @@ namespace GeklminRender{
 			void writeCharacter(
 				char Letter, int x, int y, //Where in the buffer shall the bottom left corner be
 				unsigned int targwidth, unsigned int targheight, //Width and Height in the target
-				glm::vec3 color_0_255 = glm::vec3(1)
+				glm::vec3 color_0_255 = glm::vec3(1),
+				glm::vec3 backcolor_0_255 = glm::vec3(0),
+				bool RenderBackground = false
 			);
 			void setCharDimensions(unsigned int _char_width, unsigned int _char_height, unsigned int _chars_per_row){
 				char_width = _char_width;

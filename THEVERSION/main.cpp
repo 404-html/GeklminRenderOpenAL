@@ -1015,21 +1015,21 @@ int main()
 				
 					myFont->writeCircle(rand()%WIDTH, rand()%HEIGHT, 10, rand()%255, rand()%255, rand()%255, 50);
 					myFont->writeCharacter('#', rand()%WIDTH, rand()%HEIGHT, 32, 32, glm::vec3(128,128,255));
-					myFont->writeImage(
-							0, 0,
-						    myFont->getBMPFont(), myFont->getBMPFontWidth(), myFont->getBMPFontHeight(), myFont->getBMPFontNumComponents(),
-						    0, 127, 0, 271,
-						    128, 272,
-						    false, false);
-				//~ for(size_t i= 0; i < Sprite_Draw_Pos.size(); i++)
-					//~ {
-						//~ myFont->writeImage(
-							//~ Sprite_Draw_Pos[i].x + Sprite_Draw_Pos[i].z * 64 * sinf(ordinarycounter/Sprite_Draw_Pos[i].w),
-						    //~ Sprite_Draw_Pos[i].y + Sprite_Draw_Pos[i].z * 64 * cosf(ordinarycounter/Sprite_Draw_Pos[i].w),
-						    //~ Images[0].data_ptr, Images[0].width, Images[0].height, Images[0].num_components, 0, 255, 0, 255,
-						    //~ Sprite_Draw_Pos[i].z * 64 * abs(sinf(ordinarycounter/(Sprite_Draw_Pos[i].w + 21.0))), 
-						    //~ Sprite_Draw_Pos[i].z * 64 * abs(sinf(ordinarycounter/(Sprite_Draw_Pos[i].w + 30.0))), false, false);
-					//~ }
+					//~ myFont->writeImage(
+							//~ 0, 0,
+						    //~ myFont->getBMPFont(), myFont->getBMPFontWidth(), myFont->getBMPFontHeight(), myFont->getBMPFontNumComponents(),
+						    //~ 0, 127, 0, 271,
+						    //~ 128, 272,
+						    //~ false, false);
+				for(size_t i= 0; i < Sprite_Draw_Pos.size(); i++)
+					{
+						myFont->writeImage(
+							Sprite_Draw_Pos[i].x + Sprite_Draw_Pos[i].z * 64 * sinf(ordinarycounter/Sprite_Draw_Pos[i].w),
+						    Sprite_Draw_Pos[i].y + Sprite_Draw_Pos[i].z * 64 * cosf(ordinarycounter/Sprite_Draw_Pos[i].w),
+						    Images[0].data_ptr, Images[0].width, Images[0].height, Images[0].num_components, 0, 255, 0, 255,
+						    Sprite_Draw_Pos[i].z * 64 * abs(sinf(ordinarycounter/(Sprite_Draw_Pos[i].w + 21.0))), 
+						    Sprite_Draw_Pos[i].z * 64 * abs(sinf(ordinarycounter/(Sprite_Draw_Pos[i].w + 30.0))), false, false);
+					}
 				//Do and Draw Fluid Simulation
 				//But first, randomly create drops
 				if(numdrops < (int)dropcounter)

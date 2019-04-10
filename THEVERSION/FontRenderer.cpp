@@ -294,7 +294,7 @@ namespace GeklminRender{ //Makes things easier
 			}
 		//std::cout << "\nSuccessfully Rendering the Persistence layer!";
 	}
-	void BMPFontRenderer::writePixel(unsigned int x, unsigned int y, unsigned char red, unsigned char green, unsigned char blue, unsigned char alpha) 
+	inline void BMPFontRenderer::writePixel(unsigned int x, unsigned int y, unsigned char red, unsigned char green, unsigned char blue, unsigned char alpha) 
 	{
 		if(x >= Screen->getMyWidth() || y >= Screen->getMyHeight()) return; //Do not attempt to write a pixel if it's invalid NOTE: X and Y will never be less than 0 because they're unsigned
 		//[(x + width * y)*num_components + component index] gets you the byte
@@ -404,7 +404,9 @@ namespace GeklminRender{ //Makes things easier
 	void BMPFontRenderer::writeCharacter(
 				char Letter, int x, int y, //Where in the buffer shall the bottom left corner be
 				unsigned int targwidth, unsigned int targheight, //Width and Height in the target
-				glm::vec3 color_0_255
+				glm::vec3 color_0_255,
+				glm::vec3 backcolor_0_255,
+				bool RenderBackground
 	){
 		float Percent_Through_Width = 0.0; //TODO: Fix _ convention to non_
 		float Percent_Through_Height = 0.0;
@@ -428,13 +430,14 @@ namespace GeklminRender{ //Makes things easier
 				unsigned int Src_Value_Char = (unsigned int)getRedChar(clamp(Percent_Through_Width * (char_width - 0.5), 0, char_width - 1) + charXOff, clamp(Percent_Through_Height * (char_height - 0.5), 0, char_height - 1) + charYOff);
 				float Src_Value = ((float)Src_Value_Char)/255.0f; //Get it between 0 and 1
 				unsigned char alpha = Src_Value_Char;
-				unsigned char red = Src_Value * color_0_255.x;
-				unsigned char green = Src_Value * color_0_255.y;
-				unsigned char blue = Src_Value * color_0_255.z;
-				writePixel(w, h, red, green, blue, alpha);
+				unsigned char red = Src_Value * color_0_255.x + (1 - Src_Value) * backcolor_0_255.x;
+				unsigned char green = Src_Value * color_0_255.y + (1 - Src_Value) * backcolor_0_255.y;
+				unsigned char blue = Src_Value * color_0_255.z + (1 - Src_Value) * backcolor_0_255.z;
+				if(RenderBackground)
+					writePixel(w, h, red, green, blue, 255);
+				else if(Src_Value_Char > 0)
+					writePixel(w, h, red, green, blue, Src_Value_Char);
 			}
-		//std::cout << "\nBMPFONT INFO\nWidth: " << BMPFontWidth << " \nHeight: " << BMPFontHeight;
-		//std::cout << "\nComponents: " << num_components_BMPFont << std::endl;
 	}
 	
 	
