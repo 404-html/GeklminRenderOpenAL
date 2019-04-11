@@ -1012,9 +1012,12 @@ int main()
 					//~ myFont->writeRectangle(rand()%(int)(WIDTH * UI_SCALE_FACTOR), rand()%(int)(HEIGHT * UI_SCALE_FACTOR),
 					                       //~ rand()%(int)(WIDTH * UI_SCALE_FACTOR), rand()%(int)(HEIGHT * UI_SCALE_FACTOR),
 					                       //~ rand()%256, rand()%256, rand()%256, rand()%128);
-				
-					myFont->writeCircle(rand()%WIDTH, rand()%HEIGHT, 10, rand()%255, rand()%255, rand()%255, 50);
-					myFont->writeCharacter('#', rand()%WIDTH, rand()%HEIGHT, 32, 32, glm::vec3(128,128,255));
+					myFont->clearScreen(0,0,0,0);
+					//myFont->writeCircle(rand()%WIDTH, rand()%HEIGHT, 10, rand()%255, rand()%255, rand()%255, 50);
+					//myFont->writeCharacter('#', rand()%WIDTH, rand()%HEIGHT, 32, 32, glm::vec3(128,128,255));
+					myFont->writeString(
+						std::string("GeklminRender OpenAL\n(c)Geklmin 2019"), 0, (int)(((float)HEIGHT * UI_SCALE_FACTOR) - 32), 16, 16, glm::vec3(255, 0, 0)
+					);
 					//~ myFont->writeImage(
 							//~ 0, 0,
 						    //~ myFont->getBMPFont(), myFont->getBMPFontWidth(), myFont->getBMPFontHeight(), myFont->getBMPFontNumComponents(),

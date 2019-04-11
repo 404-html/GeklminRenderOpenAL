@@ -44,9 +44,6 @@ namespace GeklminRender{
 			virtual ~BMPFontRenderer();
 			void resize(unsigned int x_screen_width, unsigned int y_screen_height, float scaling_factor = 1.0);
 			void clearScreen(unsigned char red, unsigned char green, unsigned char blue, unsigned char alpha); //Clear to this
-			void addText(BMPTextBox _texbox){TextBoxes.push_back(_texbox);}
-			void clearText() {TextBoxes.clear();} //remove all text
-			void writeText(); //write all text in the list of textboxes
 			//OPENGL CALLS!!!
 			void pushChangestoTexture(); //reInitfromDataPointer
 			void Draw(bool useBlending = true); //Draw all the text to the screen, screenquad, use blending
@@ -70,6 +67,13 @@ namespace GeklminRender{
 				glm::vec3 backcolor_0_255 = glm::vec3(0),
 				bool RenderBackground = false
 			);
+			void writeString(
+			std::string str, int x, int y, //Where in the buffer shall the bottom left corner of the first character be
+			unsigned int targcharwidth, unsigned int targcharheight,
+			glm::vec3 color_0_255 = glm::vec3(1),
+			glm::vec3 backcolor_0_255 = glm::vec3(0),
+			bool RenderBackground = false
+			);
 			void setCharDimensions(unsigned int _char_width, unsigned int _char_height, unsigned int _chars_per_row){
 				char_width = _char_width;
 				char_height = _char_height;
@@ -80,14 +84,14 @@ namespace GeklminRender{
 			unsigned int getBMPFontWidth(){return BMPFontWidth;}
 			unsigned int getBMPFontHeight(){return BMPFontHeight;}
 			unsigned int getBMPFontNumComponents(){return num_components_BMPFont;}
-			std::vector<BMPTextBox>* getTextBoxVector(){return &TextBoxes;}
+			
 			
 		protected:
 		private:
 			unsigned char getRedChar(unsigned int xoff, unsigned int yoff){
 				return BMPFont[(xoff + yoff * BMPFontWidth) * num_components_BMPFont];
 			}
-			std::vector<BMPTextBox> TextBoxes; //All text boxes. Public so you can access it.
+			//std::vector<BMPTextBox> TextBoxes; //All text boxes. Public so you can access it.
 			//You must use new to allocate this
 			BMPFontRenderer(const BMPFontRenderer& Other);
 			void operator=(const BMPFontRenderer& Other);

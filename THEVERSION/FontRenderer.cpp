@@ -23,7 +23,6 @@ namespace GeklminRender{ //Makes things easier
 			screen_width = 0;
 			screen_height = 0;
 			my_scaling_factor = 1.0;
-			TextBoxes.clear();
 			isNull = true;
 		}
 		//First: Setup the bmp font with the passthrough
@@ -119,7 +118,6 @@ namespace GeklminRender{ //Makes things easier
 			screen_width = 0;
 			screen_height = 0;
 			my_scaling_factor = 1.0;
-			TextBoxes.clear();
 			isNull = true;
 		}
 		//First: Setup the bmp font with the passthrough
@@ -246,7 +244,6 @@ namespace GeklminRender{ //Makes things easier
 			screen_width = 0;
 			screen_height = 0;
 			my_scaling_factor = 1.0;
-			TextBoxes.clear();
 			isNull = true;
 		}
 	}
@@ -433,11 +430,43 @@ namespace GeklminRender{ //Makes things easier
 				unsigned char red = Src_Value * color_0_255.x + (1 - Src_Value) * backcolor_0_255.x;
 				unsigned char green = Src_Value * color_0_255.y + (1 - Src_Value) * backcolor_0_255.y;
 				unsigned char blue = Src_Value * color_0_255.z + (1 - Src_Value) * backcolor_0_255.z;
+				if(!RenderBackground){
+					red = Src_Value * color_0_255.x;
+					green = Src_Value * color_0_255.y;
+					blue = Src_Value * color_0_255.z;
+				}
 				if(RenderBackground)
 					writePixel(w, h, red, green, blue, 255);
 				else if(Src_Value_Char > 0)
 					writePixel(w, h, red, green, blue, Src_Value_Char);
 			}
+	}
+	
+	void BMPFontRenderer::writeString(
+			std::string str, int x, int y, //Where in the buffer shall the bottom left corner of the first character be
+			unsigned int targwidth, unsigned int targheight,
+			glm::vec3 color_0_255,
+			glm::vec3 backcolor_0_255,
+			bool RenderBackground
+	){
+		unsigned int str_length = str.length();
+		int x_start = x;
+		int y_start = y;
+		for(size_t i = 0; i < str_length; i++){
+			
+			if(str[i] != '\n' && str[i] != '\t' && str[i] != ' ' && str[i] != '\b' && str[i] != '\a' && str[i] != '\r') //all other characters are drawn
+			{
+					writeCharacter(str[i], x_start, y_start, targwidth, targheight, color_0_255, backcolor_0_255, RenderBackground);
+					//Iterate the x_start
+					x_start += (int)targwidth;
+			} else if (str[i] == '\n' || str[i] == '\r'){
+				// Iterate the y_start and 
+				x_start = x;
+				y_start -= (int)targheight;
+			} else {
+				x_start += (int)targwidth;
+			}
+		}
 	}
 	
 	
