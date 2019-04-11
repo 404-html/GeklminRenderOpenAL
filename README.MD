@@ -1,4 +1,4 @@
-Welcome to the GeklminRender OpenAL Repo! This will (probably) be where all continued development will occur.
+Welcome to the GeklminRender OpenAL Repo!
 
 This is licensed under the MiT license.
 
@@ -8,27 +8,27 @@ Changes to GeklminRender will now go here.
 
 ## GeklminRender + GekAL (OpenAL wrapper)
 ### What is it?
-GeklminRender is an OpenGL based toolkit for 3d rendering and visual effects. It contains numerous helper classes to assist programming as well as a fully pre-made 3D model renderer capable of loading models and displaying them with lighting, shadows, and cubemap reflections. 
+GeklminRender is an OpenGL based toolkit for 3d rendering and visual effects. It contains numerous helper classes to assist graphics programming as well as a fully pre-made 3D model renderer capable of loading models and displaying them with lighting, shadows, and cubemap reflections. 
 
-The OpenAL part of the library, which I have dubbed GekAL, is a small wrapper/helper library that I wrote to add the ability to load and play WAV files.
+The OpenAL part of the library, which I have dubbed GekAL, is a small wrapper/helper library that I wrote to add the ability to load and play WAV files in 3D space.
 
-GeklminRender was designed for speed and usability, and its aesthetics are chosen based on my personal preference. I am currently writing a manual for GeklminRender and the latest version of it is in the top level of the repository.
+GeklminRender was designed for speed and usability, and its aesthetics are chosen based on my personal preference. As such, it will always use the Phong reflection model, and I will never implement PBR. I am currently writing a manual for GeklminRenderOpenAL and the latest version of it is in the top level of the repository.
 
 ## How do I build it?
 Requirements:
-* Microsoft Windows with MinGW 64 bit installed or Linux 64 bit with a fairly recent version of G++
+* Microsoft Windows with MinGW 64 bit (Recommended: get pthreads version) installed or Linux 64 bit with a fairly recent version of G++
 * OpenGL 3.3 supported graphics hardware
-* The dependencies listed in step 1
-
-First off, you must have the following dependencies installed:
 * OpenGL
 * GLM (Math library) installed in Include
 * GLFW3 (Windowing library, as well as the -dev package)
 * OpenAL (and -dev package)
+First, get the dependencies and download the repo
 
 Secondly, after you've unzipped/cloned the repo somewhere you must go into the THEVERSION folder and run the Compiler_Call bat or sh file, depending on your platform. IF YOU ARE ON WINDOWS, PLEASE REMOVE THE -I ARGUMENTS AS THEY POINT TO THE LOCATION OF THE INCLUDE FOLDER FOR MY MINGW INSTALLATION ON MY COMPUTER FROM THE BAT FILE. Thank you.
 
-Thirdly, to run the main demo, run the Prog.bin with ./Prog.bin or Prog2.bin with ./Prog2.bin. On windows, EXEs are generated instead of .bin files and there's even little icons on them.
+(If you get any errors in this step, please report the issue, and please provide the full g++ compiler error text)
+
+Thirdly, to run the main demo, run the Prog.bin with ./Prog.bin or Prog2.bin with ./Prog2.bin. On windows, EXEs are generated instead of .bin files and you just have to double click.
 
 ## Why this?
 
@@ -40,15 +40,19 @@ With shadowed lights disabled in the shader and no other rendertargets active, y
 
 I will be writing alternate versions of the Mainshader to facilitate this, but in the meantime if you're familiar with GLSL it should be fairly simple.
 
-One warning:
+One warning, though:
 ### DO NOT MODIFY THE LIGHTING UBO!!!
 
-With 
 ### it's very easy to integrate your own OpenGL code with it
-There are callbacks in the main renderer that allow you to add your own rendering code and draw on any buffer in any stage of the pipeline. Helper classes make writing GL code a lot easier and more fun. If you want to draw menus/overlays and render in-sim text.
+There are callbacks in the main renderer that allow you to add your own rendering code and draw on any buffer in any stage of the pipeline. Helper classes make writing GL code a lot easier and more fun. If you want to draw menus/overlays, sprites, etc. and render in-window text you can use the BMPFontRenderer.
 
 ### It's multiplatform
 It's been tested on Intel, AMD, and NVidia graphics chips, Microsoft Windows and Linux. It has only been compiled as 64 bit, but it is presumed that it would work as a 32 bit program if it were compiled that way.
+
+### It's designed to be easy to use
+Mose of the engine's API is supposed to be fairly intuitive and everything is object-oriented.
+
+The only issue right now is that the documentation is rather poor, however it is being improved periodically and eventually the manual will be finished.
 
 ### Features?
 * 3D (duh!)
@@ -73,7 +77,6 @@ The current todo list is as follows:
 5) Rigorously test every feature and squash bugs
 6) Add more utility functions to improve quality-of-life
 7) Rewrite the manual
-8) Move on
 
 
 ## Special Thanks
